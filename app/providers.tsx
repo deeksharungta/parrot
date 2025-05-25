@@ -1,21 +1,12 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { base } from "wagmi/chains";
 import { NeynarContextProvider, Theme } from "@neynar/react";
 import "@neynar/react/dist/style.css";
-import { MiniKitProvider, useMiniKit } from "@coinbase/onchainkit/minikit";
+import { MiniKitProvider } from "@coinbase/onchainkit/minikit";
 
 export function Providers(props: { children: ReactNode }) {
-  const { setFrameReady, isFrameReady } = useMiniKit();
-
-  // Call setFrameReady() when your app is ready to be shown
-  useEffect(() => {
-    if (!isFrameReady) {
-      setFrameReady();
-    }
-  }, [isFrameReady, setFrameReady]);
-
   return (
     <NeynarContextProvider
       settings={{

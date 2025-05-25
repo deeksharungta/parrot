@@ -1,15 +1,25 @@
 "use client";
 
+import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { ErrorRes } from "@neynar/nodejs-sdk/build/neynar-api/v2";
 import { NeynarAuthButton, useNeynarContext } from "@neynar/react";
 import axios from "axios";
 import { AxiosError } from "axios";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function App() {
   const { user } = useNeynarContext();
   const [text, setText] = useState("");
+
+  const { setFrameReady, isFrameReady } = useMiniKit();
+
+  // Call setFrameReady() when your app is ready to be shown
+  useEffect(() => {
+    if (!isFrameReady) {
+      setFrameReady();
+    }
+  }, [isFrameReady, setFrameReady]);
 
   const handlePublishCast = async () => {
     try {
