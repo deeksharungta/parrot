@@ -22,11 +22,6 @@ export default function App() {
   // const { requestFarcasterSignerFromWarpcast } = useFarcasterSigner();
 
   // Call setFrameReady() when your app is ready to be shown
-  useEffect(() => {
-    if (!isFrameReady) {
-      setFrameReady();
-    }
-  }, [isFrameReady, setFrameReady]);
 
   // // Usage
   // const handleSignIn = async () => {
