@@ -1,6 +1,6 @@
 "use client";
 
-import { useMiniKit } from "@coinbase/onchainkit/minikit";
+import { useAuthenticate, useMiniKit } from "@coinbase/onchainkit/minikit";
 import { ErrorRes } from "@neynar/nodejs-sdk/build/neynar-api/v2";
 import { NeynarAuthButton, useNeynarContext } from "@neynar/react";
 import axios from "axios";
@@ -21,6 +21,18 @@ export default function App() {
     }
   }, [isFrameReady, setFrameReady]);
 
+  const { signIn } = useAuthenticate();
+
+  // Usage
+  const handleSignIn = async () => {
+    const result = await signIn();
+
+    if (result) {
+      // Handle successful authentication
+      console.log("Authenticated:", result);
+    }
+  };
+
   const handlePublishCast = async () => {
     try {
       await axios.post<{ message: string }>("/api/cast", {
@@ -39,6 +51,7 @@ export default function App() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
+        <button onClick={handleSignIn}>Sign In</button>
         <NeynarAuthButton />
         {user && (
           <>
