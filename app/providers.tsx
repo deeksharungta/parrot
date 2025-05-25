@@ -9,31 +9,32 @@ import { PrivyProvider } from "@privy-io/react-auth";
 
 export function Providers(props: { children: ReactNode }) {
   return (
-    // <NeynarContextProvider
-    //   settings={{
-    //     clientId: process.env.NEXT_PUBLIC_NEYNAR_CLIENT_ID || "",
-    //     defaultTheme: Theme.Light,
-    //     eventsCallbacks: {
-    //       onAuthSuccess: () => {},
-    //       onSignout() {},
-    //     },
-    //   }}
-    // >
-    <PrivyProvider
-      appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""}
-      config={{
-        // Create embedded wallets for users who don't have a wallet
-        loginMethods: ["farcaster"],
-        embeddedWallets: {
-          ethereum: {
-            createOnLogin: "all-users",
-          },
-          solana: {
-            createOnLogin: "all-users",
-          },
+    <NeynarContextProvider
+      settings={{
+        clientId: process.env.NEXT_PUBLIC_NEYNAR_CLIENT_ID || "",
+        defaultTheme: Theme.Light,
+        eventsCallbacks: {
+          onAuthSuccess: () => {},
+          onSignout() {},
         },
       }}
     >
+      {/* 
+     {/* <PrivyProvider */}
+      {/* //   appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""}
+    //   config={{ */}
+      {/* //     // Create embedded wallets for users who don't have a wallet
+    //     loginMethods: ["farcaster"],
+    //     embeddedWallets: { */}
+      {/* //       ethereum: { */}
+      {/* //         createOnLogin: "all-users",
+    //       },
+    //       solana: { */}
+      {/* //         createOnLogin: "all-users",
+    //       },
+    //     },
+    //   }}
+    // > */}
       <MiniKitProvider
         apiKey={process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY}
         chain={base}
@@ -48,7 +49,7 @@ export function Providers(props: { children: ReactNode }) {
       >
         {props.children}
       </MiniKitProvider>
-    </PrivyProvider>
-    // </NeynarContextProvider>
+      {/* // </PrivyProvider> */}
+    </NeynarContextProvider>
   );
 }
