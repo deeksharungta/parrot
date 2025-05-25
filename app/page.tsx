@@ -1,3 +1,5 @@
+"use client";
+
 import { useOpenUrl } from "@coinbase/onchainkit/minikit";
 import React from "react";
 
