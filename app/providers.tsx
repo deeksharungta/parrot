@@ -5,16 +5,29 @@ import { base } from "wagmi/chains";
 import { NeynarContextProvider, Theme } from "@neynar/react";
 import "@neynar/react/dist/style.css";
 import { MiniKitProvider } from "@coinbase/onchainkit/minikit";
+import { PrivyProvider } from "@privy-io/react-auth";
 
 export function Providers(props: { children: ReactNode }) {
   return (
-    <NeynarContextProvider
-      settings={{
-        clientId: process.env.NEXT_PUBLIC_NEYNAR_CLIENT_ID || "",
-        defaultTheme: Theme.Light,
-        eventsCallbacks: {
-          onAuthSuccess: () => {},
-          onSignout() {},
+    // <NeynarContextProvider
+    //   settings={{
+    //     clientId: process.env.NEXT_PUBLIC_NEYNAR_CLIENT_ID || "",
+    //     defaultTheme: Theme.Light,
+    //     eventsCallbacks: {
+    //       onAuthSuccess: () => {},
+    //       onSignout() {},
+    //     },
+    //   }}
+    // >
+    <PrivyProvider
+      appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""}
+      config={{
+        // Create embedded wallets for users who don't have a wallet
+        loginMethods: ["farcaster"],
+        embeddedWallets: {
+          ethereum: {
+            createOnLogin: "all-users",
+          },
         },
       }}
     >
@@ -32,6 +45,7 @@ export function Providers(props: { children: ReactNode }) {
       >
         {props.children}
       </MiniKitProvider>
-    </NeynarContextProvider>
+    </PrivyProvider>
+    // </NeynarContextProvider>
   );
 }

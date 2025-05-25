@@ -1,18 +1,14 @@
 "use client";
 
-import { useAuthenticate, useMiniKit } from "@coinbase/onchainkit/minikit";
-import { ErrorRes } from "@neynar/nodejs-sdk/build/neynar-api/v2";
-import { NeynarAuthButton, useNeynarContext } from "@neynar/react";
-import axios from "axios";
-import { AxiosError } from "axios";
-import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useMiniKit } from "@coinbase/onchainkit/minikit";
+import { useEffect } from "react";
+import { usePrivy } from "@privy-io/react-auth";
+import { useFarcasterSigner } from "@privy-io/react-auth";
 
 export default function App() {
-  const { user } = useNeynarContext();
-  const [text, setText] = useState("");
-
   const { setFrameReady, isFrameReady } = useMiniKit();
+  const { ready, login, user, logout } = usePrivy();
+  const { requestFarcasterSignerFromWarpcast } = useFarcasterSigner();
 
   // Call setFrameReady() when your app is ready to be shown
   useEffect(() => {
@@ -21,38 +17,51 @@ export default function App() {
     }
   }, [isFrameReady, setFrameReady]);
 
-  const { signIn } = useAuthenticate();
+  // // Usage
+  // const handleSignIn = async () => {
+  //   const result = await signIn();
 
-  // Usage
+  //   if (result) {
+  //     // Handle successful authentication
+  //     console.log("Authenticated:", result);
+  //   }
+  // };
+
+  // const handlePublishCast = async () => {
+  //   try {
+  //     await axios.post<{ message: string }>("/api/cast", {
+  //       signerUuid: user?.signer_uuid,
+  //       text,
+  //     });
+  //     alert("Cast Published!");
+  //     setText("");
+  //   } catch (err) {
+  //     const { message } = (err as AxiosError).response?.data as ErrorRes;
+  //     alert(message);
+  //   }
+  // };
+
+  if (!ready) {
+    return <div>Loading...</div>;
+  }
+
   const handleSignIn = async () => {
-    const result = await signIn();
-
-    if (result) {
-      // Handle successful authentication
-      console.log("Authenticated:", result);
-    }
+    login();
   };
 
-  const handlePublishCast = async () => {
-    try {
-      await axios.post<{ message: string }>("/api/cast", {
-        signerUuid: user?.signer_uuid,
-        text,
-      });
-      alert("Cast Published!");
-      setText("");
-    } catch (err) {
-      const { message } = (err as AxiosError).response?.data as ErrorRes;
-      alert(message);
-    }
+  const handleAuthenticate = async () => {
+    const signer = await requestFarcasterSignerFromWarpcast();
+    console.log(signer);
   };
 
-  console.log(user);
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
         <button onClick={handleSignIn}>Sign In</button>
-        <NeynarAuthButton />
+        {user && <p>{user.farcaster?.fid}</p>}
+        {user && <button onClick={handleAuthenticate}>Authenticate</button>}
+        {user && <button onClick={logout}>Logout</button>}
+        {/* <NeynarAuthButton />
         {user && (
           <>
             <div className="flex flex-col gap-4 w-96 p-4 rounded-md shadow-md">
@@ -83,7 +92,7 @@ export default function App() {
               Cast
             </button>
           </>
-        )}
+        )} */}
       </div>
     </main>
   );
