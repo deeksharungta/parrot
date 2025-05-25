@@ -2,10 +2,11 @@
 
 import { useMiniKit, useOpenUrl } from "@coinbase/onchainkit/minikit";
 import React, { useEffect } from "react";
+import { sdk } from "@farcaster/frame-sdk";
 
 export default function HomePage() {
-  const openUrl = useOpenUrl();
   const { setFrameReady, isFrameReady } = useMiniKit();
+
   useEffect(() => {
     if (!isFrameReady) {
       setFrameReady();
@@ -13,7 +14,9 @@ export default function HomePage() {
   }, [isFrameReady, setFrameReady]);
 
   return (
-    <button onClick={() => openUrl("https://xcast-sepia.vercel.app/auth")}>
+    <button
+      onClick={() => sdk.actions.openUrl("https://xcast-sepia.vercel.app/auth")}
+    >
       Visit Website
     </button>
   );
