@@ -28,6 +28,9 @@ export function Providers(props: { children: ReactNode }) {
           ethereum: {
             createOnLogin: "all-users",
           },
+          solana: {
+            createOnLogin: "all-users",
+          },
         },
       }}
     >
