@@ -1,6 +1,6 @@
 "use client";
 
-import { useMiniKit, useOpenUrl } from "@coinbase/onchainkit/minikit";
+import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import React, { useEffect, useState } from "react";
 import { sdk } from "@farcaster/frame-sdk";
 import axios from "axios";
@@ -8,9 +8,14 @@ import { AxiosError } from "axios";
 import { ErrorRes } from "@neynar/nodejs-sdk/build/neynar-api/v2";
 import { useNeynarContext } from "@neynar/react";
 import Image from "next/image";
+import { useWriteContract } from "wagmi";
+import { erc20Abi, parseEther } from "viem";
 
 export default function HomePage() {
   const { user } = useNeynarContext();
+  const { writeContractAsync } = useWriteContract();
+
+  console.log({ user });
   const { setFrameReady, isFrameReady } = useMiniKit();
   const [text, setText] = useState("");
 
@@ -34,6 +39,32 @@ export default function HomePage() {
     }
   };
 
+  const handleGetApproval = async () => {
+    const hash = await writeContractAsync({
+      address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      abi: erc20Abi,
+      functionName: "approve",
+      args: [
+        "0xe9205D1d09c8fC8Da13079a1a5C0E430b74fb93b",
+        parseEther("100000"),
+      ],
+    });
+    console.log({ hash });
+  };
+
+  const handleSendTransaction = async () => {
+    const hash = await writeContractAsync({
+      address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      abi: erc20Abi,
+      functionName: "transfer",
+      args: [
+        "0x2e95EC71F1afa1B2bda547c4C3979687818156dd",
+        parseEther("100000"),
+      ],
+    });
+    console.log({ hash });
+  };
+
   return (
     <div>
       {!user && (
@@ -45,7 +76,8 @@ export default function HomePage() {
           Login
         </button>
       )}
-
+      <button onClick={handleGetApproval}>Get Approval</button>
+      <button onClick={handleSendTransaction}>Send transaction</button>
       {user && (
         <>
           <div className="flex flex-col gap-4 w-96 p-4 rounded-md shadow-md">

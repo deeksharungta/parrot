@@ -5,9 +5,12 @@ import { base } from "wagmi/chains";
 import { NeynarContextProvider, Theme } from "@neynar/react";
 import "@neynar/react/dist/style.css";
 import { MiniKitProvider } from "@coinbase/onchainkit/minikit";
-import { PrivyProvider } from "@privy-io/react-auth";
+import { WagmiProvider } from "wagmi";
+import { config } from "@/lib/wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 export function Providers(props: { children: ReactNode }) {
+  const queryClient = new QueryClient();
   return (
     <NeynarContextProvider
       settings={{
@@ -19,37 +22,24 @@ export function Providers(props: { children: ReactNode }) {
         },
       }}
     >
-      {/* 
-     {/* <PrivyProvider */}
-      {/* //   appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""}
-    //   config={{ */}
-      {/* //     // Create embedded wallets for users who don't have a wallet
-    //     loginMethods: ["farcaster"],
-    //     embeddedWallets: { */}
-      {/* //       ethereum: { */}
-      {/* //         createOnLogin: "all-users",
-    //       },
-    //       solana: { */}
-      {/* //         createOnLogin: "all-users",
-    //       },
-    //     },
-    //   }}
-    // > */}
-      <MiniKitProvider
-        apiKey={process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY}
-        chain={base}
-        config={{
-          appearance: {
-            mode: "auto",
-            theme: "mini-app-theme",
-            name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
-            logo: process.env.NEXT_PUBLIC_ICON_URL,
-          },
-        }}
-      >
-        {props.children}
-      </MiniKitProvider>
-      {/* // </PrivyProvider> */}
+      <QueryClientProvider client={queryClient}>
+        <WagmiProvider config={config}>
+          <MiniKitProvider
+            apiKey={process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY}
+            chain={base}
+            config={{
+              appearance: {
+                mode: "auto",
+                theme: "mini-app-theme",
+                name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
+                logo: process.env.NEXT_PUBLIC_ICON_URL,
+              },
+            }}
+          >
+            {props.children}
+          </MiniKitProvider>
+        </WagmiProvider>
+      </QueryClientProvider>
     </NeynarContextProvider>
   );
 }

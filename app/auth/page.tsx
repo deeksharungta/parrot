@@ -1,8 +1,12 @@
 "use client";
 
-import { NeynarAuthButton } from "@neynar/react";
+import { NeynarAuthButton, useNeynarContext } from "@neynar/react";
 
 export default function App() {
+  const { user } = useNeynarContext();
+
+  console.log({ user });
+
   // const { ready, login, user, logout } = usePrivy();
 
   // const { requestFarcasterSignerFromWarpcast } = useFarcasterSigner();

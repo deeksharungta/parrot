@@ -1,0 +1,131 @@
+export interface Database {
+  public: {
+    Tables: {
+      users: {
+        Row: {
+          id: string;
+          created_at: string;
+          updated_at: string;
+          twitter_id: string | null;
+          twitter_username: string | null;
+          twitter_display_name: string | null;
+          twitter_access_token: string | null;
+          twitter_refresh_token: string | null;
+          twitter_connected_at: string | null;
+          farcaster_fid: number | null;
+          farcaster_username: string | null;
+          farcaster_display_name: string | null;
+          neynar_signer_uuid: string | null;
+          farcaster_connected_at: string | null;
+          yolo_mode: boolean;
+          notifications_enabled: boolean;
+          auto_approve: boolean;
+          usdc_balance: number;
+          total_spent: number;
+          spending_approved: boolean;
+          spending_limit: number;
+        };
+        Insert: {
+          id?: string;
+          twitter_id?: string | null;
+          twitter_username?: string | null;
+          twitter_display_name?: string | null;
+          twitter_access_token?: string | null;
+          twitter_refresh_token?: string | null;
+          twitter_connected_at?: string | null;
+          farcaster_fid?: number | null;
+          farcaster_username?: string | null;
+          farcaster_display_name?: string | null;
+          neynar_signer_uuid?: string | null;
+          farcaster_connected_at?: string | null;
+          yolo_mode?: boolean;
+          notifications_enabled?: boolean;
+          auto_approve?: boolean;
+          usdc_balance?: number;
+          total_spent?: number;
+          spending_approved?: boolean;
+          spending_limit?: number;
+        };
+        Update: {
+          twitter_id?: string | null;
+          twitter_username?: string | null;
+          twitter_display_name?: string | null;
+          twitter_access_token?: string | null;
+          twitter_refresh_token?: string | null;
+          twitter_connected_at?: string | null;
+          farcaster_fid?: number | null;
+          farcaster_username?: string | null;
+          farcaster_display_name?: string | null;
+          neynar_signer_uuid?: string | null;
+          farcaster_connected_at?: string | null;
+          yolo_mode?: boolean;
+          notifications_enabled?: boolean;
+          auto_approve?: boolean;
+          usdc_balance?: number;
+          total_spent?: number;
+          spending_approved?: boolean;
+          spending_limit?: number;
+        };
+      };
+      tweets: {
+        Row: {
+          id: string;
+          created_at: string;
+          updated_at: string;
+          user_id: string;
+          twitter_id: string | null;
+          content: string;
+          original_content: string | null;
+          twitter_url: string | null;
+          twitter_created_at: string | null;
+          cast_status: "pending" | "approved" | "rejected" | "cast" | "failed";
+          cast_hash: string | null;
+          cast_url: string | null;
+          cast_created_at: string | null;
+          cast_price: number;
+          payment_approved: boolean;
+          payment_processed: boolean;
+          is_edited: boolean;
+          edit_count: number;
+          auto_cast: boolean;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          twitter_id?: string | null;
+          content: string;
+          original_content?: string | null;
+          twitter_url?: string | null;
+          twitter_created_at?: string | null;
+          cast_status?: "pending" | "approved" | "rejected" | "cast" | "failed";
+          cast_hash?: string | null;
+          cast_url?: string | null;
+          cast_created_at?: string | null;
+          cast_price?: number;
+          payment_approved?: boolean;
+          payment_processed?: boolean;
+          is_edited?: boolean;
+          edit_count?: number;
+          auto_cast?: boolean;
+        };
+        Update: {
+          twitter_id?: string | null;
+          content?: string;
+          original_content?: string | null;
+          twitter_url?: string | null;
+          twitter_created_at?: string | null;
+          cast_status?: "pending" | "approved" | "rejected" | "cast" | "failed";
+          cast_hash?: string | null;
+          cast_url?: string | null;
+          cast_created_at?: string | null;
+          cast_price?: number;
+          payment_approved?: boolean;
+          payment_processed?: boolean;
+          is_edited?: boolean;
+          edit_count?: number;
+          auto_cast?: boolean;
+        };
+      };
+    };
+  };
+}
