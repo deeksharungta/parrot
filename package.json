@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@coinbase/onchainkit": "latest",
-    "@farcaster/frame-sdk": "^0.0.35",
+    "@farcaster/frame-sdk": "^0.0.51",
     "@farcaster/frame-wagmi-connector": "^0.0.40",
     "@neynar/nodejs-sdk": "^1.69.1",
     "@neynar/react": "^0.9.1",
