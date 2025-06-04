@@ -491,15 +491,19 @@ import WelcomeCard from "./components/welcome/WelcomeCard";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import UserProfiles from "./components/welcome/UserProfiles";
 import { motion } from "framer-motion";
+import { sdk } from "@farcaster/frame-sdk";
 
 export default function HomePage() {
-  const { setFrameReady, isFrameReady } = useMiniKit();
+  const { setFrameReady, isFrameReady, context } = useMiniKit();
 
   useEffect(() => {
     if (!isFrameReady) {
       setFrameReady();
     }
-  }, [isFrameReady, setFrameReady]);
+    if (context?.client.added) {
+      sdk.actions.addMiniApp();
+    }
+  }, [isFrameReady, setFrameReady, context?.client.added]);
 
   return (
     <motion.div
