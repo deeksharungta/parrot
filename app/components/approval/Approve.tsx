@@ -24,7 +24,7 @@ export default function Approve() {
             <button
               key={limit}
               onClick={() => setSpendingLimit(limit)}
-              className={`px-6 py-2 border rounded-full text-base font-medium transition-colors border-[#E2E2E4] flex items-center justify-center gap-1 group ${
+              className={`p-2 border rounded-full text-base font-medium transition-colors border-[#E2E2E4] flex items-center justify-center gap-1 group ${
                 spendingLimit === limit
                   ? "bg-black text-white"
                   : "bg-[#F8F8F8] text-[#100C20] hover:bg-black hover:text-white"
