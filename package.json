@@ -11,7 +11,7 @@
   "dependencies": {
     "@coinbase/onchainkit": "latest",
     "@farcaster/frame-sdk": "^0.0.57",
-    "@farcaster/frame-wagmi-connector": "^0.0.40",
+    "@farcaster/frame-wagmi-connector": "^0.0.46",
     "@neynar/nodejs-sdk": "^1.69.1",
     "@neynar/react": "^0.9.1",
     "@pigment-css/react": "^0.0.9",
