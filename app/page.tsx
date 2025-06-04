@@ -500,10 +500,13 @@ export default function HomePage() {
     if (!isFrameReady) {
       setFrameReady();
     }
-    if (context?.client.added) {
+  }, [isFrameReady, setFrameReady]);
+
+  useEffect(() => {
+    if (!context?.client.added) {
       sdk.actions.addMiniApp();
     }
-  }, [isFrameReady, setFrameReady, context?.client.added]);
+  }, [context?.client.added]);
 
   return (
     <motion.div
