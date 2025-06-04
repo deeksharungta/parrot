@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Outfit } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
-const inter = Inter({
+const outfit = Outfit({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-outfit",
   weight: ["300", "400", "500", "600"],
 });
 
 export const metadata: Metadata = {
-  title: "TweetCaster",
+  title: "XCast",
   description: "Cross-post your tweets to Farcaster",
 };
 
@@ -20,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={outfit.variable}>
       <body className="font-sans antialiased bg-white text-gray-900">
         <Providers>{children}</Providers>
       </body>

@@ -8,9 +8,16 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-outfit)"],
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        danger: "#D60000",
+      },
+      boxShadow: {
+        "danger-top": "0px -4px 0px 0px #D60000 inset",
       },
       animation: {
         "fade-out": "1s fadeOut 3s ease-out forwards",
