@@ -17,7 +17,6 @@ type Props = {
   tweet: Tweet;
   components?: TwitterComponents;
 };
-0;
 
 // Helper function to get relative time
 function getRelativeTime(dateString: string): string {
@@ -49,34 +48,38 @@ function getRelativeTime(dateString: string): string {
 export default function MyTweet({ tweet: t, components }: Props) {
   const tweet = enrichTweet(t);
   return (
-    <TweetContainer className="bg-white rounded-3xl p-3 mx-auto border border-[#ECECED] h-full relative z-10">
-      <div className="flex items-start gap-2 mb-3">
-        <Image
-          src={tweet.user.profile_image_url_https}
-          alt={tweet.user.name}
-          width={32}
-          height={32}
-          className="rounded-full"
-        />
-        <div>
-          <p className="text-[#100C20] text-base font-semibold flex items-center gap-1">
-            {tweet.user.name}{" "}
-            {tweet.user.is_blue_verified ? <BlueTick /> : null}
-          </p>
-          <p className="text-[#8C8A94] text-sm flex items-center gap-1">
-            @{tweet.user.screen_name} ·{" "}
-            <span className="text-[#8C8A94] text-sm">
-              {getRelativeTime(tweet.created_at)}
-            </span>
-          </p>
-        </div>
+    <div className="bg-white rounded-3xl border border-[#ECECED] h-full relative z-10 overflow-y-auto">
+      <div className="h-full overflow-y-auto">
+        <TweetContainer className="mx-auto border-none p-3">
+          <div className="flex items-start gap-2 mb-3">
+            <Image
+              src={tweet.user.profile_image_url_https}
+              alt={tweet.user.name}
+              width={32}
+              height={32}
+              className="rounded-full"
+            />
+            <div>
+              <p className="text-[#100C20] text-base font-semibold flex items-center gap-1">
+                {tweet.user.name}{" "}
+                {tweet.user.is_blue_verified ? <BlueTick /> : null}
+              </p>
+              <p className="text-[#8C8A94] text-sm flex items-center gap-1">
+                @{tweet.user.screen_name} ·{" "}
+                <span className="text-[#8C8A94] text-sm">
+                  {getRelativeTime(tweet.created_at)}
+                </span>
+              </p>
+            </div>
+          </div>
+          {tweet.in_reply_to_status_id_str && <TweetInReplyTo tweet={tweet} />}
+          <TweetBody tweet={tweet} />
+          {tweet.mediaDetails?.length ? (
+            <TweetMedia tweet={tweet} components={components} />
+          ) : null}
+          {tweet.quoted_tweet && <QuotedTweet tweet={tweet.quoted_tweet} />}
+        </TweetContainer>
       </div>
-      {tweet.in_reply_to_status_id_str && <TweetInReplyTo tweet={tweet} />}
-      <TweetBody tweet={tweet} />
-      {tweet.mediaDetails?.length ? (
-        <TweetMedia tweet={tweet} components={components} />
-      ) : null}
-      {tweet.quoted_tweet && <QuotedTweet tweet={tweet.quoted_tweet} />}
 
       <style jsx global>{`
         /* React tweet theme variables for font sizing */
@@ -115,7 +118,8 @@ export default function MyTweet({ tweet: t, components }: Props) {
 
         /* Override tweet container border radius */
         .tweet-container_root__0rJLq {
-          border-radius: 24px !important;
+          border-radius: 0px !important;
+          border: none !important;
         }
 
         /* Override tweet component styles for dark theme */
@@ -150,6 +154,6 @@ export default function MyTweet({ tweet: t, components }: Props) {
           font-family: var(--font-outfit) !important;
         }
       `}</style>
-    </TweetContainer>
+    </div>
   );
 }
