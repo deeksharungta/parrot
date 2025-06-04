@@ -29,7 +29,7 @@ export default function WelcomeCard() {
 
 const Features = () => {
   return (
-    <div className="flex flex-col items-center justify-center w-full gap-5 px-6 -mt-10">
+    <div className="flex flex-col items-center justify-center w-full gap-5 px-6 -mt-16">
       <SkeletonEffect isLeft={false} />
       <SkeletonEffect isLeft={true} />
       {features.map((feature) => (
