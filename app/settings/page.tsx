@@ -17,9 +17,9 @@ export default function SettingsPage() {
   }, [isFrameReady, setFrameReady]);
 
   return (
-    <div className="p-5">
+    <div>
       <Header title="Settings" />
-      <div className="flex flex-col gap-5 mt-9">
+      <div className="flex flex-col gap-5 mt-4 h-[calc(100dvh-164px)] px-5 pb-5">
         <YoloMode />
         <DisconnectNeynar />
         <Notifications />

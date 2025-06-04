@@ -16,9 +16,9 @@ export default function CastPage() {
   }, [isFrameReady, setFrameReady]);
 
   return (
-    <div className="p-5">
+    <div>
       <Header title="Pick and Cast" />
-      <div className="flex flex-col gap-5 mt-9 h-[calc(100dvh-200px)]">
+      <div className="flex flex-col gap-5 mt-4 h-[calc(100dvh-164px)] px-5 pb-5">
         <Tweets />
       </div>
       <Navbar />

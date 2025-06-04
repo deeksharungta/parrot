@@ -8,7 +8,7 @@ export default function Header({ title }: { title: string }) {
   const { context } = useMiniKit();
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between sticky top-0 bg-white z-10 p-5">
       <p className="font-medium text-2xl text-[#494656]">{title}</p>
       <Image
         src={context?.user?.pfpUrl ?? "/farcaster.png"}
