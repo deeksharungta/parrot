@@ -1,0 +1,47 @@
+"use client";
+
+import React, { useState } from "react";
+import Container from "../ui/Container";
+import Button from "../ui/Button";
+import Dollar from "../icons/Dollar";
+
+export default function Approve() {
+  const [spendingLimit, setSpendingLimit] = useState(10);
+  const presetLimits = [5, 10, 25, 50, 100, 500];
+
+  return (
+    <Container
+      title="Approve USDC"
+      description="set a spending limit for xCast. You can top up anytime, and we'll notify you when it's running low."
+    >
+      <div className="text-left">
+        <div className="flex justify-between items-center mb-4">
+          <p className="text-base font-medium text-[#8C8A94]">spending limit</p>
+          <p className="text-[#100C20] text-2xl font-medium">{spendingLimit}</p>
+        </div>
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          {presetLimits.map((limit) => (
+            <button
+              key={limit}
+              onClick={() => setSpendingLimit(limit)}
+              className={`px-6 py-2 border rounded-full text-base font-medium transition-colors border-[#E2E2E4] flex items-center justify-center gap-1 group ${
+                spendingLimit === limit
+                  ? "bg-black text-white"
+                  : "bg-[#F8F8F8] text-[#100C20] hover:bg-black hover:text-white"
+              }`}
+            >
+              {limit} <Dollar isActive={spendingLimit === limit} />
+            </button>
+          ))}
+        </div>
+      </div>
+      <Button className="flex items-center justify-center gap-1">
+        Topup {spendingLimit} <Dollar isActive />
+      </Button>
+      <p className="text-[#8C8A94] text-xs font-normal text-center px-5 mt-1">
+        $10 covers nearly 100 casts — enough for 1 month if you cast 3 times a
+        day.
+      </p>
+    </Container>
+  );
+}

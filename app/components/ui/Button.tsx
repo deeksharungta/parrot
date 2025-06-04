@@ -18,7 +18,7 @@ export default function Button({
     "rounded-full font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed font-sans w-full py-4";
 
   const variantClasses = {
-    primary: "bg-black text-white",
+    primary: "bg-black text-white shadow-[0px_-4px_0px_0px_#343434_inset]",
     secondary: "bg-[#FFE0E0] text-[#DE2424] border border-[#F03D3D]",
     red: "bg-[#F03D3D] text-white shadow-danger-top",
   };
