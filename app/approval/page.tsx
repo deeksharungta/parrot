@@ -1,11 +1,21 @@
-import React from "react";
+"use client";
+
+import React, { useEffect } from "react";
 import Header from "../components/ui/Header";
 import Navbar from "../components/ui/Navbar";
 import Container from "../components/ui/Container";
 import Button from "../components/ui/Button";
 import Approve from "../components/approval/Approve";
+import { useMiniKit } from "@coinbase/onchainkit/minikit";
 
 export default function ApprovalPage() {
+  const { isFrameReady, setFrameReady } = useMiniKit();
+
+  useEffect(() => {
+    if (!isFrameReady) {
+      setFrameReady();
+    }
+  }, [isFrameReady, setFrameReady]);
   return (
     <div className="p-5">
       <Header title="Configure spending" />

@@ -7,6 +7,7 @@ import ArrowRight from "../icons/ArrowRight";
 import { EditModal } from "./EditModal";
 import { useTweet } from "react-tweet";
 import NoTweetsFound from "./NoTweetsFound";
+import { sdk } from "@farcaster/frame-sdk";
 
 // Dummy tweet data
 const dummyTweetIds = [
@@ -41,7 +42,8 @@ export default function Tweets() {
   const SWIPE_THRESHOLD = 100;
   const MAX_ROTATION = 15;
 
-  const handleReject = () => {
+  const handleReject = async () => {
+    await sdk.haptics.impactOccurred("medium");
     console.log("Tweet rejected:", dummyTweetIds[currentIndex]);
     setSwipeDirection("left");
     setTimeout(() => {
@@ -59,7 +61,9 @@ export default function Tweets() {
     setShowEditModal(true);
   };
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
+    await sdk.haptics.impactOccurred("medium");
+    await sdk.haptics.notificationOccurred("success");
     console.log("Tweet approved:", dummyTweetIds[currentIndex]);
     setSwipeDirection("right");
     setTimeout(() => {
