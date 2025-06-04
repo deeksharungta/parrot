@@ -86,17 +86,17 @@ export function EditModal({
               stiffness: 300,
               duration: 0.3,
             }}
-            className="fixed bottom-1 left-1 right-1 bg-white rounded-[24px] border border-[#ECECED] z-50 max-h-[85vh] overflow-hidden p-4 sm:bottom-2 sm:left-2 sm:right-2 sm:rounded-[32px] sm:p-6"
+            className="fixed  bg-white border border-[#ECECED] z-50 max-h-[85vh] overflow-hidden bottom-2 left-2 right-2 rounded-[32px] p-6"
           >
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-[#100c20] sm:text-base">
+              <h3 className="font-semibold text-[#100c20] text-base">
                 Edit cast
               </h3>
               <button onClick={onClose} className="p-1 -m-1 touch-manipulation">
                 <Cross />
               </button>
             </div>
-            <div className="mb-4 overflow-hidden sm:my-6">
+            <div className="overflow-hidden my-6">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="339"
@@ -114,7 +114,7 @@ export function EditModal({
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="w-full p-3 rounded-xl resize-none focus:outline-none focus:border-transparent bg-[#f8f8f8] text-sm leading-relaxed touch-manipulation sm:rows-6"
+                className="w-full p-3 rounded-xl resize-none focus:outline-none focus:border-transparent bg-[#f8f8f8] text-sm leading-relaxed touch-manipulation rows-6"
                 rows={4}
                 maxLength={280}
                 placeholder="What's happening?"
@@ -122,7 +122,7 @@ export function EditModal({
 
               {mediaUrls.length > 0 && (
                 <div className="mt-2">
-                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <div className="grid grid-cols-2 gap-2">
                     {mediaUrls.map((url, index) => (
                       <div key={index} className="relative group">
                         <Image
@@ -130,11 +130,11 @@ export function EditModal({
                           alt={`Media ${index + 1}`}
                           width={100}
                           height={100}
-                          className="rounded-lg object-cover w-full h-20 sm:h-24"
+                          className="rounded-lg object-cover w-full h-24"
                         />
                         <button
                           onClick={() => removeImage(index)}
-                          className="absolute top-1 right-1 bg-white/90 backdrop-blur-sm rounded-full p-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-white touch-manipulation"
+                          className="absolute top-1 right-1 bg-white/90 backdrop-blur-sm rounded-full p-2 opacity-100 transition-opacity hover:bg-white touch-manipulation"
                         >
                           <Trash />
                         </button>
@@ -146,11 +146,11 @@ export function EditModal({
 
               {quotedTweetUrl && tweet.quoted_tweet && (
                 <div className="mt-2">
-                  <div className="relative group border border-[#ECECED] rounded-xl bg-white max-h-20 sm:max-h-24 overflow-y-auto">
-                    <div className="p-2 sm:p-3">
+                  <div className="relative group border border-[#ECECED] rounded-xl bg-white max-h-24 overflow-y-auto">
+                    <div className="p-3">
                       <button
                         onClick={removeQuoteTweet}
-                        className="absolute top-1 right-1 bg-white/90 backdrop-blur-sm rounded-full p-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-white z-10 touch-manipulation"
+                        className="absolute top-1 right-1 bg-white/90 backdrop-blur-sm rounded-full p-2 opacity-100 transition-opacity hover:bg-white z-10 touch-manipulation"
                       >
                         <Trash />
                       </button>
@@ -160,11 +160,11 @@ export function EditModal({
                           alt={tweet.quoted_tweet.user.name}
                           width={20}
                           height={20}
-                          className="rounded-full flex-shrink-0 sm:w-6 sm:h-6"
+                          className="rounded-full flex-shrink-0"
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-col items-start gap-0.5 text-xs text-[#8C8A94]">
-                            <span className="font-semibold text-[#100C20] truncate max-w-full text-xs sm:text-sm">
+                            <span className="font-semibold text-[#100C20] truncate max-w-full text-sm">
                               {tweet.quoted_tweet.user.name}
                             </span>
                             <div className="text-xs">
@@ -177,7 +177,7 @@ export function EditModal({
                               </span>
                             </div>
                           </div>
-                          <p className="text-xs sm:text-sm text-[#100C20] mt-1 leading-relaxed break-words">
+                          <p className="text-sm text-[#100C20] mt-1 leading-relaxed break-words">
                             {tweet.quoted_tweet.content}
                           </p>
                         </div>
@@ -188,7 +188,7 @@ export function EditModal({
               )}
 
               <Button
-                className="mt-4 sm:mt-6 w-full text-base py-3 touch-manipulation"
+                className="mt-6 w-full text-base py-3 touch-manipulation"
                 onClick={handleSave}
                 disabled={isLoading || content.length === 0}
               >
