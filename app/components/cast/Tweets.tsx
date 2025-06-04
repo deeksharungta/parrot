@@ -153,11 +153,17 @@ export default function Tweets() {
   };
 
   // Edit modal handlers
-  const handleEditSave = async (editedContent: string) => {
+  const handleEditSave = async (
+    editedContent: string,
+    mediaUrls: string[],
+    quotedTweetUrl: string | null,
+  ) => {
     setIsEditLoading(true);
     try {
-      // Here you would typically save the edited content
+      // Here you would typically save the edited content, media URLs, and quoted tweet URL
       console.log("Saving edited content:", editedContent);
+      console.log("Media URLs:", mediaUrls);
+      console.log("Quoted tweet URL:", quotedTweetUrl);
 
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -207,6 +213,26 @@ export default function Tweets() {
         twitter_url: `https://twitter.com/${currentTweetData.user.screen_name}/status/${currentTweetData.id_str}`,
         cast_status: "pending" as const,
         is_edited: false,
+        media_urls:
+          currentTweetData.mediaDetails?.map(
+            (media) => media.media_url_https,
+          ) || [],
+        quoted_tweet_url: currentTweetData.quoted_tweet
+          ? `https://twitter.com/${currentTweetData.quoted_tweet.user.screen_name}/status/${currentTweetData.quoted_tweet.id_str}`
+          : null,
+        quoted_tweet: currentTweetData.quoted_tweet
+          ? {
+              id: currentTweetData.quoted_tweet.id_str,
+              content: currentTweetData.quoted_tweet.text || "",
+              user: {
+                name: currentTweetData.quoted_tweet.user.name,
+                username: currentTweetData.quoted_tweet.user.screen_name,
+                profile_image_url:
+                  currentTweetData.quoted_tweet.user.profile_image_url_https,
+              },
+              created_at: currentTweetData.quoted_tweet.created_at,
+            }
+          : null,
       }
     : null;
 
