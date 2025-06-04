@@ -19,12 +19,7 @@ export default function ApprovalPage() {
   }, [isFrameReady, setFrameReady]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-    >
+    <div>
       <Header title="Configure spending" />
       <motion.div
         className="flex flex-col gap-5 mt-4 h-[calc(100dvh-170px)] px-5 pb-5"
@@ -53,6 +48,6 @@ export default function ApprovalPage() {
         </motion.div>
       </motion.div>
       <Navbar />
-    </motion.div>
+    </div>
   );
 }

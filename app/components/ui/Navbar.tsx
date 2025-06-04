@@ -26,24 +26,11 @@ export default function Navbar() {
   ];
 
   return (
-    <motion.div
-      className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#ECECED] py-6 px-16"
-      initial={{ y: 100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-    >
-      <motion.div
-        className="flex justify-between items-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3, delay: 0.2 }}
-      >
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#ECECED] py-6 px-16">
+      <motion.div className="flex justify-between items-center">
         {navItems.map((item, index) => (
           <motion.div
             key={item.href}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.1 + index * 0.1 }}
             whileHover={{
               scale: 1.1,
               y: -2,
@@ -60,6 +47,6 @@ export default function Navbar() {
           </motion.div>
         ))}
       </motion.div>
-    </motion.div>
+    </div>
   );
 }
