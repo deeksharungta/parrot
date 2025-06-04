@@ -190,7 +190,10 @@ export default function Tweets() {
   const allTweetsFinished = currentIndex >= dummyTweetIds.length;
 
   // Calculate transform values for drag effect
-  const rotationX = (dragOffset.x / window.innerWidth) * MAX_ROTATION;
+  const rotationX =
+    typeof window !== "undefined"
+      ? (dragOffset.x / window.innerWidth) * MAX_ROTATION
+      : 0;
   const opacity = isDragging
     ? Math.max(0.7, 1 - Math.abs(dragOffset.x + dragOffset.y) / 300)
     : 1;
