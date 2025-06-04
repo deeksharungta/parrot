@@ -3,6 +3,7 @@ import Button from "../ui/Button";
 import Image from "next/image";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { useGetTwitterAccount } from "@/hooks/useGetTwitterAccount";
+import Link from "next/link";
 
 const SkeletonLoader = ({ width = "w-16" }: { width?: string }) => (
   <div className={`h-4 ${width} bg-gray-200 rounded animate-pulse`} />
@@ -48,9 +49,11 @@ export default function UserProfiles() {
           )}
         </div>
       </div>
-      <Button disabled={isLoading}>
-        {isLoading ? "Loading..." : "Continue fetching tweets"}
-      </Button>
+      <Link href="/cast">
+        <Button disabled={isLoading}>
+          {isLoading ? "Loading..." : "Continue fetching tweets"}
+        </Button>
+      </Link>
     </div>
   );
 }
