@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import React from "react";
+import { motion } from "framer-motion";
 
 const features = [
   {
@@ -21,28 +24,39 @@ const features = [
 
 export default function WelcomeCard() {
   return (
-    <div className="flex flex-col items-center justify-center w-full">
+    <motion.div 
+      className="flex flex-col items-center justify-center w-full"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+    >
       <Features />
-    </div>
+    </motion.div>
   );
 }
 
 const Features = () => {
   return (
-    <div className="flex flex-col items-center justify-center w-full gap-5 px-6 -mt-16">
-      <SkeletonEffect isLeft={false} />
-      <SkeletonEffect isLeft={true} />
-      {features.map((feature) => (
+    <motion.div 
+      className="flex flex-col items-center justify-center w-full gap-5 px-6 -mt-16"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4, delay: 0.2 }}
+    >
+      <SkeletonEffect isLeft={false} delay={0.1} />
+      <SkeletonEffect isLeft={true} delay={0.2} />
+      {features.map((feature, index) => (
         <FeatureItem
           key={feature.feature}
           feature={feature.feature}
           icon={feature.icon}
           backgrounColor={feature.backgrounColor}
+          delay={0.3 + index * 0.1}
         />
       ))}
-      <SkeletonEffect isLeft={true} />
-      <SkeletonEffect isLeft={false} />
-    </div>
+      <SkeletonEffect isLeft={true} delay={0.6} />
+      <SkeletonEffect isLeft={false} delay={0.7} />
+    </motion.div>
   );
 };
 
@@ -50,23 +64,40 @@ const FeatureItem = ({
   feature,
   icon,
   backgrounColor,
+  delay = 0,
 }: {
   feature: string;
   icon: string;
   backgrounColor: string;
+  delay?: number;
 }) => {
   const isUsdcFeature = icon === "/usdc.png";
 
   return (
-    <div className="flex items-center justify-center w-full gap-3">
+    <motion.div 
+      className="flex items-center justify-center w-full gap-3"
+      initial={{ opacity: 0, x: isUsdcFeature ? -20 : 20, scale: 0.95 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      transition={{ 
+        duration: 0.5, 
+        delay,
+        ease: "easeOut"
+      }}
+      whileHover={{ 
+        scale: 1.02,
+        transition: { duration: 0.2 }
+      }}
+      whileTap={{ scale: 0.98 }}
+    >
       {isUsdcFeature ? (
         <>
-          <div
+          <motion.div
             className={`h-full w-[86px] bg-[${backgrounColor}] rounded-3xl flex items-center justify-center`}
             style={{ backgroundColor: backgrounColor }}
+            whileHover={{ rotate: [0, -2, 2, 0], transition: { duration: 0.3 } }}
           >
             <Image src={icon} alt={feature} width={40} height={40} />
-          </div>
+          </motion.div>
           <div className="bg-[#F3F3F4] py-7 rounded-3xl text-lg font-normal text-[#494656] whitespace-nowrap flex-1 flex items-center justify-center">
             <p>{feature}</p>
           </div>
@@ -76,21 +107,27 @@ const FeatureItem = ({
           <div className="bg-[#F3F3F4] py-7 rounded-3xl text-lg font-normal text-[#494656] whitespace-nowrap flex-1 flex items-center justify-center">
             <p>{feature}</p>
           </div>
-          <div
+          <motion.div
             className={`h-full w-[86px] bg-[${backgrounColor}] rounded-3xl flex items-center justify-center`}
             style={{ backgroundColor: backgrounColor }}
+            whileHover={{ rotate: [0, 2, -2, 0], transition: { duration: 0.3 } }}
           >
             <Image src={icon} alt={feature} width={40} height={40} />
-          </div>
+          </motion.div>
         </>
       )}
-    </div>
+    </motion.div>
   );
 };
 
-const SkeletonEffect = ({ isLeft }: { isLeft: boolean }) => {
+const SkeletonEffect = ({ isLeft, delay = 0 }: { isLeft: boolean; delay?: number }) => {
   return (
-    <div className="flex items-center justify-center w-full gap-3 h-[86px] opacity-20">
+    <motion.div 
+      className="flex items-center justify-center w-full gap-3 h-[86px] opacity-20"
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 0.2, scale: 1 }}
+      transition={{ duration: 0.4, delay }}
+    >
       {isLeft ? (
         <>
           <div className="h-full w-[86px] bg-[#E2E2E4] rounded-3xl" />
@@ -102,6 +139,6 @@ const SkeletonEffect = ({ isLeft }: { isLeft: boolean }) => {
           <div className="h-full w-[86px] bg-[#E2E2E4] rounded-3xl" />
         </>
       )}
-    </div>
+    </motion.div>
   );
 };

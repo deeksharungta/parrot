@@ -1,21 +1,27 @@
 import React from "react";
+import { motion } from "framer-motion";
 
 export default function ArrowRight() {
   return (
-    <svg
+    <motion.svg
       xmlns="http://www.w3.org/2000/svg"
       width="24"
       height="24"
       viewBox="0 0 24 24"
       fill="none"
+      whileHover={{ x: 2 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
     >
-      <path
+      <motion.path
         d="M15.1696 6C17.273 7.55556 19.1622 9.37278 20.7905 11.4057C20.9302 11.5801 21 11.79 21 12M15.1696 18C17.273 16.4444 19.1622 14.6272 20.7905 12.5943C20.9302 12.4199 21 12.21 21 12M21 12H3"
         stroke="#111111"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 0.5, ease: "easeInOut" }}
       />
-    </svg>
+    </motion.svg>
   );
 }

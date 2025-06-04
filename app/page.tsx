@@ -490,6 +490,7 @@ import React, { useEffect } from "react";
 import WelcomeCard from "./components/welcome/WelcomeCard";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import UserProfiles from "./components/welcome/UserProfiles";
+import { motion } from "framer-motion";
 
 export default function HomePage() {
   const { setFrameReady, isFrameReady } = useMiniKit();
@@ -501,9 +502,14 @@ export default function HomePage() {
   }, [isFrameReady, setFrameReady]);
 
   return (
-    <div className="flex flex-col items-center justify-start h-screen overflow-hidden relative">
+    <motion.div
+      className="flex flex-col items-center justify-start h-screen overflow-hidden relative"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <WelcomeCard />
       <UserProfiles />
-    </div>
+    </motion.div>
   );
 }

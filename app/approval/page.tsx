@@ -7,6 +7,7 @@ import Container from "../components/ui/Container";
 import Button from "../components/ui/Button";
 import Approve from "../components/approval/Approve";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
+import { motion } from "framer-motion";
 
 export default function ApprovalPage() {
   const { isFrameReady, setFrameReady } = useMiniKit();
@@ -16,19 +17,42 @@ export default function ApprovalPage() {
       setFrameReady();
     }
   }, [isFrameReady, setFrameReady]);
+
   return (
-    <div>
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+    >
       <Header title="Configure spending" />
-      <div className="flex flex-col gap-5 mt-4 h-[calc(100dvh-164px)] px-5 pb-5">
-        <Approve />
-        <Container
-          title="Revoke USDC"
-          description="when you revoke, we stop all charges immediately."
+      <motion.div
+        className="flex flex-col gap-5 mt-4 h-[calc(100dvh-170px)] px-5 pb-5"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.2 }}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
         >
-          <Button variant="red">Revoke Allowance</Button>
-        </Container>
-      </div>
+          <Approve />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.4 }}
+        >
+          <Container
+            title="Revoke USDC"
+            description="when you revoke, we stop all charges immediately."
+          >
+            <Button variant="red">Revoke Allowance</Button>
+          </Container>
+        </motion.div>
+      </motion.div>
       <Navbar />
-    </div>
+    </motion.div>
   );
 }

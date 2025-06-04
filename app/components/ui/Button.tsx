@@ -1,6 +1,22 @@
-import React from "react";
+"use client";
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+import React from "react";
+import { motion } from "framer-motion";
+
+interface ButtonProps
+  extends Omit<
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
+    | "onAnimationStart"
+    | "onAnimationEnd"
+    | "onDragStart"
+    | "onDragEnd"
+    | "onDrag"
+    | "onDragEnter"
+    | "onDragExit"
+    | "onDragLeave"
+    | "onDragOver"
+    | "onDrop"
+  > {
   children: React.ReactNode;
   variant?: "primary" | "secondary" | "red";
   isLoading?: boolean;
@@ -26,19 +42,56 @@ export default function Button({
   const buttonClasses = `${baseClasses} ${variantClasses[variant]} ${className}`;
 
   return (
-    <button
+    <motion.button
       className={buttonClasses}
       disabled={disabled || isLoading}
+      whileHover={
+        disabled || isLoading
+          ? {}
+          : {
+              scale: 1.02,
+              y: -1,
+              transition: { type: "spring", stiffness: 400, damping: 25 },
+            }
+      }
+      whileTap={
+        disabled || isLoading
+          ? {}
+          : {
+              scale: 0.98,
+              y: 0,
+              transition: { type: "spring", stiffness: 400, damping: 25 },
+            }
+      }
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
       {...props}
     >
       {isLoading ? (
-        <div className="flex items-center justify-center">
-          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+        <motion.div
+          className="flex items-center justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2 }}
+        >
+          <motion.div
+            className="w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          />
           Loading...
-        </div>
+        </motion.div>
       ) : (
-        children
+        <motion.p
+          className="flex items-center justify-center gap-1"
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, delay: 0.1 }}
+        >
+          {children}
+        </motion.p>
       )}
-    </button>
+    </motion.button>
   );
 }

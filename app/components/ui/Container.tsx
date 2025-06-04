@@ -11,10 +11,38 @@ export default function Container({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border border-[#ECECED] bg-white rounded-3xl p-6">
-      <p className="font-semibold text-base text-[#100C20]">{title}</p>
-      <p className="font-normal text-sm text-[#8C8A94]">{description}</p>
-      <div className="my-4 overflow-hidden">
+    <motion.div
+      className="border border-[#ECECED] bg-white rounded-3xl p-6"
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      whileHover={{
+        scale: 1.01,
+        transition: { duration: 0.2 },
+      }}
+    >
+      <motion.p
+        className="font-semibold text-base text-[#100C20]"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+      >
+        {title}
+      </motion.p>
+      <motion.p
+        className="font-normal text-sm text-[#8C8A94]"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.2 }}
+      >
+        {description}
+      </motion.p>
+      <motion.div
+        className="my-4 overflow-hidden"
+        initial={{ opacity: 0, scaleX: 0 }}
+        animate={{ opacity: 1, scaleX: 1 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="304"
@@ -27,8 +55,14 @@ export default function Container({
             stroke="#E2E2E4"
           />
         </svg>
-      </div>
-      {children}
-    </div>
+      </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.4 }}
+      >
+        {children}
+      </motion.div>
+    </motion.div>
   );
 }

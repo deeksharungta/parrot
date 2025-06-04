@@ -1,12 +1,19 @@
+"use client";
+
 import React from "react";
 import Button from "../ui/Button";
 import Image from "next/image";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { useGetTwitterAccount } from "@/hooks/useGetTwitterAccount";
 import Link from "next/link";
+import { motion } from "framer-motion";
 
 const SkeletonLoader = ({ width = "w-16" }: { width?: string }) => (
-  <div className={`h-4 ${width} bg-gray-200 rounded animate-pulse`} />
+  <motion.div
+    className={`h-4 ${width} bg-gray-200 rounded`}
+    animate={{ opacity: [0.4, 0.8, 0.4] }}
+    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+  />
 );
 
 export default function UserProfiles() {
@@ -16,9 +23,23 @@ export default function UserProfiles() {
   );
 
   return (
-    <div className="flex flex-col items-center justify-center w-full px-6 py-8 bg-white border-t border-[#ECECED] absolute bottom-0 left-0 right-0">
-      <div className="flex justify-between items-center w-full mb-2.5">
-        <div className="flex items-center gap-1">
+    <motion.div
+      className="flex flex-col items-center justify-center w-full px-6 py-8 bg-white border-t border-[#ECECED] absolute bottom-0 left-0 right-0"
+      initial={{ y: 100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.6, delay: 0.8, ease: "easeOut" }}
+    >
+      <motion.div
+        className="flex justify-between items-center w-full mb-2.5"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 1.0 }}
+      >
+        <motion.div
+          className="flex items-center gap-1"
+          whileHover={{ scale: 1.05 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
           <Image
             src="/farcaster.png"
             alt="farcaster"
@@ -29,8 +50,12 @@ export default function UserProfiles() {
           <p className="text-sm font-normal text-[#8C8A94]">
             @{context?.user?.username}
           </p>
-        </div>
-        <div className="flex items-center gap-1">
+        </motion.div>
+        <motion.div
+          className="flex items-center gap-1"
+          whileHover={{ scale: 1.05 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
           <Image
             src="/twitter.png"
             alt="twitter"
@@ -41,19 +66,38 @@ export default function UserProfiles() {
           {isLoading ? (
             <SkeletonLoader width="w-20" />
           ) : isError ? (
-            <p className="text-sm font-normal text-red-500">Error loading</p>
+            <motion.p
+              className="text-sm font-normal text-red-500"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              Error loading
+            </motion.p>
           ) : (
-            <p className="text-sm font-normal text-[#8C8A94]">
+            <motion.p
+              className="text-sm font-normal text-[#8C8A94]"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
+            >
               @{twitterAccount?.username}
-            </p>
+            </motion.p>
           )}
-        </div>
-      </div>
-      <Link href="/cast" className="w-full">
-        <Button disabled={isLoading}>
-          {isLoading ? "Loading..." : "Continue fetching tweets"}
-        </Button>
-      </Link>
-    </div>
+        </motion.div>
+      </motion.div>
+      <motion.div
+        className="w-full"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 1.2 }}
+      >
+        <Link href="/cast" className="w-full">
+          <Button disabled={isLoading}>
+            {isLoading ? "Loading..." : "Continue fetching tweets"}
+          </Button>
+        </Link>
+      </motion.div>
+    </motion.div>
   );
 }

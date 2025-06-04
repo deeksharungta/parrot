@@ -6,6 +6,7 @@ import DisconnectNeynar from "../components/settings/DisconnectNeynar";
 import Notifications from "../components/settings/Notifications";
 import Navbar from "../components/ui/Navbar";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
+import { motion } from "framer-motion";
 
 export default function SettingsPage() {
   const { isFrameReady, setFrameReady } = useMiniKit();
@@ -16,15 +17,38 @@ export default function SettingsPage() {
     }
   }, [isFrameReady, setFrameReady]);
 
+  const settingsItems = [
+    { component: YoloMode, delay: 0.3 },
+    { component: DisconnectNeynar, delay: 0.4 },
+    { component: Notifications, delay: 0.5 },
+  ];
+
   return (
-    <div>
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+    >
       <Header title="Settings" />
-      <div className="flex flex-col gap-5 mt-4 h-[calc(100dvh-164px)] px-5 pb-5">
-        <YoloMode />
-        <DisconnectNeynar />
-        <Notifications />
-      </div>
+      <motion.div
+        className="flex flex-col gap-5 mt-4 h-[calc(100dvh-170px)] px-5 pb-5"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.2 }}
+      >
+        {settingsItems.map((item, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: item.delay }}
+          >
+            <item.component />
+          </motion.div>
+        ))}
+      </motion.div>
       <Navbar />
-    </div>
+    </motion.div>
   );
 }
