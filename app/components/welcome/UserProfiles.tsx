@@ -49,7 +49,7 @@ export default function UserProfiles() {
           )}
         </div>
       </div>
-      <Link href="/cast">
+      <Link href="/cast" className="w-full">
         <Button disabled={isLoading}>
           {isLoading ? "Loading..." : "Continue fetching tweets"}
         </Button>
