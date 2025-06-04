@@ -15,7 +15,7 @@ export default function UserProfiles() {
   );
 
   return (
-    <div className="flex flex-col items-center justify-center w-full px-6 py-8 bg-white border-t border-[#ECECED]">
+    <div className="flex flex-col items-center justify-center w-full px-6 py-8 bg-white border-t border-[#ECECED] absolute bottom-0 left-0 right-0">
       <div className="flex justify-between items-center w-full mb-2.5">
         <div className="flex items-center gap-1">
           <Image

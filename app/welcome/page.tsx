@@ -15,7 +15,7 @@ export default function WelcomePage() {
   }, [isFrameReady, setFrameReady]);
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen overflow-hidden">
+    <div className="flex flex-col items-center justify-start h-screen overflow-hidden relative">
       <WelcomeCard />
       <UserProfiles />
     </div>
