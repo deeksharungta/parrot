@@ -29,7 +29,7 @@ export default function WelcomeCard() {
 
 const Features = () => {
   return (
-    <div className="flex flex-col items-center justify-center w-full gap-5 px-7">
+    <div className="flex flex-col items-center justify-center w-full gap-5 px-6">
       <SkeletonEffect isLeft={false} />
       <SkeletonEffect isLeft={true} />
       {features.map((feature) => (
@@ -67,13 +67,13 @@ const FeatureItem = ({
           >
             <Image src={icon} alt={feature} width={40} height={40} />
           </div>
-          <div className="bg-[#F3F3F4] px-6 py-7 rounded-3xl text-lg font-normal text-[#494656] whitespace-nowrap flex-1 flex items-center justify-center">
+          <div className="bg-[#F3F3F4] py-7 rounded-3xl text-lg font-normal text-[#494656] whitespace-nowrap flex-1 flex items-center justify-center">
             <p>{feature}</p>
           </div>
         </>
       ) : (
         <>
-          <div className="bg-[#F3F3F4] px-6 py-7 rounded-3xl text-lg font-normal text-[#494656] whitespace-nowrap flex-1 flex items-center justify-center">
+          <div className="bg-[#F3F3F4] py-7 rounded-3xl text-lg font-normal text-[#494656] whitespace-nowrap flex-1 flex items-center justify-center">
             <p>{feature}</p>
           </div>
           <div
