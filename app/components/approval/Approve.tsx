@@ -4,10 +4,26 @@ import React, { useState } from "react";
 import Container from "../ui/Container";
 import Button from "../ui/Button";
 import Dollar from "../icons/Dollar";
+import { useUSDCApproval } from "@/hooks/useUSDCApproval";
 
 export default function Approve() {
   const [spendingLimit, setSpendingLimit] = useState(10);
   const presetLimits = [5, 10, 25, 50, 100, 500];
+
+  const {
+    isApproving,
+    isRevoking,
+    error,
+    isConnected,
+    currentAllowanceFormatted,
+    hasAllowance,
+    handleApprove,
+    handleRevoke,
+  } = useUSDCApproval();
+
+  const onApprove = () => {
+    handleApprove(spendingLimit);
+  };
 
   return (
     <Container
@@ -35,12 +51,47 @@ export default function Approve() {
           ))}
         </div>
       </div>
-      <Button className="flex items-center justify-center gap-1">
-        Topup {spendingLimit} <Dollar isActive />
-      </Button>
+
+      <div className="space-y-3">
+        <Button
+          className="flex items-center justify-center gap-1"
+          onClick={onApprove}
+          disabled={!isConnected || isApproving}
+        >
+          {isApproving ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              Approving...
+            </>
+          ) : (
+            <>
+              Approve {spendingLimit} <Dollar isActive />
+            </>
+          )}
+        </Button>
+
+        {hasAllowance && (
+          <Button
+            className="flex items-center justify-center gap-1"
+            onClick={handleRevoke}
+            disabled={!isConnected || isRevoking}
+          >
+            {isRevoking ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Revoking...
+              </>
+            ) : (
+              "Revoke Allowance"
+            )}
+          </Button>
+        )}
+      </div>
+
       <p className="text-[#8C8A94] text-xs font-normal text-center px-5 mt-1">
-        $10 covers nearly 100 casts — enough for 1 month if you cast 3 times a
-        day.
+        ${spendingLimit} covers nearly {Math.floor(spendingLimit * 10)} casts —
+        enough for 1 month if you cast {Math.floor(spendingLimit / 3)} time
+        {Math.floor(spendingLimit / 3) > 1 ? "s" : ""} a day.
       </p>
     </Container>
   );
