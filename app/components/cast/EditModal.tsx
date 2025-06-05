@@ -1,33 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTweet } from "react-tweet";
 import Cross from "../icons/Cross";
 import Trash from "../icons/Trash";
 import Button from "../ui/Button";
 import Image from "next/image";
 
-interface Tweet {
-  id: string;
-  content: string;
-  twitter_created_at: string | null;
-  twitter_url: string | null;
-  cast_status: "pending" | "approved" | "rejected" | "cast" | "failed";
-  is_edited: boolean;
-  media_urls?: string[] | null;
-  quoted_tweet_url?: string | null;
-  quoted_tweet?: {
-    id: string;
-    content: string;
-    user: {
-      name: string;
-      username: string;
-      profile_image_url: string;
-    };
-    created_at: string;
-  } | null;
-}
-
 interface EditModalProps {
-  tweet: Tweet;
+  tweetId: string;
   onSave: (
     content: string,
     mediaUrls: string[],
@@ -39,17 +19,43 @@ interface EditModalProps {
 }
 
 export function EditModal({
-  tweet,
+  tweetId,
   onSave,
   onClose,
   isLoading,
   isOpen,
 }: EditModalProps) {
-  const [content, setContent] = useState(tweet.content);
-  const [mediaUrls, setMediaUrls] = useState<string[]>(tweet.media_urls || []);
-  const [quotedTweetUrl, setQuotedTweetUrl] = useState<string | null>(
-    tweet.quoted_tweet_url || null,
-  );
+  const { data: tweetData } = useTweet(tweetId);
+  const [content, setContent] = useState("");
+  const [mediaUrls, setMediaUrls] = useState<string[]>([]);
+  const [quotedTweetUrl, setQuotedTweetUrl] = useState<string | null>(null);
+
+  // Cleanup tweet content function
+  const cleanupTweetContent = (content: string): string => {
+    let cleaned = content;
+    // Remove t.co URLs (with or without "this@" prefix) but preserve whitespace
+    cleaned = cleaned.replace(/this@https:\/\/t\.co\/\S*/g, "");
+    cleaned = cleaned.replace(/https:\/\/t\.co\/\S*/g, "");
+    // Only trim trailing whitespace at the very end, preserve internal formatting
+    cleaned = cleaned.replace(/\s+$/, "");
+    return cleaned;
+  };
+
+  // Update state when tweet data loads
+  useEffect(() => {
+    if (tweetData && isOpen) {
+      setContent(cleanupTweetContent(tweetData.text || ""));
+      setMediaUrls(
+        tweetData.mediaDetails?.map((media: any) => media.media_url_https) ||
+          [],
+      );
+      setQuotedTweetUrl(
+        tweetData.quoted_tweet
+          ? `https://twitter.com/${tweetData.quoted_tweet.user.screen_name}/status/${tweetData.quoted_tweet.id_str}`
+          : null,
+      );
+    }
+  }, [tweetData, isOpen]);
 
   const removeImage = (indexToRemove: number) => {
     setMediaUrls((prev) => prev.filter((_, index) => index !== indexToRemove));
@@ -62,6 +68,38 @@ export function EditModal({
   const handleSave = () => {
     onSave(content, mediaUrls, quotedTweetUrl);
   };
+
+  // Show loading state while tweet data is loading
+  if (!tweetData && isOpen) {
+    return (
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 bg-white/20 z-40 backdrop-blur-sm"
+          onClick={onClose}
+        />
+        <motion.div
+          initial={{ y: "100%" }}
+          animate={{ y: 0 }}
+          exit={{ y: "100%" }}
+          transition={{
+            type: "spring",
+            damping: 25,
+            stiffness: 300,
+            duration: 0.3,
+          }}
+          className="fixed bg-white border border-[#ECECED] z-50 max-h-[85vh] overflow-hidden bottom-2 left-2 right-2 rounded-[32px] p-6"
+        >
+          <div className="flex items-center justify-center h-32">
+            <div className="w-6 h-6 border-2 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
 
   return (
     <AnimatePresence>
@@ -144,7 +182,7 @@ export function EditModal({
                 </div>
               )}
 
-              {quotedTweetUrl && tweet.quoted_tweet && (
+              {quotedTweetUrl && tweetData?.quoted_tweet && (
                 <div className="mt-2">
                   <div className="relative group border border-[#ECECED] rounded-xl bg-white max-h-24 overflow-y-auto">
                     <div className="p-3">
@@ -156,8 +194,10 @@ export function EditModal({
                       </button>
                       <div className="flex items-start gap-2">
                         <Image
-                          src={tweet.quoted_tweet.user.profile_image_url}
-                          alt={tweet.quoted_tweet.user.name}
+                          src={
+                            tweetData.quoted_tweet.user.profile_image_url_https
+                          }
+                          alt={tweetData.quoted_tweet.user.name}
                           width={20}
                           height={20}
                           className="rounded-full flex-shrink-0"
@@ -165,20 +205,24 @@ export function EditModal({
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-col items-start gap-0.5 text-xs text-[#8C8A94]">
                             <span className="font-semibold text-[#100C20] truncate max-w-full text-sm">
-                              {tweet.quoted_tweet.user.name}
+                              {tweetData.quoted_tweet.user.name}
                             </span>
                             <div className="text-xs">
-                              <span>@{tweet.quoted_tweet.user.username}</span>
+                              <span>
+                                @{tweetData.quoted_tweet.user.screen_name}
+                              </span>
                               <span> · </span>
                               <span>
                                 {new Date(
-                                  tweet.quoted_tweet.created_at,
+                                  tweetData.quoted_tweet.created_at,
                                 ).toLocaleDateString()}
                               </span>
                             </div>
                           </div>
                           <p className="text-sm text-[#100C20] mt-1 leading-relaxed break-words">
-                            {tweet.quoted_tweet.content}
+                            {cleanupTweetContent(
+                              tweetData.quoted_tweet.text || "",
+                            )}
                           </p>
                         </div>
                       </div>

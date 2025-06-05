@@ -5,7 +5,6 @@ import Cross from "../icons/Cross";
 import Edit from "../icons/Edit";
 import ArrowRight from "../icons/ArrowRight";
 import { EditModal } from "./EditModal";
-import { useTweet } from "react-tweet";
 import NoTweetsFound from "./NoTweetsFound";
 import { sdk } from "@farcaster/frame-sdk";
 
@@ -36,8 +35,6 @@ export default function Tweets() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [isEditLoading, setIsEditLoading] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-
-  const { data: currentTweetData } = useTweet(dummyTweetIds[currentIndex]);
 
   const SWIPE_THRESHOLD = 100;
   const MAX_ROTATION = 15;
@@ -152,58 +149,6 @@ export default function Tweets() {
     handleEnd();
   };
 
-  // Add this cleanup function before creating mockTweetForEdit
-  const cleanupTweetContent = (content: string): string => {
-    console.log("Original content:", content); // Debug log
-
-    let cleaned = content;
-
-    // Remove t.co URLs (with or without "this@" prefix) but preserve whitespace
-    cleaned = cleaned.replace(/this@https:\/\/t\.co\/\S*/g, "");
-    cleaned = cleaned.replace(/https:\/\/t\.co\/\S*/g, "");
-
-    // Only trim trailing whitespace at the very end, preserve internal formatting
-    cleaned = cleaned.replace(/\s+$/, "");
-
-    console.log("Cleaned content:", cleaned); // Debug log
-
-    return cleaned;
-  };
-
-  // Create a mock tweet object for the EditModal (since we need to adapt the data structure)
-  const mockTweetForEdit = currentTweetData
-    ? {
-        id: currentTweetData.id_str,
-        content: cleanupTweetContent(currentTweetData.text || ""),
-        twitter_created_at: currentTweetData.created_at,
-        twitter_url: `https://twitter.com/${currentTweetData.user.screen_name}/status/${currentTweetData.id_str}`,
-        cast_status: "pending" as const,
-        is_edited: false,
-        media_urls:
-          currentTweetData.mediaDetails?.map(
-            (media) => media.media_url_https,
-          ) || [],
-        quoted_tweet_url: currentTweetData.quoted_tweet
-          ? `https://twitter.com/${currentTweetData.quoted_tweet.user.screen_name}/status/${currentTweetData.quoted_tweet.id_str}`
-          : null,
-        quoted_tweet: currentTweetData.quoted_tweet
-          ? {
-              id: currentTweetData.quoted_tweet.id_str,
-              content: cleanupTweetContent(
-                currentTweetData.quoted_tweet.text || "",
-              ),
-              user: {
-                name: currentTweetData.quoted_tweet.user.name,
-                username: currentTweetData.quoted_tweet.user.screen_name,
-                profile_image_url:
-                  currentTweetData.quoted_tweet.user.profile_image_url_https,
-              },
-              created_at: currentTweetData.quoted_tweet.created_at,
-            }
-          : null,
-      }
-    : null;
-
   // Edit modal handlers
   const handleEditSave = async (
     editedContent: string,
@@ -212,11 +157,8 @@ export default function Tweets() {
   ) => {
     setIsEditLoading(true);
     try {
-      // Content is already cleaned when passed to modal, but clean again for safety
-      const cleanedContent = cleanupTweetContent(editedContent);
-
       // Here you would typically save the edited content, media URLs, and quoted tweet URL
-      console.log("Saving edited content:", cleanedContent);
+      console.log("Saving edited content:", editedContent);
       console.log("Media URLs:", mediaUrls);
       console.log("Quoted tweet URL:", quotedTweetUrl);
 
@@ -341,15 +283,13 @@ export default function Tweets() {
       </p>
 
       {/* Edit Modal */}
-      {mockTweetForEdit && (
-        <EditModal
-          tweet={mockTweetForEdit}
-          onSave={handleEditSave}
-          onClose={handleEditClose}
-          isLoading={isEditLoading}
-          isOpen={showEditModal}
-        />
-      )}
+      <EditModal
+        tweetId={dummyTweetIds[currentIndex]}
+        onSave={handleEditSave}
+        onClose={handleEditClose}
+        isLoading={isEditLoading}
+        isOpen={showEditModal}
+      />
     </div>
   );
 }
