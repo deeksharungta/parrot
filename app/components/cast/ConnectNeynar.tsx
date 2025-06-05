@@ -67,7 +67,12 @@ export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
                 allows us to cast on your behalf without storing sensitive keys.
               </p>
             </div>
-            <Button className="mt-6">Connect with Neynar</Button>
+            <Button
+              className="mt-6"
+              onClick={() => window.open("/auth", "_blank")}
+            >
+              Connect with Neynar
+            </Button>
           </motion.div>
         </>
       )}
