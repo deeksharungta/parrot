@@ -172,7 +172,7 @@ CREATE INDEX idx_tweets_created_at ON tweets(created_at DESC);
 npm run dev
 ```
 
-Visit `http://localhost:3000` to see your app running locally.
+Visit `http://localhost:3000` to see your app running locally..
 
 ## 🏗️ Architecture
 
