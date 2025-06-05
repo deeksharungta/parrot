@@ -27,7 +27,7 @@ export default function YoloMode() {
       description="Automatically cast all new tweets without approval. You'll be charged 0.1 USDC per cast."
     >
       <Button
-        disabled={!userData?.user?.neynar_signer_uuid || updateUser.isPending}
+        disabled={updateUser.isPending}
         onClick={handleToggleYoloMode}
         variant={isYoloModeEnabled ? "secondary" : "primary"}
       >
