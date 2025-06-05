@@ -7,7 +7,7 @@ import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { useGetTwitterAccount } from "@/hooks/useGetTwitterAccount";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useCreateUser, useGetUser } from "@/hooks/useUsers";
+import { useCreateUser, useGetUser, UserInsert } from "@/hooks/useUsers";
 
 const SkeletonLoader = ({ width = "w-16" }: { width?: string }) => (
   <motion.div
@@ -37,11 +37,10 @@ export default function UserProfiles() {
       !createUserMutation.isPending &&
       twitterAccount?.username
     ) {
-      const userToCreate = {
+      const userToCreate: UserInsert = {
         farcaster_fid: context.user.fid,
-        username: context.user.username || null,
-        display_name: context.user.displayName || null,
-        avatar_url: context.user.pfpUrl || null,
+        farcaster_username: context.user.username || null,
+        farcaster_display_name: context.user.displayName || null,
         twitter_username: twitterAccount?.username || null,
       };
 

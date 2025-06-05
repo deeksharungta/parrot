@@ -2,9 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Database } from "@/lib/types/database";
 
 // Type definitions
-type User = Database["public"]["Tables"]["users"]["Row"];
-type UserInsert = Database["public"]["Tables"]["users"]["Insert"];
-type UserUpdate = Database["public"]["Tables"]["users"]["Update"];
+export type User = Database["public"]["Tables"]["users"]["Row"];
+export type UserInsert = Database["public"]["Tables"]["users"]["Insert"];
+export type UserUpdate = Database["public"]["Tables"]["users"]["Update"];
 
 // API Response types
 interface GetUserResponse {
