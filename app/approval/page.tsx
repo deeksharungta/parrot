@@ -10,6 +10,7 @@ import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { motion } from "framer-motion";
 import { useAccount } from "wagmi";
 import { useUSDCApproval } from "@/hooks/useUSDCApproval";
+import { Loader2 } from "lucide-react";
 
 export default function ApprovalPage() {
   const { isFrameReady, setFrameReady } = useMiniKit();
@@ -53,7 +54,11 @@ export default function ApprovalPage() {
               onClick={handleRevoke}
               disabled={isRevoking || !isConnected || !hasAllowance}
             >
-              {isRevoking ? "Revoking..." : "Revoke Allowance"}
+              {isRevoking ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                "Revoke Allowance"
+              )}
             </Button>
           </Container>
         </motion.div>

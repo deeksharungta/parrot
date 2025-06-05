@@ -5,18 +5,13 @@ import Container from "../ui/Container";
 import Button from "../ui/Button";
 import Dollar from "../icons/Dollar";
 import { useUSDCApproval } from "@/hooks/useUSDCApproval";
+import { Loader2 } from "lucide-react";
 
 export default function Approve() {
   const [spendingLimit, setSpendingLimit] = useState(10);
   const presetLimits = [5, 10, 25, 50, 100, 500];
 
-  const {
-    isApproving,
-
-    isConnected,
-
-    handleApprove,
-  } = useUSDCApproval();
+  const { isApproving, isConnected, handleApprove } = useUSDCApproval();
 
   const onApprove = () => {
     handleApprove(spendingLimit);
@@ -56,12 +51,11 @@ export default function Approve() {
       >
         {isApproving ? (
           <>
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            Approving...
+            <Loader2 className="animate-spin" />
           </>
         ) : (
           <>
-            Approve {spendingLimit} <Dollar isActive />
+            Topup {spendingLimit} <Dollar isActive />
           </>
         )}
       </Button>
