@@ -4,7 +4,6 @@ import React, { useEffect } from "react";
 import Header from "../components/ui/Header";
 import YoloMode from "../components/settings/YoloMode";
 import DisconnectNeynar from "../components/settings/DisconnectNeynar";
-import Notifications from "../components/settings/Notifications";
 import Navbar from "../components/ui/Navbar";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { motion } from "framer-motion";
@@ -21,7 +20,6 @@ export default function SettingsPage() {
   const settingsItems = [
     { component: YoloMode, delay: 0.3 },
     { component: DisconnectNeynar, delay: 0.4 },
-    { component: Notifications, delay: 0.5 },
   ];
 
   return (
