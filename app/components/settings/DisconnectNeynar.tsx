@@ -18,7 +18,14 @@ export default function DisconnectNeynar() {
     >
       <Button
         variant={user ? "secondary" : "primary"}
-        onClick={() => (user ? logoutUser() : window.open("/auth", "_blank"))}
+        onClick={() =>
+          user
+            ? logoutUser()
+            : window.open(
+                `https://app.neynar.com/login?client_id=${process.env.NEXT_PUBLIC_NEYNAR_CLIENT_ID}`,
+                "_blank",
+              )
+        }
       >
         {user ? "Disconnect Neynar" : "Connect Neynar"}
       </Button>
