@@ -4,6 +4,7 @@ import Container from "../ui/Container";
 import Button from "../ui/Button";
 import { useGetUser } from "@/hooks/useUsers";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
+import Link from "next/link";
 
 export default function DisconnectNeynar() {
   const { context } = useMiniKit();
@@ -44,14 +45,19 @@ export default function DisconnectNeynar() {
           : "to cast tweets, we need access to your Neynar signer"
       }
     >
-      <Button
-        variant={userData?.user?.neynar_signer_uuid ? "secondary" : "primary"}
-        onClick={handleOpenAuth}
+      <Link
+        href={`${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth`}
+        target="_blank"
       >
-        {userData?.user?.neynar_signer_uuid
-          ? "Disconnect Neynar"
-          : "Connect Neynar"}
-      </Button>
+        <Button
+          variant={userData?.user?.neynar_signer_uuid ? "secondary" : "primary"}
+          // onClick={handleOpenAuth}
+        >
+          {userData?.user?.neynar_signer_uuid
+            ? "Disconnect Neynar"
+            : "Connect Neynar"}
+        </Button>
+      </Link>
     </Container>
   );
 }
