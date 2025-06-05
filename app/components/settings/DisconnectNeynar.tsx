@@ -3,11 +3,12 @@
 import Container from "../ui/Container";
 import Button from "../ui/Button";
 import { useGetUser } from "@/hooks/useUsers";
-import { useMiniKit } from "@coinbase/onchainkit/minikit";
+import { useMiniKit, useOpenUrl } from "@coinbase/onchainkit/minikit";
 
 export default function DisconnectNeynar() {
   const { context } = useMiniKit();
   const { data: userData } = useGetUser(context?.user?.fid);
+  const openUrl = useOpenUrl();
 
   return (
     <Container
@@ -24,7 +25,7 @@ export default function DisconnectNeynar() {
     >
       <Button
         variant={userData?.user?.neynar_signer_uuid ? "secondary" : "primary"}
-        onClick={() => window.open("/auth", "_blank")}
+        onClick={() => openUrl("/auth")}
       >
         {userData?.user?.neynar_signer_uuid
           ? "Disconnect Neynar"
