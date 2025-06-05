@@ -38,26 +38,25 @@ export default function ApprovalPage() {
         >
           <Approve />
         </motion.div>
-        {isConnected && hasAllowance && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.4 }}
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.4 }}
+        >
+          <Container
+            title="Revoke USDC"
+            description="when you revoke, we stop all charges immediately."
           >
-            <Container
-              title="Revoke USDC"
-              description="when you revoke, we stop all charges immediately."
+            <Button
+              variant="red"
+              onClick={handleRevoke}
+              disabled={isRevoking || !isConnected || !hasAllowance}
             >
-              <Button
-                variant="red"
-                onClick={handleRevoke}
-                disabled={isRevoking}
-              >
-                {isRevoking ? "Revoking..." : "Revoke Allowance"}
-              </Button>
-            </Container>
-          </motion.div>
-        )}
+              {isRevoking ? "Revoking..." : "Revoke Allowance"}
+            </Button>
+          </Container>
+        </motion.div>
       </motion.div>
       <Navbar />
     </div>
