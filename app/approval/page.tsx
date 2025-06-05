@@ -8,9 +8,13 @@ import Button from "../components/ui/Button";
 import Approve from "../components/approval/Approve";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { motion } from "framer-motion";
+import { useAccount } from "wagmi";
+import { useUSDCApproval } from "@/hooks/useUSDCApproval";
 
 export default function ApprovalPage() {
   const { isFrameReady, setFrameReady } = useMiniKit();
+  const { isConnected } = useAccount();
+  const { hasAllowance, handleRevoke, isRevoking } = useUSDCApproval();
 
   useEffect(() => {
     if (!isFrameReady) {
@@ -34,18 +38,26 @@ export default function ApprovalPage() {
         >
           <Approve />
         </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.4 }}
-        >
-          <Container
-            title="Revoke USDC"
-            description="when you revoke, we stop all charges immediately."
+        {isConnected && hasAllowance && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.4 }}
           >
-            <Button variant="red">Revoke Allowance</Button>
-          </Container>
-        </motion.div>
+            <Container
+              title="Revoke USDC"
+              description="when you revoke, we stop all charges immediately."
+            >
+              <Button
+                variant="red"
+                onClick={handleRevoke}
+                disabled={isRevoking}
+              >
+                {isRevoking ? "Revoking..." : "Revoke Allowance"}
+              </Button>
+            </Container>
+          </motion.div>
+        )}
       </motion.div>
       <Navbar />
     </div>

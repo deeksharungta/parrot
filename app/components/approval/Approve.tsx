@@ -12,13 +12,10 @@ export default function Approve() {
 
   const {
     isApproving,
-    isRevoking,
-    error,
+
     isConnected,
-    currentAllowanceFormatted,
-    hasAllowance,
+
     handleApprove,
-    handleRevoke,
   } = useUSDCApproval();
 
   const onApprove = () => {
@@ -52,41 +49,22 @@ export default function Approve() {
         </div>
       </div>
 
-      <div className="space-y-3">
-        <Button
-          className="flex items-center justify-center gap-1"
-          onClick={onApprove}
-          disabled={!isConnected || isApproving}
-        >
-          {isApproving ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              Approving...
-            </>
-          ) : (
-            <>
-              Approve {spendingLimit} <Dollar isActive />
-            </>
-          )}
-        </Button>
-
-        {hasAllowance && (
-          <Button
-            className="flex items-center justify-center gap-1"
-            onClick={handleRevoke}
-            disabled={!isConnected || isRevoking}
-          >
-            {isRevoking ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Revoking...
-              </>
-            ) : (
-              "Revoke Allowance"
-            )}
-          </Button>
+      <Button
+        className="flex items-center justify-center gap-1"
+        onClick={onApprove}
+        disabled={!isConnected || isApproving}
+      >
+        {isApproving ? (
+          <>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            Approving...
+          </>
+        ) : (
+          <>
+            Approve {spendingLimit} <Dollar isActive />
+          </>
         )}
-      </div>
+      </Button>
 
       <p className="text-[#8C8A94] text-xs font-normal text-center px-5 mt-1">
         ${spendingLimit} covers nearly {Math.floor(spendingLimit * 10)} casts —

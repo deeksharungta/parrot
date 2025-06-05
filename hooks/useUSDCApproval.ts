@@ -108,7 +108,8 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
   };
 
   const currentAllowanceFormatted = formatAllowance(currentAllowance);
-  const hasAllowance = currentAllowance && currentAllowance > BigInt(0);
+
+  const hasAllowance = currentAllowance ? currentAllowance > BigInt(0) : false;
 
   const clearError = () => setError("");
 
