@@ -7,23 +7,18 @@ import ArrowRight from "../icons/ArrowRight";
 import { EditModal } from "./EditModal";
 import NoTweetsFound from "./NoTweetsFound";
 import { sdk } from "@farcaster/frame-sdk";
+import { useGetUserTweets } from "@/hooks/useGetUserTweets";
 
-// Dummy tweet data
-const dummyTweetIds = [
-  "1929987407446978649",
-  "1928445938827219370",
-  "1928155639487906223",
-  "1928145819137421703",
-  "1928143197605085622",
-  "1927988876712255827",
-  "1927604837031538934",
-  "1927459285245820961",
-  "1927433206820753676",
-  "1927429740605985000",
-  "1926930088563536109",
-];
+interface TweetsProps {
+  fid: number;
+}
 
-export default function Tweets() {
+export default function Tweets({ fid }: TweetsProps) {
+  // Fetch user tweets using the hook
+  const { tweetIds, tweetsData, isLoading, error, isError } =
+    useGetUserTweets(fid);
+  const showTweetsId = tweetIds?.slice(0, 10);
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState<
     "left" | "right" | "up" | null
@@ -39,9 +34,54 @@ export default function Tweets() {
   const SWIPE_THRESHOLD = 100;
   const MAX_ROTATION = 15;
 
+  // Handle loading and error states
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full px-6">
+        <div className="text-center">
+          {/* Loading spinner */}
+          <div className="w-12 h-12 mx-auto mb-4">
+            <div className="w-12 h-12 border-4 border-gray-200 border-t-gray-600 rounded-full animate-spin"></div>
+          </div>
+          <p className="text-gray-500 text-sm">Loading tweets...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || !showTweetsId) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full px-6">
+        <div className="text-center">
+          <div className="mx-auto mb-6 w-16 h-16 rounded-full bg-red-50 flex items-center justify-center">
+            <svg
+              className="w-8 h-8 text-red-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+              />
+            </svg>
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            Unable to load tweets
+          </h3>
+          <p className="text-gray-500 text-sm mb-4">
+            {error?.message || "No tweets found for this user"}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const handleReject = async () => {
     await sdk.haptics.impactOccurred("medium");
-    console.log("Tweet rejected:", dummyTweetIds[currentIndex]);
+    console.log("Tweet rejected:", showTweetsId[currentIndex]);
     setSwipeDirection("left");
     setTimeout(() => {
       setIsAnimating(true);
@@ -54,14 +94,14 @@ export default function Tweets() {
   };
 
   const handleEdit = () => {
-    console.log("Edit tweet:", dummyTweetIds[currentIndex]);
+    console.log("Edit tweet:", showTweetsId[currentIndex]);
     setShowEditModal(true);
   };
 
   const handleApprove = async () => {
     await sdk.haptics.impactOccurred("medium");
     await sdk.haptics.notificationOccurred("success");
-    console.log("Tweet approved:", dummyTweetIds[currentIndex]);
+    console.log("Tweet approved:", showTweetsId[currentIndex]);
     setSwipeDirection("right");
     setTimeout(() => {
       setIsAnimating(true);
@@ -187,10 +227,10 @@ export default function Tweets() {
     setShowEditModal(false);
   };
 
-  const currentTweet = dummyTweetIds[currentIndex];
+  const currentTweet = showTweetsId[currentIndex];
 
   // Check if all tweets are finished
-  const allTweetsFinished = currentIndex >= dummyTweetIds.length;
+  const allTweetsFinished = currentIndex >= showTweetsId.length;
 
   // Calculate transform values for drag effect
   const rotationX =
@@ -224,9 +264,9 @@ export default function Tweets() {
         <div className="w-[calc(100%-6px)] h-full rounded-3xl bg-[#F8F8F8] border border-[#ECECED] absolute -top-2 left-1/2 -translate-x-1/2 z-0" />
 
         {(swipeDirection || isDragging) &&
-          currentIndex < dummyTweetIds.length - 1 && (
+          currentIndex < showTweetsId.length - 1 && (
             <div className="absolute inset-0 z-10">
-              <TweetCard tweetId={dummyTweetIds[currentIndex + 1]} />
+              <TweetCard tweetId={showTweetsId[currentIndex + 1]} />
             </div>
           )}
 
@@ -279,12 +319,11 @@ export default function Tweets() {
 
       <p className="text-center text-base font-medium text-[#B3B1B8] mt-3">
         <span className="text-[#8C8A94]">{currentIndex + 1}</span> of{" "}
-        <span className="text-[#8C8A94]">{dummyTweetIds.length}</span>
+        <span className="text-[#8C8A94]">{showTweetsId.length}</span>
       </p>
 
-      {/* Edit Modal */}
       <EditModal
-        tweetId={dummyTweetIds[currentIndex]}
+        tweetId={showTweetsId[currentIndex]}
         onSave={handleEditSave}
         onClose={handleEditClose}
         isLoading={isEditLoading}
