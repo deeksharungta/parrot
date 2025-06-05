@@ -114,6 +114,8 @@ export default function MyTweet({ tweet: t, components }: Props) {
           --tweet-font-color: #494656;
           --tweet-font-color-secondary: #8c8a94;
           --tweet-font-family: var(--font-outfit);
+          --tweet-bg-color-hover: white;
+          --tweet-quoted-bg-color-hover: white;
         }
 
         /* Override tweet container border radius */
