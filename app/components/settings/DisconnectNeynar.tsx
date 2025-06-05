@@ -2,25 +2,33 @@
 
 import Container from "../ui/Container";
 import Button from "../ui/Button";
-import { useNeynarContext } from "@neynar/react";
+import { useGetUser } from "@/hooks/useUsers";
+import { useMiniKit } from "@coinbase/onchainkit/minikit";
 
 export default function DisconnectNeynar() {
-  const { user, logoutUser } = useNeynarContext();
+  const { context } = useMiniKit();
+  const { data: userData } = useGetUser(context?.user?.fid);
 
   return (
     <Container
-      title={user ? "Disconnect Neynar" : "Connect Neynar"}
+      title={
+        userData?.user?.neynar_signer_uuid
+          ? "Disconnect Neynar"
+          : "Connect Neynar"
+      }
       description={
-        user
+        userData?.user?.neynar_signer_uuid
           ? "If you disconnect, we won't be able to cast tweets on your behalf."
           : "to cast tweets, we need access to your Neynar signer"
       }
     >
       <Button
-        variant={user ? "secondary" : "primary"}
+        variant={userData?.user?.neynar_signer_uuid ? "secondary" : "primary"}
         onClick={() => window.open("/auth", "_blank")}
       >
-        {user ? "Disconnect Neynar" : "Connect Neynar"}
+        {userData?.user?.neynar_signer_uuid
+          ? "Disconnect Neynar"
+          : "Connect Neynar"}
       </Button>
     </Container>
   );

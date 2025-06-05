@@ -1,12 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Button from "../ui/Button";
 import Image from "next/image";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { useGetTwitterAccount } from "@/hooks/useGetTwitterAccount";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useCreateUser, useGetUser } from "@/hooks/useUsers";
 
 const SkeletonLoader = ({ width = "w-16" }: { width?: string }) => (
   <motion.div
@@ -21,6 +22,39 @@ export default function UserProfiles() {
   const { twitterAccount, isLoading, isError } = useGetTwitterAccount(
     context?.user?.fid,
   );
+
+  const { data: userData, isLoading: isLoadingUser } = useGetUser(
+    context?.user?.fid,
+  );
+  const createUserMutation = useCreateUser();
+
+  // Create user in database when context is available and user doesn't exist
+  useEffect(() => {
+    if (
+      context?.user?.fid &&
+      userData &&
+      !userData.exists &&
+      !createUserMutation.isPending &&
+      twitterAccount?.username
+    ) {
+      const userToCreate = {
+        farcaster_fid: context.user.fid,
+        username: context.user.username || null,
+        display_name: context.user.displayName || null,
+        avatar_url: context.user.pfpUrl || null,
+        twitter_username: twitterAccount?.username || null,
+      };
+
+      createUserMutation.mutate(userToCreate, {
+        onSuccess: (response) => {
+          console.log("User created successfully:", response.user);
+        },
+        onError: (error) => {
+          console.error("Failed to create user:", error.message);
+        },
+      });
+    }
+  }, [context?.user, userData, createUserMutation]);
 
   return (
     <motion.div
