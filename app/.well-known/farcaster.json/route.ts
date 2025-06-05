@@ -30,7 +30,7 @@ export async function GET() {
       splashImageUrl: process.env.NEXT_PUBLIC_APP_SPLASH_IMAGE,
       splashBackgroundColor: process.env.NEXT_PUBLIC_SPLASH_BACKGROUND_COLOR,
       homeUrl: URL,
-      webhookUrl: `https://api.neynar.com/f/app/1b372209-9f79-47b7-b034-7b0532d672fe/event`,
+      webhookUrl: `${process.env.NEXT_PUBLIC_URL}/api/webhook`,
       primaryCategory: process.env.NEXT_PUBLIC_APP_PRIMARY_CATEGORY,
       tags: [],
       heroImageUrl: process.env.NEXT_PUBLIC_APP_HERO_IMAGE,
