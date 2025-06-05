@@ -4,32 +4,14 @@ import Container from "../ui/Container";
 import Button from "../ui/Button";
 import { useGetUser } from "@/hooks/useUsers";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
-import Link from "next/link";
+import { sdk } from "@farcaster/frame-sdk";
 
 export default function DisconnectNeynar() {
   const { context } = useMiniKit();
   const { data: userData } = useGetUser(context?.user?.fid);
 
-  const handleOpenAuth = () => {
-    const authUrl = `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth`;
-
-    // Detect iOS
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-    if (isIOS) {
-      // For iOS, try creating a temporary anchor element and clicking it
-      const tempLink = document.createElement("a");
-      tempLink.href = authUrl;
-      tempLink.target = "_blank";
-      tempLink.rel = "noopener noreferrer";
-      tempLink.style.display = "none";
-      document.body.appendChild(tempLink);
-      tempLink.click();
-      document.body.removeChild(tempLink);
-    } else {
-      // For other platforms, use window.open
-      window.open(authUrl, "_blank");
-    }
+  const handleOpenAuth = async () => {
+    await sdk.actions.openUrl(`https://xcast-miniapp.vercel.app/auth`);
   };
 
   return (
@@ -45,19 +27,14 @@ export default function DisconnectNeynar() {
           : "to cast tweets, we need access to your Neynar signer"
       }
     >
-      <Link
-        href={`${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth`}
-        target="_blank"
+      <Button
+        variant={userData?.user?.neynar_signer_uuid ? "secondary" : "primary"}
+        onClick={handleOpenAuth}
       >
-        <Button
-          variant={userData?.user?.neynar_signer_uuid ? "secondary" : "primary"}
-          // onClick={handleOpenAuth}
-        >
-          {userData?.user?.neynar_signer_uuid
-            ? "Disconnect Neynar"
-            : "Connect Neynar"}
-        </Button>
-      </Link>
+        {userData?.user?.neynar_signer_uuid
+          ? "Disconnect Neynar"
+          : "Connect Neynar"}
+      </Button>
     </Container>
   );
 }
