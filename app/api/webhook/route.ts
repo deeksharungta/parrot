@@ -63,6 +63,8 @@ export async function POST(request: Request) {
 
   const { header: encodedHeader, payload: encodedPayload } = requestJson;
 
+  console.log({ encodedPayload });
+
   const headerData = decode(encodedHeader);
   const event = decode(encodedPayload);
 
@@ -76,6 +78,8 @@ export async function POST(request: Request) {
       { status: 401 },
     );
   }
+
+  console.log({ event });
 
   switch (event.event) {
     case "frame_added":

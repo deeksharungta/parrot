@@ -46,6 +46,8 @@ export async function setUserNotificationDetails(
       updated_at: new Date().toISOString(),
     };
 
+    console.log({ updates });
+
     // If it's a frame_added event, also set has_frame to true
     if (eventType === "frame_added") {
       updates.has_frame = true;
