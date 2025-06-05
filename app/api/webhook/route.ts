@@ -59,78 +59,88 @@ function decode(encoded: string) {
 }
 
 export async function POST(request: Request) {
-  const requestJson = await request.json();
+  try {
+    console.log("Webhook received request");
+    const requestJson = await request.json();
+    console.log("Request JSON:", JSON.stringify(requestJson, null, 2));
 
-  const { header: encodedHeader, payload: encodedPayload } = requestJson;
+    const { header: encodedHeader, payload: encodedPayload } = requestJson;
 
-  console.log({ encodedPayload });
+    console.log({ encodedPayload });
 
-  const headerData = decode(encodedHeader);
-  const event = decode(encodedPayload);
+    const headerData = decode(encodedHeader);
+    const event = decode(encodedPayload);
 
-  const { fid, key } = headerData;
+    const { fid, key } = headerData;
 
-  const valid = await verifyFidOwnership(fid, key);
+    const valid = await verifyFidOwnership(fid, key);
 
-  if (!valid) {
-    return Response.json(
-      { success: false, error: "Invalid FID ownership" },
-      { status: 401 },
-    );
-  }
-
-  console.log({ event });
-
-  switch (event.event) {
-    case "frame_added":
-      console.log(
-        "frame_added",
-        "event.notificationDetails",
-        event.notificationDetails,
+    if (!valid) {
+      return Response.json(
+        { success: false, error: "Invalid FID ownership" },
+        { status: 401 },
       );
-      if (event.notificationDetails) {
+    }
+
+    console.log({ event });
+
+    switch (event.event) {
+      case "frame_added":
+        console.log(
+          "frame_added",
+          "event.notificationDetails",
+          event.notificationDetails,
+        );
+        if (event.notificationDetails) {
+          await setUserNotificationDetails(
+            fid,
+            event.notificationDetails,
+            "frame_added",
+          );
+          await sendFrameNotification({
+            fid,
+            title: `Welcome to ${appName}`,
+            body: `Thank you for adding ${appName}`,
+          });
+        } else {
+          await deleteUserNotificationDetails(fid, "frame_removed");
+        }
+
+        break;
+      case "frame_removed": {
+        console.log("frame_removed");
+        await deleteUserNotificationDetails(fid, "frame_removed");
+        break;
+      }
+      case "notifications_enabled": {
+        console.log("notifications_enabled", event.notificationDetails);
         await setUserNotificationDetails(
           fid,
           event.notificationDetails,
-          "frame_added",
+          "notifications_enabled",
         );
         await sendFrameNotification({
           fid,
           title: `Welcome to ${appName}`,
-          body: `Thank you for adding ${appName}`,
+          body: `Thank you for enabling notifications for ${appName}`,
         });
-      } else {
-        await deleteUserNotificationDetails(fid, "frame_removed");
+
+        break;
       }
+      case "notifications_disabled": {
+        console.log("notifications_disabled");
+        await deleteUserNotificationDetails(fid, "notifications_disabled");
 
-      break;
-    case "frame_removed": {
-      console.log("frame_removed");
-      await deleteUserNotificationDetails(fid, "frame_removed");
-      break;
+        break;
+      }
     }
-    case "notifications_enabled": {
-      console.log("notifications_enabled", event.notificationDetails);
-      await setUserNotificationDetails(
-        fid,
-        event.notificationDetails,
-        "notifications_enabled",
-      );
-      await sendFrameNotification({
-        fid,
-        title: `Welcome to ${appName}`,
-        body: `Thank you for enabling notifications for ${appName}`,
-      });
 
-      break;
-    }
-    case "notifications_disabled": {
-      console.log("notifications_disabled");
-      await deleteUserNotificationDetails(fid, "notifications_disabled");
-
-      break;
-    }
+    return Response.json({ success: true });
+  } catch (error) {
+    console.error("Webhook error:", error);
+    return Response.json(
+      { success: false, error: "Internal server error" },
+      { status: 500 },
+    );
   }
-
-  return Response.json({ success: true });
 }
