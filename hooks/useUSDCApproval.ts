@@ -56,16 +56,13 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
     try {
       // Convert spending limit to USDC amount (6 decimals)
       const amountBigInt = parseUnits(amount.toString(), 6);
-
+      console.log(amountBigInt);
       const hash = await writeContractAsync({
         address: USDC_ADDRESS,
         abi: erc20Abi,
         functionName: "approve",
         args: [SPENDER_ADDRESS, amountBigInt],
       });
-
-      // Wait for transaction confirmation
-      // Note: You might want to add transaction receipt waiting here if needed
 
       setIsApproving(false);
       refetchAllowance();
