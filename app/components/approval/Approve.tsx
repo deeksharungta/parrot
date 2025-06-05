@@ -50,12 +50,10 @@ export default function Approve() {
         disabled={!isConnected || isApproving}
       >
         {isApproving ? (
-          <>
-            <Loader2 className="animate-spin" />
-          </>
+          <Loader2 className="animate-spin" />
         ) : (
           <>
-            Topup {spendingLimit} <Dollar isActive />
+            Topup ${spendingLimit} <Dollar isActive />
           </>
         )}
       </Button>

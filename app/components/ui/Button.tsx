@@ -34,9 +34,11 @@ export default function Button({
     "rounded-full font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-0 focus:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed font-sans w-full py-4 disabled:opacity-50 disabled:cursor-not-allowed";
 
   const variantClasses = {
-    primary: "bg-black text-white shadow-[0px_-4px_0px_0px_#343434_inset]",
-    secondary: "bg-[#FFE0E0] text-[#DE2424] border border-[#F03D3D]",
-    red: "bg-[#F03D3D] text-white shadow-danger-top",
+    primary:
+      "bg-black text-white shadow-[0px_-4px_0px_0px_#343434_inset] disabled:bg-black/50 disabled:shadow-none",
+    secondary:
+      "bg-[#FFE0E0] text-[#DE2424] border border-[#F03D3D] disabled:bg-[#FFE0E0]/50",
+    red: "bg-[#F03D3D] text-white shadow-danger-top disabled:bg-[#F03D3D]/50 disabled:shadow-none",
   };
 
   const buttonClasses = `${baseClasses} ${variantClasses[variant]} ${className}`;
