@@ -32,7 +32,7 @@ export default function Tweets({ fid }: TweetsProps) {
     updateTweetStatus: updateTweetStatusHandler,
   } = useUserTweets(fid);
 
-  const showTweets = tweets?.slice(0, 10) || [];
+  const showTweets = tweets || [];
 
   // Fetch user data to check for signer_uuid and allowance
   const { data: userData } = useGetUser(fid);
