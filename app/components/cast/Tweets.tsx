@@ -7,10 +7,12 @@ import Edit from "../icons/Edit";
 import ArrowRight from "../icons/ArrowRight";
 import { EditModal } from "./EditModal";
 import { ConnectNeynar } from "./ConnectNeynar";
+import { ApproveSpending } from "./ApproveSpending";
 import NoTweetsFound from "./NoTweetsFound";
 import { sdk } from "@farcaster/frame-sdk";
 import { useGetUserTweets } from "@/hooks/useGetUserTweets";
 import { useGetUser } from "@/hooks/useUsers";
+import { useUSDCApproval } from "@/hooks/useUSDCApproval";
 
 interface TweetsProps {
   fid: number;
@@ -22,8 +24,9 @@ export default function Tweets({ fid }: TweetsProps) {
     useGetUserTweets(fid);
   const showTweetsId = tweetIds?.slice(0, 10);
 
-  // Fetch user data to check for signer_uuid
+  // Fetch user data to check for signer_uuid and allowance
   const { data: userData } = useGetUser(fid);
+  const { hasAllowance } = useUSDCApproval();
   const hasSignerUuid = userData?.user?.neynar_signer_uuid;
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -36,6 +39,7 @@ export default function Tweets({ fid }: TweetsProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showConnectNeynar, setShowConnectNeynar] = useState(false);
+  const [showApproveSpending, setShowApproveSpending] = useState(false);
   const [isEditLoading, setIsEditLoading] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -110,6 +114,12 @@ export default function Tweets({ fid }: TweetsProps) {
       return;
     }
 
+    // Check if user has allowance
+    if (!hasAllowance) {
+      setShowApproveSpending(true);
+      return;
+    }
+
     setShowEditModal(true);
   };
 
@@ -117,6 +127,12 @@ export default function Tweets({ fid }: TweetsProps) {
     // Check if user has signer_uuid before approving
     if (!hasSignerUuid) {
       setShowConnectNeynar(true);
+      return;
+    }
+
+    // Check if user has allowance
+    if (!hasAllowance) {
+      setShowApproveSpending(true);
       return;
     }
 
@@ -159,7 +175,7 @@ export default function Tweets({ fid }: TweetsProps) {
     if (absX > SWIPE_THRESHOLD && absX > absY) {
       // Horizontal swipe
       if (dragOffset.x > 0) {
-        // Swiped right - approve (check for signer_uuid)
+        // Swiped right - approve (check for signer_uuid and allowance)
         handleApprove();
       } else {
         // Swiped left - reject
@@ -252,14 +268,19 @@ export default function Tweets({ fid }: TweetsProps) {
     setShowConnectNeynar(false);
   };
 
+  const handleApproveSpendingClose = () => {
+    setShowApproveSpending(false);
+  };
+
   const currentTweet = showTweetsId[currentIndex];
 
   // Check if all tweets are finished
   const allTweetsFinished = currentIndex >= showTweetsId.length;
 
   // Calculate transform values for drag effect
-  // Prevent right swipe animation if no signer_uuid
-  const shouldPreventRightSwipe = !hasSignerUuid && dragOffset.x > 0;
+  // Prevent right swipe animation if no signer_uuid or no allowance
+  const shouldPreventRightSwipe =
+    (!hasSignerUuid || !hasAllowance) && dragOffset.x > 0;
   const effectiveDragX = shouldPreventRightSwipe ? 0 : dragOffset.x;
 
   const rotationX =
@@ -362,6 +383,11 @@ export default function Tweets({ fid }: TweetsProps) {
       <ConnectNeynar
         isOpen={showConnectNeynar}
         onClose={handleConnectNeynarClose}
+      />
+
+      <ApproveSpending
+        isOpen={showApproveSpending}
+        onClose={handleApproveSpendingClose}
       />
     </div>
   );
