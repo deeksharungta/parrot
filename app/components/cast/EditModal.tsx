@@ -64,8 +64,19 @@ export function EditModal({
           ? `https://twitter.com/${tweetData.quoted_tweet.user.screen_name}/status/${tweetData.quoted_tweet.id_str}`
           : null,
       );
+      setShowRetweet(true);
     }
   }, [tweetData, isOpen, isRetweet]);
+
+  // Reset all edits when modal is closed
+  useEffect(() => {
+    if (!isOpen) {
+      setContent("");
+      setMediaUrls([]);
+      setQuotedTweetUrl(null);
+      setShowRetweet(true);
+    }
+  }, [isOpen]);
 
   const removeImage = (indexToRemove: number) => {
     setMediaUrls((prev) => prev.filter((_, index) => index !== indexToRemove));
