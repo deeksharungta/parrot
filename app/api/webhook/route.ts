@@ -3,86 +3,53 @@ import {
   deleteUserNotificationDetails,
 } from "@/lib/notification-supabase";
 import { sendFrameNotification } from "@/lib/notification-client";
-import { http } from "viem";
-import { createPublicClient } from "viem";
-import { optimism } from "viem/chains";
-
-const appName = process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME;
-
-const KEY_REGISTRY_ADDRESS = "0x00000000Fc1237824fb747aBDE0FF18990E59b7e";
-
-const KEY_REGISTRY_ABI = [
-  {
-    inputs: [
-      { name: "fid", type: "uint256" },
-      { name: "key", type: "bytes" },
-    ],
-    name: "keyDataOf",
-    outputs: [
-      {
-        components: [
-          { name: "state", type: "uint8" },
-          { name: "keyType", type: "uint32" },
-        ],
-        name: "",
-        type: "tuple",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-] as const;
-
-async function verifyFidOwnership(fid: number, appKey: `0x${string}`) {
-  const client = createPublicClient({
-    chain: optimism,
-    transport: http(),
-  });
-
-  try {
-    const result = await client.readContract({
-      address: KEY_REGISTRY_ADDRESS,
-      abi: KEY_REGISTRY_ABI,
-      functionName: "keyDataOf",
-      args: [BigInt(fid), appKey],
-    });
-
-    return result.state === 1 && result.keyType === 1;
-  } catch (error) {
-    console.error("Key Registry verification failed:", error);
-    return false;
-  }
-}
-
-function decode(encoded: string) {
-  return JSON.parse(Buffer.from(encoded, "base64url").toString("utf-8"));
-}
+import {
+  ParseWebhookEvent,
+  parseWebhookEvent,
+  verifyAppKeyWithNeynar,
+} from "@farcaster/frame-node";
 
 export async function POST(request: Request) {
   try {
-    console.log("Webhook received request");
     const requestJson = await request.json();
-    console.log("Request JSON:", JSON.stringify(requestJson, null, 2));
+    console.log({ requestJson });
 
-    const { header: encodedHeader, payload: encodedPayload } = requestJson;
+    let data;
+    try {
+      data = await parseWebhookEvent(requestJson, verifyAppKeyWithNeynar);
+      console.log({ data });
+    } catch (e: unknown) {
+      const error = e as ParseWebhookEvent.ErrorType;
 
-    console.log({ encodedPayload });
-
-    const headerData = decode(encodedHeader);
-    const event = decode(encodedPayload);
-
-    const { fid, key } = headerData;
-
-    const valid = await verifyFidOwnership(fid, key);
-
-    if (!valid) {
-      return Response.json(
-        { success: false, error: "Invalid FID ownership" },
-        { status: 401 },
-      );
+      switch (error.name) {
+        case "VerifyJsonFarcasterSignature.InvalidDataError":
+        case "VerifyJsonFarcasterSignature.InvalidEventDataError":
+          // The request data is invalid
+          return Response.json(
+            { success: false, error: error.message },
+            { status: 400 },
+          );
+        case "VerifyJsonFarcasterSignature.InvalidAppKeyError":
+          // The app key is invalid
+          return Response.json(
+            { success: false, error: error.message },
+            { status: 401 },
+          );
+        case "VerifyJsonFarcasterSignature.VerifyAppKeyError":
+          // Internal error verifying the app key (caller may want to try again)
+          return Response.json(
+            { success: false, error: error.message },
+            { status: 500 },
+          );
+      }
     }
 
-    console.log({ event });
+    console.log({ data });
+
+    const fid = data.fid;
+    const event = data.event;
+
+    console.log({ fid, event });
 
     switch (event.event) {
       case "frame_added":
@@ -99,8 +66,8 @@ export async function POST(request: Request) {
           );
           await sendFrameNotification({
             fid,
-            title: `Welcome to ${appName}`,
-            body: `Thank you for adding ${appName}`,
+            title: `Welcome to XCast`,
+            body: `Thank you for adding XCast`,
           });
         } else {
           await deleteUserNotificationDetails(fid, "frame_removed");
@@ -121,8 +88,8 @@ export async function POST(request: Request) {
         );
         await sendFrameNotification({
           fid,
-          title: `Welcome to ${appName}`,
-          body: `Thank you for enabling notifications for ${appName}`,
+          title: `Welcome to XCast`,
+          body: `Thank you for enabling notifications for XCast`,
         });
 
         break;
