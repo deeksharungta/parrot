@@ -11,7 +11,8 @@ export default function Approve() {
   const [spendingLimit, setSpendingLimit] = useState(10);
   const presetLimits = [5, 10, 25, 50, 100, 500];
 
-  const { isApproving, isConnected, handleApprove } = useUSDCApproval();
+  const { isApproving, isConnected, handleApprove, currentAllowanceFormatted } =
+    useUSDCApproval();
 
   const onApprove = () => {
     handleApprove(spendingLimit);
@@ -25,7 +26,9 @@ export default function Approve() {
       <div className="text-left">
         <div className="flex justify-between items-center mb-4">
           <p className="text-base font-medium text-[#8C8A94]">spending limit</p>
-          <p className="text-[#100C20] text-2xl font-medium">{spendingLimit}</p>
+          <p className="text-[#100C20] text-2xl font-medium">
+            {currentAllowanceFormatted}
+          </p>
         </div>
         <div className="grid grid-cols-3 gap-3 mb-4">
           {presetLimits.map((limit) => (

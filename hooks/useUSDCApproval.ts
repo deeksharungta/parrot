@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useAccount, useWriteContract, useReadContract } from "wagmi";
 import { erc20Abi, parseUnits, formatUnits } from "viem";
 import { USDC_ADDRESS, SPENDER_ADDRESS } from "@/lib/constant";
+import { useUpdateUser } from "./useUsers";
+import { useMiniKit } from "@coinbase/onchainkit/minikit";
 
 export interface UseUSDCApprovalReturn {
   // State
@@ -28,6 +30,8 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
   const [isRevoking, setIsRevoking] = useState(false);
   const [error, setError] = useState<string>("");
   const { writeContractAsync } = useWriteContract();
+  const updateUser = useUpdateUser();
+  const { context } = useMiniKit();
 
   const { address, isConnected } = useAccount();
 
@@ -50,6 +54,11 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
       return;
     }
 
+    if (!context?.user?.fid) {
+      setError("User not found");
+      return;
+    }
+
     setError("");
     setIsApproving(true);
 
@@ -63,6 +72,20 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
         functionName: "approve",
         args: [SPENDER_ADDRESS, amountBigInt],
       });
+
+      // Save approval to Supabase users table
+      try {
+        await updateUser.mutateAsync({
+          farcaster_fid: context.user.fid,
+          spending_approved: true,
+          spending_limit: amount,
+          usdc_balance: amount, // Set initial balance to spending limit
+        });
+        console.log("Approval saved to database");
+      } catch (dbError) {
+        console.error("Failed to save approval to database:", dbError);
+        // Don't fail the entire operation if database save fails
+      }
 
       setIsApproving(false);
       refetchAllowance();
@@ -79,6 +102,11 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
       return;
     }
 
+    if (!context?.user?.fid) {
+      setError("User not found");
+      return;
+    }
+
     setError("");
     setIsRevoking(true);
 
@@ -90,8 +118,19 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
         args: [SPENDER_ADDRESS, BigInt(0)], // Set allowance to 0 to revoke
       });
 
-      // Wait for transaction confirmation
-      // Note: You might want to add transaction receipt waiting here if needed
+      // Save revocation to Supabase users table
+      try {
+        await updateUser.mutateAsync({
+          farcaster_fid: context.user.fid,
+          spending_approved: false,
+          spending_limit: 0,
+          usdc_balance: 0, // Reset balance when revoking
+        });
+        console.log("Revocation saved to database");
+      } catch (dbError) {
+        console.error("Failed to save revocation to database:", dbError);
+        // Don't fail the entire operation if database save fails
+      }
 
       setIsRevoking(false);
       refetchAllowance();
