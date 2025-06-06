@@ -46,7 +46,7 @@ export default function Tweets({ fid }: TweetsProps) {
 
   // Fetch user data to check for signer_uuid and allowance
   const { data: userData } = useGetUser(fid);
-  const { hasAllowance } = useUSDCApproval();
+  const { hasAllowance, currentAllowance } = useUSDCApproval();
   const hasSignerUuid = userData?.user?.neynar_signer_uuid;
 
   // Helper function to create retweet info from available data
@@ -182,8 +182,11 @@ export default function Tweets({ fid }: TweetsProps) {
       return;
     }
 
-    // Check if user has allowance
-    if (!hasAllowance) {
+    // Check if user has allowance (less than 0.1 USDC)
+    if (
+      !hasAllowance ||
+      (currentAllowance !== undefined && currentAllowance < BigInt(100000))
+    ) {
       setShowApproveSpending(true);
       return;
     }
