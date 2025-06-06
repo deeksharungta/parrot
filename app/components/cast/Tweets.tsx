@@ -202,7 +202,10 @@ export default function Tweets({ fid }: TweetsProps) {
     }
 
     // Check if user has allowance
-    if (!hasAllowance) {
+    if (
+      !hasAllowance ||
+      (currentAllowance !== undefined && currentAllowance < BigInt(100000))
+    ) {
       setShowApproveSpending(true);
       return;
     }
@@ -362,7 +365,10 @@ export default function Tweets({ fid }: TweetsProps) {
   // Calculate transform values for drag effect
   // Prevent right swipe animation if no signer_uuid or no allowance
   const shouldPreventRightSwipe =
-    (!hasSignerUuid || !hasAllowance) && dragOffset.x > 0;
+    (!hasSignerUuid ||
+      !hasAllowance ||
+      (currentAllowance !== undefined && currentAllowance < BigInt(100000))) &&
+    dragOffset.x > 0;
   const effectiveDragX = shouldPreventRightSwipe ? 0 : dragOffset.x;
 
   const rotationX =
