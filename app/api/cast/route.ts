@@ -8,6 +8,7 @@ import {
   parseUnits,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
+import { parseTweetToFarcasterCast } from "@/lib/cast-utils";
 import { base } from "viem/chains";
 import { USDC_ADDRESS, SPENDER_ADDRESS } from "@/lib/constant";
 
@@ -169,13 +170,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get the tweet content to cast
+    // Get the tweet data to cast
+    let tweetData = null;
     let tweetContent = content;
+
     if (!tweetContent) {
-      // Get tweet content from database
+      // Get tweet data from database
       const { data: tweet, error: tweetError } = await supabase
         .from("tweets")
-        .select("content")
+        .select("*")
         .eq("id", tweetId)
         .single();
 
@@ -183,7 +186,22 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Tweet not found" }, { status: 404 });
       }
 
+      tweetData = tweet;
       tweetContent = tweet.content;
+    }
+
+    // Parse tweet content to Farcaster format
+    let parsedCast: { content: string; embeds: string[] } = {
+      content: tweetContent,
+      embeds: [],
+    };
+    if (tweetData) {
+      try {
+        parsedCast = await parseTweetToFarcasterCast(tweetData);
+      } catch (parseError) {
+        console.error("Error parsing tweet to Farcaster format:", parseError);
+        // Continue with original content if parsing fails
+      }
     }
 
     // Process payment FIRST (0.1 USDC)
@@ -235,17 +253,23 @@ export async function POST(request: NextRequest) {
     }
 
     // Cast to Farcaster using Neynar API (AFTER payment is confirmed)
+    const castPayload: any = {
+      signer_uuid: signerUuid,
+      text: parsedCast.content,
+    };
+
+    // Add embeds if available (images, quoted tweets, etc.)
+    if (parsedCast.embeds && parsedCast.embeds.length > 0) {
+      castPayload.embeds = parsedCast.embeds.map((url) => ({ url }));
+    }
+
     const castResponse = await fetch(`${NEYNAR_BASE_URL}/farcaster/cast`, {
       method: "POST",
       headers: {
         "x-api-key": NEYNAR_API_KEY,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        signer_uuid: signerUuid,
-        text: tweetContent,
-        // Add any additional cast options here
-      }),
+      body: JSON.stringify(castPayload),
     });
 
     if (!castResponse.ok) {

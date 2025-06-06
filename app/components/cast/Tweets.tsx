@@ -13,6 +13,7 @@ import { sdk } from "@farcaster/frame-sdk";
 import { useUserTweets } from "@/hooks/useUserTweets";
 import { useGetUser } from "@/hooks/useUsers";
 import { useUSDCApproval } from "@/hooks/useUSDCApproval";
+import { useEditTweet, useCastTweet } from "@/hooks/useTweetEdit";
 
 interface RetweetInfo {
   retweetedBy: {
@@ -83,6 +84,10 @@ export default function Tweets({ fid }: TweetsProps) {
   const [showApproveSpending, setShowApproveSpending] = useState(false);
   const [isEditLoading, setIsEditLoading] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+
+  // New hooks for editing and casting
+  const editTweetMutation = useEditTweet();
+  const castTweetMutation = useCastTweet();
 
   const SWIPE_THRESHOLD = 100;
   const MAX_ROTATION = 15;
@@ -211,28 +216,42 @@ export default function Tweets({ fid }: TweetsProps) {
     }
 
     await sdk.haptics.impactOccurred("medium");
-    await sdk.haptics.notificationOccurred("success");
     const currentTweet = showTweets[currentIndex];
-    console.log("Tweet approved:", currentTweet?.tweet_id);
+    console.log("Tweet approved, starting cast flow:", currentTweet?.tweet_id);
 
-    // Update tweet status in database
-    if (currentTweet?.tweet_id) {
+    // Start the cast flow
+    if (currentTweet?.tweet_id && userData?.user?.neynar_signer_uuid) {
       try {
-        await updateTweetStatusHandler(currentTweet.tweet_id, "approved");
+        setIsEditLoading(true);
+
+        // Cast the tweet to Farcaster
+        await castTweetMutation.mutateAsync({
+          tweetId: currentTweet.tweet_id,
+          fid: fid,
+          signerUuid: userData.user.neynar_signer_uuid,
+          content: currentTweet.content || "",
+        });
+
+        await sdk.haptics.notificationOccurred("success");
+        console.log("Tweet cast successfully");
+
+        // Move to next tweet
+        setSwipeDirection("right");
+        setTimeout(() => {
+          setIsAnimating(true);
+          setTimeout(() => {
+            setCurrentIndex(currentIndex + 1);
+            setSwipeDirection(null);
+            setIsAnimating(false);
+          }, 50);
+        }, 100);
       } catch (error) {
-        console.error("Error updating tweet status:", error);
+        console.error("Error casting tweet:", error);
+        await sdk.haptics.notificationOccurred("error");
+      } finally {
+        setIsEditLoading(false);
       }
     }
-
-    setSwipeDirection("right");
-    setTimeout(() => {
-      setIsAnimating(true);
-      setTimeout(() => {
-        setCurrentIndex(currentIndex + 1);
-        setSwipeDirection(null);
-        setIsAnimating(false);
-      }, 50);
-    }, 100);
   };
 
   const handleStart = (clientX: number, clientY: number) => {
@@ -318,16 +337,41 @@ export default function Tweets({ fid }: TweetsProps) {
     quotedTweetUrl: string | null,
   ) => {
     setIsEditLoading(true);
+    const currentTweet = showTweets[currentIndex];
+
     try {
-      // Here you would typically save the edited content, media URLs, and quoted tweet URL
+      console.log("Starting edit + cast flow");
       console.log("Saving edited content:", editedContent);
       console.log("Media URLs:", mediaUrls);
       console.log("Quoted tweet URL:", quotedTweetUrl);
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      if (!currentTweet?.tweet_id) {
+        throw new Error("No tweet ID available");
+      }
 
-      // Close modal and proceed to next tweet after editing
+      // Step 1: Save edited content to database
+      await editTweetMutation.mutateAsync({
+        tweetId: currentTweet.tweet_id,
+        content: editedContent,
+      });
+
+      console.log("Edited content saved successfully");
+
+      // Step 2: Cast the edited tweet to Farcaster
+      if (userData?.user?.neynar_signer_uuid) {
+        await castTweetMutation.mutateAsync({
+          tweetId: currentTweet.tweet_id,
+          fid: fid,
+          signerUuid: userData.user.neynar_signer_uuid,
+          content: editedContent,
+        });
+
+        console.log("Edited tweet cast successfully");
+      } else {
+        throw new Error("Signer UUID not available");
+      }
+
+      // Close modal and proceed to next tweet after successful edit + cast
       setShowEditModal(false);
       setSwipeDirection("right");
       setTimeout(() => {
@@ -339,7 +383,8 @@ export default function Tweets({ fid }: TweetsProps) {
         }, 50);
       }, 100);
     } catch (error) {
-      console.error("Error saving edited tweet:", error);
+      console.error("Error in edit + cast flow:", error);
+      // Keep modal open on error so user can retry
     } finally {
       setIsEditLoading(false);
     }
@@ -452,15 +497,25 @@ export default function Tweets({ fid }: TweetsProps) {
         </button>
         <button
           onClick={handleEdit}
-          className="rounded-full bg-[#F8F8F8] p-4 flex items-center justify-center hover:bg-[#ECECED] transition-colors"
+          disabled={isEditLoading || editTweetMutation.isPending}
+          className="rounded-full bg-[#F8F8F8] p-4 flex items-center justify-center hover:bg-[#ECECED] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Edit />
+          {isEditLoading || editTweetMutation.isPending ? (
+            <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+          ) : (
+            <Edit />
+          )}
         </button>
         <button
           onClick={handleApprove}
-          className="rounded-full bg-[#F8F8F8] p-4 flex items-center justify-center hover:bg-[#ECECED] transition-colors"
+          disabled={isEditLoading || castTweetMutation.isPending}
+          className="rounded-full bg-[#F8F8F8] p-4 flex items-center justify-center hover:bg-[#ECECED] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <ArrowRight />
+          {isEditLoading || castTweetMutation.isPending ? (
+            <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+          ) : (
+            <ArrowRight />
+          )}
         </button>
       </div>
 
