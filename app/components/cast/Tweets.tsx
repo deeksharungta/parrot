@@ -10,7 +10,7 @@ import { ConnectNeynar } from "./ConnectNeynar";
 import { ApproveSpending } from "./ApproveSpending";
 import NoTweetsFound from "./NoTweetsFound";
 import { sdk } from "@farcaster/frame-sdk";
-import { useGetUserTweets } from "@/hooks/useGetUserTweets";
+import { useUserTweets } from "@/hooks/useUserTweets";
 import { useGetUser } from "@/hooks/useUsers";
 import { useUSDCApproval } from "@/hooks/useUSDCApproval";
 
@@ -19,10 +19,20 @@ interface TweetsProps {
 }
 
 export default function Tweets({ fid }: TweetsProps) {
-  // Fetch user tweets using the hook
-  const { tweetIds, tweetsData, isLoading, error, isError } =
-    useGetUserTweets(fid);
-  const showTweetsId = tweetIds?.slice(0, 10);
+  // Fetch user tweets using the new caching hook
+  const {
+    tweets,
+    tweetsData,
+    isLoading,
+    isLoadingFresh,
+    error,
+    isError,
+    hasNewTweets,
+    refreshTweets,
+    updateTweetStatus: updateTweetStatusHandler,
+  } = useUserTweets(fid);
+
+  const showTweets = tweets?.slice(0, 10) || [];
 
   // Fetch user data to check for signer_uuid and allowance
   const { data: userData } = useGetUser(fid);
@@ -46,8 +56,11 @@ export default function Tweets({ fid }: TweetsProps) {
   const SWIPE_THRESHOLD = 100;
   const MAX_ROTATION = 15;
 
+  // Determine if this is a first-time user
+  const isFirstTimeUser = showTweets.length === 0 && !isLoading && !isError;
+
   // Handle loading and error states
-  if (isLoading) {
+  if (isLoading || (isFirstTimeUser && isLoadingFresh)) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-6">
         <div className="text-center">
@@ -61,7 +74,8 @@ export default function Tweets({ fid }: TweetsProps) {
     );
   }
 
-  if (isError || !showTweetsId) {
+  // Show error only when there's an actual error, not when no tweets are found
+  if (isError) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-6">
         <div className="text-center">
@@ -84,16 +98,38 @@ export default function Tweets({ fid }: TweetsProps) {
             Unable to load tweets
           </h3>
           <p className="text-gray-500 text-sm mb-4">
-            {error?.message || "No tweets found for this user"}
+            {error?.message || "Something went wrong while loading tweets"}
           </p>
+          <button
+            onClick={refreshTweets}
+            className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-medium hover:bg-blue-600 transition-colors"
+          >
+            Tap to refresh
+          </button>
         </div>
       </div>
     );
   }
 
+  // Show NoTweetsFound when no tweets are available (but no error occurred)
+  if (!isLoading && !isLoadingFresh && showTweets.length === 0) {
+    return <NoTweetsFound />;
+  }
+
   const handleReject = async () => {
     await sdk.haptics.impactOccurred("medium");
-    console.log("Tweet rejected:", showTweetsId[currentIndex]);
+    const currentTweet = showTweets[currentIndex];
+    console.log("Tweet rejected:", currentTweet?.tweet_id);
+
+    // Update tweet status in database
+    if (currentTweet?.tweet_id) {
+      try {
+        await updateTweetStatusHandler(currentTweet.tweet_id, "rejected");
+      } catch (error) {
+        console.error("Error updating tweet status:", error);
+      }
+    }
+
     setSwipeDirection("left");
     setTimeout(() => {
       setIsAnimating(true);
@@ -106,7 +142,8 @@ export default function Tweets({ fid }: TweetsProps) {
   };
 
   const handleEdit = () => {
-    console.log("Edit tweet:", showTweetsId[currentIndex]);
+    const currentTweet = showTweets[currentIndex];
+    console.log("Edit tweet:", currentTweet?.tweet_id);
 
     // Check if user has signer_uuid before opening edit modal
     if (!hasSignerUuid) {
@@ -138,7 +175,18 @@ export default function Tweets({ fid }: TweetsProps) {
 
     await sdk.haptics.impactOccurred("medium");
     await sdk.haptics.notificationOccurred("success");
-    console.log("Tweet approved:", showTweetsId[currentIndex]);
+    const currentTweet = showTweets[currentIndex];
+    console.log("Tweet approved:", currentTweet?.tweet_id);
+
+    // Update tweet status in database
+    if (currentTweet?.tweet_id) {
+      try {
+        await updateTweetStatusHandler(currentTweet.tweet_id, "approved");
+      } catch (error) {
+        console.error("Error updating tweet status:", error);
+      }
+    }
+
     setSwipeDirection("right");
     setTimeout(() => {
       setIsAnimating(true);
@@ -272,10 +320,10 @@ export default function Tweets({ fid }: TweetsProps) {
     setShowApproveSpending(false);
   };
 
-  const currentTweet = showTweetsId[currentIndex];
+  const currentTweet = showTweets[currentIndex];
 
   // Check if all tweets are finished
-  const allTweetsFinished = currentIndex >= showTweetsId.length;
+  const allTweetsFinished = currentIndex >= showTweets.length;
 
   // Calculate transform values for drag effect
   // Prevent right swipe animation if no signer_uuid or no allowance
@@ -314,9 +362,11 @@ export default function Tweets({ fid }: TweetsProps) {
         <div className="w-[calc(100%-6px)] h-full rounded-3xl bg-[#F8F8F8] border border-[#ECECED] absolute -top-2 left-1/2 -translate-x-1/2 z-0" />
 
         {(swipeDirection || isDragging) &&
-          currentIndex < showTweetsId.length - 1 && (
+          currentIndex < showTweets.length - 1 && (
             <div className="absolute inset-0 z-10">
-              <TweetCard tweetId={showTweetsId[currentIndex + 1]} />
+              <TweetCard
+                tweetId={showTweets[currentIndex + 1]?.tweet_id || ""}
+              />
             </div>
           )}
 
@@ -341,7 +391,7 @@ export default function Tweets({ fid }: TweetsProps) {
               transition: isDragging ? "none" : "all 150ms ease-out",
             }}
           >
-            <TweetCard tweetId={currentTweet} />
+            <TweetCard tweetId={currentTweet?.tweet_id || ""} />
           </div>
         )}
       </div>
@@ -369,11 +419,22 @@ export default function Tweets({ fid }: TweetsProps) {
 
       <p className="text-center text-base font-medium text-[#B3B1B8] mt-3">
         <span className="text-[#8C8A94]">{currentIndex + 1}</span> of{" "}
-        <span className="text-[#8C8A94]">{showTweetsId.length}</span>
+        <span className="text-[#8C8A94]">{showTweets.length}</span>
       </p>
 
+      {hasNewTweets && (
+        <div className="text-center mt-2">
+          <button
+            onClick={refreshTweets}
+            className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-medium hover:bg-blue-600 transition-colors"
+          >
+            New tweets available - Tap to refresh
+          </button>
+        </div>
+      )}
+
       <EditModal
-        tweetId={showTweetsId[currentIndex]}
+        tweetId={currentTweet?.tweet_id || ""}
         onSave={handleEditSave}
         onClose={handleEditClose}
         isLoading={isEditLoading}
