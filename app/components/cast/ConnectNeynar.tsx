@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import Cross from "../icons/Cross";
 import Button from "../ui/Button";
+import { sdk } from "@farcaster/frame-sdk";
 
 interface ConnectNeynarProps {
   onClose: () => void;
@@ -8,6 +9,10 @@ interface ConnectNeynarProps {
 }
 
 export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
+  const handleOpenAuth = async () => {
+    await sdk.actions.openUrl(`https://xcast-miniapp.vercel.app/auth`);
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -67,10 +72,7 @@ export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
                 allows us to cast on your behalf without storing sensitive keys.
               </p>
             </div>
-            <Button
-              className="mt-6"
-              onClick={() => window.open("/auth", "_blank")}
-            >
+            <Button className="mt-6" onClick={handleOpenAuth}>
               Connect with Neynar
             </Button>
           </motion.div>
