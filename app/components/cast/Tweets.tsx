@@ -1,13 +1,16 @@
 "use client";
+
 import React, { useState, useRef } from "react";
 import TweetCard from "./TweetCard";
 import Cross from "../icons/Cross";
 import Edit from "../icons/Edit";
 import ArrowRight from "../icons/ArrowRight";
 import { EditModal } from "./EditModal";
+import { ConnectNeynar } from "./ConnectNeynar";
 import NoTweetsFound from "./NoTweetsFound";
 import { sdk } from "@farcaster/frame-sdk";
 import { useGetUserTweets } from "@/hooks/useGetUserTweets";
+import { useGetUser } from "@/hooks/useUsers";
 
 interface TweetsProps {
   fid: number;
@@ -19,6 +22,10 @@ export default function Tweets({ fid }: TweetsProps) {
     useGetUserTweets(fid);
   const showTweetsId = tweetIds?.slice(0, 10);
 
+  // Fetch user data to check for signer_uuid
+  const { data: userData } = useGetUser(fid);
+  const hasSignerUuid = userData?.user?.neynar_signer_uuid;
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState<
     "left" | "right" | "up" | null
@@ -28,6 +35,7 @@ export default function Tweets({ fid }: TweetsProps) {
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [isAnimating, setIsAnimating] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showConnectNeynar, setShowConnectNeynar] = useState(false);
   const [isEditLoading, setIsEditLoading] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -95,10 +103,23 @@ export default function Tweets({ fid }: TweetsProps) {
 
   const handleEdit = () => {
     console.log("Edit tweet:", showTweetsId[currentIndex]);
+
+    // Check if user has signer_uuid before opening edit modal
+    if (!hasSignerUuid) {
+      setShowConnectNeynar(true);
+      return;
+    }
+
     setShowEditModal(true);
   };
 
   const handleApprove = async () => {
+    // Check if user has signer_uuid before approving
+    if (!hasSignerUuid) {
+      setShowConnectNeynar(true);
+      return;
+    }
+
     await sdk.haptics.impactOccurred("medium");
     await sdk.haptics.notificationOccurred("success");
     console.log("Tweet approved:", showTweetsId[currentIndex]);
@@ -138,7 +159,7 @@ export default function Tweets({ fid }: TweetsProps) {
     if (absX > SWIPE_THRESHOLD && absX > absY) {
       // Horizontal swipe
       if (dragOffset.x > 0) {
-        // Swiped right - approve
+        // Swiped right - approve (check for signer_uuid)
         handleApprove();
       } else {
         // Swiped left - reject
@@ -227,18 +248,26 @@ export default function Tweets({ fid }: TweetsProps) {
     setShowEditModal(false);
   };
 
+  const handleConnectNeynarClose = () => {
+    setShowConnectNeynar(false);
+  };
+
   const currentTweet = showTweetsId[currentIndex];
 
   // Check if all tweets are finished
   const allTweetsFinished = currentIndex >= showTweetsId.length;
 
   // Calculate transform values for drag effect
+  // Prevent right swipe animation if no signer_uuid
+  const shouldPreventRightSwipe = !hasSignerUuid && dragOffset.x > 0;
+  const effectiveDragX = shouldPreventRightSwipe ? 0 : dragOffset.x;
+
   const rotationX =
     typeof window !== "undefined"
-      ? (dragOffset.x / window.innerWidth) * MAX_ROTATION
+      ? (effectiveDragX / window.innerWidth) * MAX_ROTATION
       : 0;
   const opacity = isDragging
-    ? Math.max(0.7, 1 - Math.abs(dragOffset.x + dragOffset.y) / 300)
+    ? Math.max(0.7, 1 - Math.abs(effectiveDragX + dragOffset.y) / 300)
     : 1;
 
   // If all tweets are finished, show the message
@@ -275,15 +304,15 @@ export default function Tweets({ fid }: TweetsProps) {
             className="absolute inset-0 z-20"
             style={{
               transform:
-                isDragging && Math.abs(dragOffset.x) > Math.abs(dragOffset.y)
-                  ? `translateX(${dragOffset.x}px) rotateZ(${rotationX}deg)`
+                isDragging && Math.abs(effectiveDragX) > Math.abs(dragOffset.y)
+                  ? `translateX(${effectiveDragX}px) rotateZ(${rotationX}deg)`
                   : swipeDirection === "left"
                     ? "translateX(-100%) rotate(-30deg)"
                     : swipeDirection === "right"
                       ? "translateX(100%) rotate(30deg)"
                       : "translateX(0) translateY(0) rotate(0deg)",
               opacity:
-                isDragging && Math.abs(dragOffset.x) > Math.abs(dragOffset.y)
+                isDragging && Math.abs(effectiveDragX) > Math.abs(dragOffset.y)
                   ? opacity
                   : swipeDirection
                     ? 0
@@ -328,6 +357,11 @@ export default function Tweets({ fid }: TweetsProps) {
         onClose={handleEditClose}
         isLoading={isEditLoading}
         isOpen={showEditModal}
+      />
+
+      <ConnectNeynar
+        isOpen={showConnectNeynar}
+        onClose={handleConnectNeynarClose}
       />
     </div>
   );
