@@ -77,6 +77,7 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
       try {
         await updateUser.mutateAsync({
           farcaster_fid: context.user.fid,
+          wallet_address: address,
           spending_approved: true,
           spending_limit: amount,
           usdc_balance: amount, // Set initial balance to spending limit
@@ -122,6 +123,7 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
       try {
         await updateUser.mutateAsync({
           farcaster_fid: context.user.fid,
+          wallet_address: address,
           spending_approved: false,
           spending_limit: 0,
           usdc_balance: 0, // Reset balance when revoking

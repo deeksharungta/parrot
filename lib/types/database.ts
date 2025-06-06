@@ -21,6 +21,7 @@ export interface Database {
           notification_token: string | null;
           notification_url: string | null;
           has_frame: boolean | null;
+          wallet_address: string | null;
         };
         Insert: {
           id?: string;
@@ -41,6 +42,7 @@ export interface Database {
           notification_token?: string | null;
           notification_url?: string | null;
           has_frame?: boolean | null;
+          wallet_address?: string | null;
         };
         Update: {
           id?: string;
@@ -61,6 +63,7 @@ export interface Database {
           notification_token?: string | null;
           notification_url?: string | null;
           has_frame?: boolean | null;
+          wallet_address?: string | null;
         };
       };
       tweets: {
