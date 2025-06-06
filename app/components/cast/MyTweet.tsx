@@ -13,9 +13,21 @@ import {
 import Image from "next/image";
 import BlueTick from "../icons/BlueTick";
 
+interface RetweetInfo {
+  retweetedBy: {
+    name: string;
+    username: string;
+    profileImageUrl: string;
+    isVerified: boolean;
+  };
+  retweetedAt: string;
+}
+
 type Props = {
   tweet: Tweet;
   components?: TwitterComponents;
+  isRetweet?: boolean;
+  retweetInfo?: RetweetInfo;
 };
 
 // Helper function to get relative time
@@ -45,39 +57,127 @@ function getRelativeTime(dateString: string): string {
   }
 }
 
-export default function MyTweet({ tweet: t, components }: Props) {
+export default function MyTweet({
+  tweet: t,
+  components,
+  isRetweet,
+  retweetInfo,
+}: Props) {
   const tweet = enrichTweet(t);
+
+  console.log({ retweetInfo, isRetweet });
+
+  // Extract retweet info from tweet data if not provided via props
+  const extractedRetweetInfo = (() => {
+    if (!isRetweet) return null;
+
+    // If retweetInfo is provided via props, use it
+    if (retweetInfo) return retweetInfo;
+
+    // Otherwise, try to extract from tweet data
+    const referencedRetweet = (t as any).referenced_tweets?.find(
+      (ref: any) => ref.type === "retweeted",
+    );
+    if (referencedRetweet) {
+      // For retweets, the current tweet.user is actually the retweeter
+      return {
+        retweetedBy: {
+          name: tweet.user.name,
+          username: tweet.user.screen_name,
+          profileImageUrl: tweet.user.profile_image_url_https,
+          isVerified: tweet.user.is_blue_verified || false,
+        },
+        retweetedAt: tweet.created_at,
+      };
+    }
+
+    return null;
+  })();
+
   return (
     <div className="bg-white rounded-3xl border border-[#ECECED] h-full relative z-10 overflow-y-auto">
       <div className="h-full overflow-y-auto">
         <TweetContainer className="mx-auto border-none p-3">
-          <div className="flex items-start gap-2 mb-3">
-            <Image
-              src={tweet.user.profile_image_url_https}
-              alt={tweet.user.name}
-              width={32}
-              height={32}
-              className="rounded-full"
-            />
-            <div>
-              <p className="text-[#100C20] text-base font-semibold flex items-center gap-1">
-                {tweet.user.name}{" "}
-                {tweet.user.is_blue_verified ? <BlueTick /> : null}
-              </p>
-              <p className="text-[#8C8A94] text-sm flex items-center gap-1">
-                @{tweet.user.screen_name} ·{" "}
-                <span className="text-[#8C8A94] text-sm">
-                  {getRelativeTime(tweet.created_at)}
-                </span>
-              </p>
+          {isRetweet && extractedRetweetInfo && (
+            <div className="flex items-start gap-2 mb-3">
+              <Image
+                src={extractedRetweetInfo.retweetedBy.profileImageUrl}
+                alt={extractedRetweetInfo.retweetedBy.name}
+                width={32}
+                height={32}
+                className="rounded-full"
+              />
+              <div>
+                <p className="text-[#100C20] text-base font-semibold flex items-center gap-1">
+                  {extractedRetweetInfo.retweetedBy.name}{" "}
+                  {extractedRetweetInfo.retweetedBy.isVerified ? (
+                    <BlueTick />
+                  ) : null}
+                </p>
+                <p className="text-[#8C8A94] text-sm flex items-center gap-1">
+                  @{extractedRetweetInfo.retweetedBy.username} ·{" "}
+                  <span className="text-[#8C8A94] text-sm">
+                    {getRelativeTime(extractedRetweetInfo.retweetedAt)}
+                  </span>
+                </p>
+              </div>
             </div>
-          </div>
-          {tweet.in_reply_to_status_id_str && <TweetInReplyTo tweet={tweet} />}
-          <TweetBody tweet={tweet} />
-          {tweet.mediaDetails?.length ? (
-            <TweetMedia tweet={tweet} components={components} />
-          ) : null}
-          {tweet.quoted_tweet && <QuotedTweet tweet={tweet.quoted_tweet} />}
+          )}
+          {isRetweet ? (
+            <div className="border border-[#ECECED] p-3 rounded-3xl">
+              <div className="flex items-start gap-2 mb-3">
+                <Image
+                  src={tweet.user.profile_image_url_https}
+                  alt={tweet.user.name}
+                  width={32}
+                  height={32}
+                  className="rounded-full"
+                />
+                <div>
+                  <p className="text-[#100C20] text-base font-semibold flex items-center gap-1">
+                    {tweet.user.name}{" "}
+                    {tweet.user.is_blue_verified ? <BlueTick /> : null}
+                  </p>
+                  <p className="text-[#8C8A94] text-sm flex items-center gap-1">
+                    @{tweet.user.screen_name} ·{" "}
+                    <span className="text-[#8C8A94] text-sm">
+                      {getRelativeTime(tweet.created_at)}
+                    </span>
+                  </p>
+                </div>
+              </div>
+              {tweet.in_reply_to_status_id_str && (
+                <TweetInReplyTo tweet={tweet} />
+              )}
+              <TweetBody tweet={tweet} />
+              {tweet.mediaDetails?.length ? (
+                <TweetMedia tweet={tweet} components={components} />
+              ) : null}
+              {tweet.quoted_tweet && <QuotedTweet tweet={tweet.quoted_tweet} />}
+            </div>
+          ) : (
+            <div className="flex items-start gap-2 mb-3">
+              <Image
+                src={tweet.user.profile_image_url_https}
+                alt={tweet.user.name}
+                width={32}
+                height={32}
+                className="rounded-full"
+              />
+              <div>
+                <p className="text-[#100C20] text-base font-semibold flex items-center gap-1">
+                  {tweet.user.name}{" "}
+                  {tweet.user.is_blue_verified ? <BlueTick /> : null}
+                </p>
+                <p className="text-[#8C8A94] text-sm flex items-center gap-1">
+                  @{tweet.user.screen_name} ·{" "}
+                  <span className="text-[#8C8A94] text-sm">
+                    {getRelativeTime(tweet.created_at)}
+                  </span>
+                </p>
+              </div>
+            </div>
+          )}
         </TweetContainer>
       </div>
 

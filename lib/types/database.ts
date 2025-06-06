@@ -72,7 +72,6 @@ export interface Database {
           created_at: string;
           updated_at: string;
           user_id: string;
-          twitter_user_id: string | null;
           content: string;
           original_content: string | null;
           twitter_url: string | null;
@@ -95,11 +94,16 @@ export interface Database {
           tweet_id: string | null;
           quoted_tweet_url: string | null;
           media_urls: Record<string, any> | null;
+          is_retweet: boolean | null;
+          retweet_tweet_id: string | null;
+          profile_image_url: string | null;
+          twitter_username: string | null;
+          twitter_display_name: string | null;
+          is_blue_tick_verified: boolean | null;
         };
         Insert: {
           id?: string;
           user_id: string;
-          twitter_user_id?: string | null;
           content: string;
           original_content?: string | null;
           twitter_url?: string | null;
@@ -122,9 +126,14 @@ export interface Database {
           tweet_id?: string | null;
           quoted_tweet_url?: string | null;
           media_urls?: Record<string, any> | null;
+          is_retweet?: boolean | null;
+          retweet_tweet_id?: string | null;
+          profile_image_url?: string | null;
+          twitter_username?: string | null;
+          twitter_display_name?: string | null;
+          is_blue_tick_verified?: boolean | null;
         };
         Update: {
-          twitter_user_id?: string | null;
           content?: string;
           original_content?: string | null;
           twitter_url?: string | null;
@@ -147,6 +156,12 @@ export interface Database {
           tweet_id?: string | null;
           quoted_tweet_url?: string | null;
           media_urls?: Record<string, any> | null;
+          is_retweet?: boolean | null;
+          retweet_tweet_id?: string | null;
+          profile_image_url?: string | null;
+          twitter_username?: string | null;
+          twitter_display_name?: string | null;
+          is_blue_tick_verified?: boolean | null;
         };
       };
       notifications: {

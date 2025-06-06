@@ -4,7 +4,27 @@ import React from "react";
 import { TweetNotFound, TweetSkeleton, useTweet } from "react-tweet";
 import MyTweet from "./MyTweet";
 
-export default function TweetCard({ tweetId }: { tweetId: string }) {
+interface RetweetInfo {
+  retweetedBy: {
+    name: string;
+    username: string;
+    profileImageUrl: string;
+    isVerified: boolean;
+  };
+  retweetedAt: string;
+}
+
+interface TweetCardProps {
+  tweetId: string;
+  isRetweet?: boolean;
+  retweetInfo?: RetweetInfo;
+}
+
+export default function TweetCard({
+  tweetId,
+  isRetweet,
+  retweetInfo,
+}: TweetCardProps) {
   const { data, error, isLoading } = useTweet(tweetId);
   if (isLoading)
     return (
@@ -20,5 +40,7 @@ export default function TweetCard({ tweetId }: { tweetId: string }) {
     );
   if (!data) return null;
 
-  return <MyTweet tweet={data} />;
+  return (
+    <MyTweet tweet={data} isRetweet={isRetweet} retweetInfo={retweetInfo} />
+  );
 }

@@ -26,15 +26,34 @@ interface NeynarResponse {
 export interface TwitterApiTweet {
   tweet_id: string;
   text: string;
-  created_at?: string;
+  creation_date?: string;
   retweet: boolean;
   retweet_tweet_id?: string;
   quoted_status_id?: string;
   in_reply_to_status_id?: string;
   user?: {
-    id?: string;
+    user_id?: string;
     username?: string;
+    name?: string;
+    profile_pic_url?: string;
+    is_blue_verified?: boolean;
+    is_verified?: boolean;
   };
+  retweet_status?: {
+    tweet_id: string;
+    text: string;
+    creation_date?: string;
+    user?: {
+      user_id?: string;
+      username?: string;
+      name?: string;
+      profile_pic_url?: string;
+      is_blue_verified?: boolean;
+      is_verified?: boolean;
+    };
+  };
+  media_url?: string[];
+  timestamp?: number;
   [key: string]: any;
 }
 
@@ -49,17 +68,8 @@ export interface CachedTweetsResponse {
   lastFetched: string | null;
 }
 
-// Helper function to filter out normal retweets (keeps quote tweets)
-function filterOutNormalRetweets(tweetsData: any) {
-  if (!tweetsData.results) {
-    return tweetsData;
-  }
-
-  return {
-    ...tweetsData,
-    results: tweetsData.results.filter((tweet: any) => !tweet.retweet),
-  };
-}
+// Note: We no longer filter out retweets - all tweets (including retweets) are saved
+// The is_retweet field in the database indicates which tweets are retweets
 
 // Fetch tweets from Twitter API (extracted from API route)
 async function fetchTweetsFromTwitterAPI(fid: number): Promise<{
@@ -136,8 +146,8 @@ async function fetchTweetsFromTwitterAPI(fid: number): Promise<{
 
   const tweetsData = await tweetsResponse.json();
 
-  // Step 4: Filter out normal retweets
-  const filteredTweetsData = filterOutNormalRetweets(tweetsData);
+  // Step 4: Return all tweets (including retweets)
+  // We save the is_retweet field to identify retweets in the database
 
   // Step 5: Return combined data
   return {
@@ -147,13 +157,10 @@ async function fetchTweetsFromTwitterAPI(fid: number): Promise<{
       display_name: user.display_name,
       twitter_username: twitterUsername,
     },
-    tweets: filteredTweetsData,
+    tweets: tweetsData,
     meta: {
       total_tweets_fetched: tweetsData.results?.length || 0,
-      tweets_after_filtering: filteredTweetsData.results?.length || 0,
-      filtered_retweets:
-        (tweetsData.results?.length || 0) -
-        (filteredTweetsData.results?.length || 0),
+      retweets_included: true,
     },
   };
 }
@@ -231,26 +238,39 @@ export async function getCachedTweets(
 // Save new tweets to Supabase
 export async function saveTweetsToDatabase(
   userId: string,
-  twitterUserId: string | null,
   tweets: TwitterApiTweet[],
 ): Promise<void> {
   try {
-    const tweetsToInsert: TweetInsert[] = tweets.map((tweet) => ({
-      user_id: userId,
-      twitter_user_id: twitterUserId,
-      tweet_id: tweet.tweet_id,
-      content: tweet.text,
-      original_content: tweet.text,
-      twitter_created_at: tweet.created_at || new Date().toISOString(),
-      cast_status: "pending",
-      is_edited: false,
-      edit_count: 0,
-      auto_cast: false,
-      media_urls: tweet.media_urls || null,
-      quoted_tweet_url: tweet.quoted_status_id
-        ? `https://twitter.com/i/status/${tweet.quoted_status_id}`
-        : null,
-    }));
+    const tweetsToInsert: TweetInsert[] = tweets.map((tweet) => {
+      // For retweets, we want to store the retweeter's information (not the original tweet author)
+      // But we also want to handle cases where we want the original author's info
+      const userInfo = tweet.user;
+
+      return {
+        user_id: userId,
+        tweet_id: tweet.tweet_id,
+        content: tweet.text,
+        original_content: tweet.text,
+        twitter_url: `https://twitter.com/i/status/${tweet.tweet_id}`,
+        twitter_created_at: tweet.creation_date || new Date().toISOString(),
+        cast_status: "pending",
+        is_edited: false,
+        edit_count: 0,
+        auto_cast: false,
+        media_urls: tweet.media_url || null,
+        quoted_tweet_url: tweet.quoted_status_id
+          ? `https://twitter.com/i/status/${tweet.quoted_status_id}`
+          : null,
+        is_retweet: tweet.retweet || false,
+        retweet_tweet_id: tweet.retweet_tweet_id || null,
+        // For retweets, store the retweeter's information (the person who retweeted)
+        profile_image_url: userInfo?.profile_pic_url || null,
+        twitter_username: userInfo?.username || null,
+        twitter_display_name: userInfo?.name || null,
+        is_blue_tick_verified:
+          userInfo?.is_blue_verified || userInfo?.is_verified || false,
+      };
+    });
 
     // Check for existing tweets first to avoid duplicates
     const existingTweetIds = new Set();
@@ -341,18 +361,10 @@ export async function fetchAndSaveFreshTweets(fid: number): Promise<{
       }
 
       // Extract twitter user ID from the first tweet (all tweets should have the same user)
-      const twitterUserId =
-        freshTweets.length > 0
-          ? freshTweets[0]?.user?.id || data.user?.twitter_username
-          : null;
-      await saveTweetsToDatabase(newUser.id, twitterUserId, freshTweets);
+      await saveTweetsToDatabase(newUser.id, freshTweets);
     } else {
-      // Extract twitter user ID from the first tweet (all tweets should have the same user)
-      const twitterUserId =
-        freshTweets.length > 0
-          ? freshTweets[0]?.user?.id || data.user?.twitter_username
-          : null;
-      await saveTweetsToDatabase(userData.id, twitterUserId, freshTweets);
+      // Extract twitter user ID from the first tweet (all tweets should have the same user)s
+      await saveTweetsToDatabase(userData.id, freshTweets);
     }
 
     return {

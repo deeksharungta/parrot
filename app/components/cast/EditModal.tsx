@@ -16,6 +16,7 @@ interface EditModalProps {
   onClose: () => void;
   isLoading: boolean;
   isOpen: boolean;
+  isRetweet?: boolean;
 }
 
 export function EditModal({
@@ -24,11 +25,13 @@ export function EditModal({
   onClose,
   isLoading,
   isOpen,
+  isRetweet = false,
 }: EditModalProps) {
   const { data: tweetData } = useTweet(tweetId);
   const [content, setContent] = useState("");
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   const [quotedTweetUrl, setQuotedTweetUrl] = useState<string | null>(null);
+  const [showRetweet, setShowRetweet] = useState(true);
 
   // Cleanup tweet content function
   const cleanupTweetContent = (content: string): string => {
@@ -44,7 +47,14 @@ export function EditModal({
   // Update state when tweet data loads
   useEffect(() => {
     if (tweetData && isOpen) {
-      setContent(cleanupTweetContent(tweetData.text || ""));
+      if (isRetweet) {
+        // For retweets, keep the text area empty
+        setContent("");
+      } else {
+        // For regular tweets, use the cleaned content
+        setContent(cleanupTweetContent(tweetData.text || ""));
+      }
+
       setMediaUrls(
         tweetData.mediaDetails?.map((media: any) => media.media_url_https) ||
           [],
@@ -55,7 +65,7 @@ export function EditModal({
           : null,
       );
     }
-  }, [tweetData, isOpen]);
+  }, [tweetData, isOpen, isRetweet]);
 
   const removeImage = (indexToRemove: number) => {
     setMediaUrls((prev) => prev.filter((_, index) => index !== indexToRemove));
@@ -63,6 +73,10 @@ export function EditModal({
 
   const removeQuoteTweet = () => {
     setQuotedTweetUrl(null);
+  };
+
+  const removeRetweet = () => {
+    setShowRetweet(false);
   };
 
   const handleSave = () => {
@@ -158,7 +172,7 @@ export function EditModal({
                 placeholder="What's happening?"
               />
 
-              {mediaUrls.length > 0 && (
+              {mediaUrls.length > 0 && !isRetweet && (
                 <div className="mt-2">
                   <div className="grid grid-cols-2 gap-2">
                     {mediaUrls.map((url, index) => (
@@ -178,6 +192,68 @@ export function EditModal({
                         </button>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Display retweet content */}
+              {isRetweet && tweetData && showRetweet && (
+                <div className="mt-2">
+                  <div className="relative group border border-[#ECECED] rounded-xl bg-white overflow-y-auto">
+                    <div className="p-3">
+                      <button
+                        onClick={removeRetweet}
+                        className="absolute top-1 right-1 bg-white/90 backdrop-blur-sm rounded-full p-2 opacity-100 transition-opacity hover:bg-white z-10 touch-manipulation"
+                      >
+                        <Trash />
+                      </button>
+                      <div className="flex items-start gap-2">
+                        <Image
+                          src={tweetData.user.profile_image_url_https}
+                          alt={tweetData.user.name}
+                          width={20}
+                          height={20}
+                          className="rounded-full flex-shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col items-start gap-0.5 text-xs text-[#8C8A94]">
+                            <span className="font-semibold text-[#100C20] truncate max-w-full text-sm">
+                              {tweetData.user.name}
+                            </span>
+                            <div className="text-xs">
+                              <span>@{tweetData.user.screen_name}</span>
+                              <span> · </span>
+                              <span>
+                                {new Date(
+                                  tweetData.created_at,
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-sm text-[#100C20] mt-1 leading-relaxed break-words">
+                            {cleanupTweetContent(tweetData.text || "")}
+                          </p>
+                          {/* Display media inside retweet */}
+                          {mediaUrls.length > 0 && (
+                            <div className="mt-2">
+                              <div className="grid grid-cols-2 gap-2">
+                                {mediaUrls.map((url, index) => (
+                                  <div key={index} className="relative">
+                                    <Image
+                                      src={url}
+                                      alt={`Media ${index + 1}`}
+                                      width={100}
+                                      height={100}
+                                      className="rounded-lg object-cover w-full h-24"
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

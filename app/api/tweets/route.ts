@@ -34,23 +34,13 @@ interface TwitterResponse {
   continuation_token?: string;
 }
 
-// Helper function to filter out normal retweets (keeps quote tweets)
-function filterOutNormalRetweets(tweetsData: any) {
-  if (!tweetsData.results) {
-    return tweetsData;
-  }
-
-  return {
-    ...tweetsData,
-    results: tweetsData.results.filter((tweet: Tweet) => !tweet.retweet),
-  };
-}
+// Note: We no longer filter out retweets - all tweets (including retweets) are returned
+// The frontend can identify retweets using the retweet field in the tweet data
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const fid = searchParams.get("fid");
-    const includeRetweets = searchParams.get("includeRetweets") === "true"; // Optional parameter
 
     if (!fid) {
       return NextResponse.json({ error: "FID is required" }, { status: 400 });
@@ -135,10 +125,8 @@ export async function GET(request: NextRequest) {
 
     const tweetsData = await tweetsResponse.json();
 
-    // Step 4: Filter out normal retweets (unless specifically requested)
-    const filteredTweetsData = includeRetweets
-      ? tweetsData
-      : filterOutNormalRetweets(tweetsData);
+    // Step 4: Return all tweets (including retweets)
+    // Clients can filter retweets if needed using the retweet field
 
     // Step 5: Return combined data
     return NextResponse.json({
@@ -148,14 +136,10 @@ export async function GET(request: NextRequest) {
         display_name: user.display_name,
         twitter_username: twitterUsername,
       },
-      tweets: filteredTweetsData,
+      tweets: tweetsData,
       meta: {
         total_tweets_fetched: tweetsData.results?.length || 0,
-        tweets_after_filtering: filteredTweetsData.results?.length || 0,
-        filtered_retweets: includeRetweets
-          ? 0
-          : (tweetsData.results?.length || 0) -
-            (filteredTweetsData.results?.length || 0),
+        retweets_included: true,
       },
     });
   } catch (error) {

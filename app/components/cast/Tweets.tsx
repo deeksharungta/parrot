@@ -14,6 +14,16 @@ import { useUserTweets } from "@/hooks/useUserTweets";
 import { useGetUser } from "@/hooks/useUsers";
 import { useUSDCApproval } from "@/hooks/useUSDCApproval";
 
+interface RetweetInfo {
+  retweetedBy: {
+    name: string;
+    username: string;
+    profileImageUrl: string;
+    isVerified: boolean;
+  };
+  retweetedAt: string;
+}
+
 interface TweetsProps {
   fid: number;
 }
@@ -38,6 +48,27 @@ export default function Tweets({ fid }: TweetsProps) {
   const { data: userData } = useGetUser(fid);
   const { hasAllowance } = useUSDCApproval();
   const hasSignerUuid = userData?.user?.neynar_signer_uuid;
+
+  // Helper function to create retweet info from available data
+  const createRetweetInfo = (tweet: any): RetweetInfo | undefined => {
+    if (!tweet?.is_retweet) return undefined;
+
+    // Use the saved Twitter user data from the database
+    return {
+      retweetedBy: {
+        name:
+          tweet.twitter_display_name ||
+          tweet.twitter_username ||
+          "Unknown User",
+        username: tweet.twitter_username || "unknown",
+        profileImageUrl:
+          tweet.profile_image_url ||
+          `https://api.dicebear.com/7.x/avataaars/svg?seed=${tweet.twitter_username || "default"}`,
+        isVerified: tweet.is_blue_tick_verified || false,
+      },
+      retweetedAt: tweet.twitter_created_at || tweet.created_at,
+    };
+  };
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState<
@@ -344,6 +375,7 @@ export default function Tweets({ fid }: TweetsProps) {
     return <NoTweetsFound />;
   }
 
+  console.log({ currentTweet });
   return (
     <div className="flex flex-col items-center w-full h-full">
       <div
@@ -366,6 +398,8 @@ export default function Tweets({ fid }: TweetsProps) {
             <div className="absolute inset-0 z-10">
               <TweetCard
                 tweetId={showTweets[currentIndex + 1]?.tweet_id || ""}
+                isRetweet={showTweets[currentIndex + 1]?.is_retweet || false}
+                retweetInfo={createRetweetInfo(showTweets[currentIndex + 1])}
               />
             </div>
           )}
@@ -391,7 +425,11 @@ export default function Tweets({ fid }: TweetsProps) {
               transition: isDragging ? "none" : "all 150ms ease-out",
             }}
           >
-            <TweetCard tweetId={currentTweet?.tweet_id || ""} />
+            <TweetCard
+              tweetId={currentTweet?.tweet_id || ""}
+              isRetweet={currentTweet?.is_retweet || false}
+              retweetInfo={createRetweetInfo(currentTweet)}
+            />
           </div>
         )}
       </div>
@@ -422,23 +460,13 @@ export default function Tweets({ fid }: TweetsProps) {
         <span className="text-[#8C8A94]">{showTweets.length}</span>
       </p>
 
-      {hasNewTweets && (
-        <div className="text-center mt-2">
-          <button
-            onClick={refreshTweets}
-            className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-medium hover:bg-blue-600 transition-colors"
-          >
-            New tweets available - Tap to refresh
-          </button>
-        </div>
-      )}
-
       <EditModal
         tweetId={currentTweet?.tweet_id || ""}
         onSave={handleEditSave}
         onClose={handleEditClose}
         isLoading={isEditLoading}
         isOpen={showEditModal}
+        isRetweet={currentTweet?.is_retweet || false}
       />
 
       <ConnectNeynar

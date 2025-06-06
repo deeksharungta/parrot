@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Invalid FID" }, { status: 400 });
     }
 
-    // Fetch fresh tweets and save to database
+    // Fetch fresh tweets and save to database (includes retweets)
     const result = await fetchAndSaveFreshTweets(fidNumber);
 
     if (!result.success) {

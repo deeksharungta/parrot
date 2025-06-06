@@ -19,7 +19,7 @@ export default function CastPage() {
     <div>
       <Header title="Pick and Cast" />
       <div className="flex flex-col gap-5 mt-4 h-[calc(100dvh-164px)] px-5 pb-5">
-        <Tweets fid={context?.user?.fid ?? 3} />
+        <Tweets fid={context?.user?.fid ?? 369341} />
       </div>
       <Navbar />
     </div>
