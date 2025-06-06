@@ -1,43 +1,27 @@
-function withValidProperties(
-  properties: Record<string, undefined | string | string[]>,
-) {
-  return Object.fromEntries(
-    Object.entries(properties).filter(([key, value]) => {
-      if (Array.isArray(value)) {
-        return value.length > 0;
-      }
-      return !!value;
-    }),
-  );
-}
-
 export async function GET() {
-  const URL = process.env.NEXT_PUBLIC_URL;
+  const appUrl = process.env.NEXT_PUBLIC_URL;
 
-  return Response.json({
+  // You can use appUrl for debugging or additional configuration
+  console.log(`Server running at: ${appUrl}`);
+
+  const config = {
     accountAssociation: {
       header: process.env.FARCASTER_HEADER,
       payload: process.env.FARCASTER_PAYLOAD,
       signature: process.env.FARCASTER_SIGNATURE,
     },
-    frame: withValidProperties({
+    frame: {
       version: "1",
-      name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
-      subtitle: process.env.NEXT_PUBLIC_APP_SUBTITLE,
-      description: process.env.NEXT_PUBLIC_APP_DESCRIPTION,
-      screenshotUrls: [],
-      iconUrl: process.env.NEXT_PUBLIC_APP_ICON,
-      splashImageUrl: process.env.NEXT_PUBLIC_APP_SPLASH_IMAGE,
-      splashBackgroundColor: process.env.NEXT_PUBLIC_SPLASH_BACKGROUND_COLOR,
-      homeUrl: URL,
-      webhookUrl: "https://xcast-miniapp.vercel.app/api/webhook",
-      primaryCategory: process.env.NEXT_PUBLIC_APP_PRIMARY_CATEGORY,
-      tags: [],
-      heroImageUrl: process.env.NEXT_PUBLIC_APP_HERO_IMAGE,
-      tagline: process.env.NEXT_PUBLIC_APP_TAGLINE,
-      ogTitle: process.env.NEXT_PUBLIC_APP_OG_TITLE,
-      ogDescription: process.env.NEXT_PUBLIC_APP_OG_DESCRIPTION,
-      ogImageUrl: process.env.NEXT_PUBLIC_APP_OG_IMAGE,
-    }),
-  });
+      name: "XCast",
+      iconUrl: `${appUrl}/icon.png`,
+      homeUrl: appUrl,
+      imageUrl: `${appUrl}/image.png`,
+      buttonTitle: "Check this out",
+      splashImageUrl: `${appUrl}/splash.png`,
+      splashBackgroundColor: "#eeccff",
+      webhookUrl: `${appUrl}/api/webhook`,
+    },
+  };
+
+  return Response.json(config);
 }
