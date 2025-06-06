@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTweet } from "react-tweet";
 import Cross from "../icons/Cross";
 import Trash from "../icons/Trash";
 import Button from "../ui/Button";
 import Image from "next/image";
+import { useUserSearch, FarcasterUser } from "@/hooks/useUserSearch";
+import UserMentionDropdown from "../ui/UserMentionDropdown";
 
 interface EditModalProps {
   tweetId: string;
@@ -32,6 +34,18 @@ export function EditModal({
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   const [quotedTweetUrl, setQuotedTweetUrl] = useState<string | null>(null);
   const [showRetweet, setShowRetweet] = useState(true);
+
+  // @ mention functionality
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [currentMentionQuery, setCurrentMentionQuery] = useState("");
+  const [cursorPosition, setCursorPosition] = useState(0);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // User search hook
+  const { data: userSearchData, isLoading: isSearching } = useUserSearch(
+    currentMentionQuery,
+    currentMentionQuery.length > 0,
+  );
 
   // Cleanup tweet content function
   const cleanupTweetContent = (content: string): string => {
@@ -75,6 +89,8 @@ export function EditModal({
       setMediaUrls([]);
       setQuotedTweetUrl(null);
       setShowRetweet(true);
+      setShowUserDropdown(false);
+      setCurrentMentionQuery("");
     }
   }, [isOpen]);
 
@@ -93,6 +109,90 @@ export function EditModal({
   const handleSave = () => {
     onSave(content, mediaUrls, quotedTweetUrl);
   };
+
+  // Handle @ mention detection
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newContent = e.target.value;
+    const cursor = e.target.selectionStart;
+
+    setContent(newContent);
+    setCursorPosition(cursor);
+
+    // Check for @ mention
+    const textBeforeCursor = newContent.slice(0, cursor);
+    const mentionMatch = textBeforeCursor.match(/@(\w*)$/);
+
+    if (mentionMatch) {
+      const query = mentionMatch[1];
+      setCurrentMentionQuery(query);
+      setShowUserDropdown(true);
+    } else {
+      setShowUserDropdown(false);
+      setCurrentMentionQuery("");
+    }
+  };
+
+  // Handle user selection from dropdown
+  const handleUserSelect = (user: FarcasterUser) => {
+    if (!textareaRef.current) return;
+
+    const textBeforeCursor = content.slice(0, cursorPosition);
+    const textAfterCursor = content.slice(cursorPosition);
+    const mentionMatch = textBeforeCursor.match(/@(\w*)$/);
+
+    if (mentionMatch) {
+      const beforeMention = textBeforeCursor.slice(0, mentionMatch.index);
+      const userMention = `@${user.username}`;
+      const newContent = beforeMention + userMention + textAfterCursor;
+      const newCursorPosition = beforeMention.length + userMention.length;
+
+      setContent(newContent);
+      setShowUserDropdown(false);
+      setCurrentMentionQuery("");
+
+      // Focus back to textarea and set cursor position
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          textareaRef.current.setSelectionRange(
+            newCursorPosition,
+            newCursorPosition,
+          );
+        }
+      }, 0);
+    }
+  };
+
+  // Close dropdown when clicking outside or pressing escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShowUserDropdown(false);
+        setCurrentMentionQuery("");
+      }
+    };
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        showUserDropdown &&
+        textareaRef.current &&
+        !textareaRef.current.contains(e.target as Node)
+      ) {
+        setShowUserDropdown(false);
+        setCurrentMentionQuery("");
+      }
+    };
+
+    if (showUserDropdown) {
+      document.addEventListener("keydown", handleKeyDown);
+      document.addEventListener("click", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [showUserDropdown]);
 
   // Show loading state while tweet data is loading
   if (!tweetData && isOpen) {
@@ -174,14 +274,23 @@ export function EditModal({
               </svg>
             </div>
             <div>
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="w-full p-3 rounded-xl resize-none focus:outline-none focus:border-transparent bg-[#f8f8f8] text-sm leading-relaxed touch-manipulation rows-6"
-                rows={4}
-                maxLength={280}
-                placeholder="What's happening?"
-              />
+              <div className="relative">
+                <textarea
+                  ref={textareaRef}
+                  value={content}
+                  onChange={handleContentChange}
+                  className="w-full p-3 rounded-xl resize-none focus:outline-none focus:border-transparent bg-[#f8f8f8] text-sm leading-relaxed touch-manipulation rows-6"
+                  rows={4}
+                  maxLength={280}
+                  placeholder="What's happening? Use @ to mention users"
+                />
+                <UserMentionDropdown
+                  users={userSearchData?.result?.users || []}
+                  isVisible={showUserDropdown}
+                  onUserSelect={handleUserSelect}
+                  position={{ top: 65, left: 0 }}
+                />
+              </div>
 
               {mediaUrls.length > 0 && !isRetweet && (
                 <div className="mt-2">
