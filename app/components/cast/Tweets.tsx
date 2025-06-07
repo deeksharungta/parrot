@@ -257,7 +257,6 @@ export default function Tweets({ fid }: TweetsProps) {
         await castTweetMutation.mutateAsync({
           tweetId: currentTweet.tweet_id,
           fid: fid,
-          signerUuid: userData.user.neynar_signer_uuid,
           content: currentTweet.content || "",
         });
 
@@ -391,7 +390,6 @@ export default function Tweets({ fid }: TweetsProps) {
         await castTweetMutation.mutateAsync({
           tweetId: currentTweet.tweet_id,
           fid: fid,
-          signerUuid: userData.user.neynar_signer_uuid,
           content: editedContent,
         });
 

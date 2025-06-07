@@ -67,11 +67,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { tweetId, fid, signerUuid, content } = body;
+    const { tweetId, fid, content } = body;
 
-    if (!tweetId || !fid || !signerUuid) {
+    if (!tweetId || !fid) {
       return NextResponse.json(
-        { error: "tweetId, fid, and signerUuid are required" },
+        { error: "tweetId and fid are required" },
         { status: 400 },
       );
     }
@@ -254,7 +254,7 @@ export async function POST(request: NextRequest) {
 
     // Cast to Farcaster using Neynar API (AFTER payment is confirmed)
     const castPayload: any = {
-      signer_uuid: signerUuid,
+      signer_uuid: user.neynar_signer_uuid,
       text: parsedCast.content,
     };
 

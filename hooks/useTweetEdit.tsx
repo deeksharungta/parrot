@@ -59,7 +59,6 @@ export const useCastTweet = () => {
     mutationFn: async (castData: {
       tweetId: string;
       fid: number;
-      signerUuid: string;
       content: string;
     }): Promise<any> => {
       const response = await fetch("/api/cast", {
