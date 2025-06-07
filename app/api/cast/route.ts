@@ -23,7 +23,7 @@ const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(",") || [
 export async function OPTIONS(request: NextRequest) {
   // Handle CORS preflight requests
   const origin = request.headers.get("origin");
-
+  console.log("origin", origin);
   if (
     !origin ||
     !ALLOWED_ORIGINS.some((allowedOrigin) => origin.startsWith(allowedOrigin))
@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
     // Security Check 1: Origin validation
     const origin =
       request.headers.get("origin") || request.headers.get("referer");
+
     if (
       !origin ||
       !ALLOWED_ORIGINS.some((allowedOrigin) => origin.startsWith(allowedOrigin))
