@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     // Security Check 1: Origin validation
     const origin =
       request.headers.get("origin") || request.headers.get("referer");
-
+    console.log("origin", origin);
     if (
       !origin ||
       !ALLOWED_ORIGINS.some((allowedOrigin) => origin.startsWith(allowedOrigin))
@@ -180,7 +180,7 @@ export async function POST(request: NextRequest) {
       const { data: tweet, error: tweetError } = await supabase
         .from("tweets")
         .select("*")
-        .eq("id", tweetId)
+        .eq("tweet_id", tweetId)
         .single();
 
       if (tweetError || !tweet) {
@@ -342,7 +342,7 @@ export async function POST(request: NextRequest) {
         payment_processed: true,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", tweetId);
+      .eq("tweet_id", tweetId);
 
     if (tweetUpdateError) {
       console.error("Failed to update tweet status:", tweetUpdateError);
