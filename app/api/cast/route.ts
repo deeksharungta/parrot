@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { tweetId, fid, content } = body;
+    const { tweetId, fid } = body;
 
     if (!tweetId || !fid) {
       return NextResponse.json(
@@ -171,39 +171,18 @@ export async function POST(request: NextRequest) {
     //   );
     // }
 
-    // Get the tweet data to cast
-    let tweetData = null;
-    let tweetContent = content;
+    // Get tweet data from database
+    const { data: tweet, error: tweetError } = await supabase
+      .from("tweets")
+      .select("*")
+      .eq("tweet_id", tweetId)
+      .single();
 
-    if (!tweetContent) {
-      // Get tweet data from database
-      const { data: tweet, error: tweetError } = await supabase
-        .from("tweets")
-        .select("*")
-        .eq("tweet_id", tweetId)
-        .single();
-
-      if (tweetError || !tweet) {
-        return NextResponse.json({ error: "Tweet not found" }, { status: 404 });
-      }
-
-      tweetData = tweet;
-      tweetContent = tweet.content;
+    if (tweetError || !tweet) {
+      return NextResponse.json({ error: "Tweet not found" }, { status: 404 });
     }
 
-    // Parse tweet content to Farcaster format
-    let parsedCast: { content: string; embeds: string[] } = {
-      content: tweetContent,
-      embeds: [],
-    };
-    if (tweetData) {
-      try {
-        parsedCast = await parseTweetToFarcasterCast(tweetData);
-      } catch (parseError) {
-        console.error("Error parsing tweet to Farcaster format:", parseError);
-        // Continue with original content if parsing fails
-      }
-    }
+    const parsedCast = await parseTweetToFarcasterCast(tweet);
 
     // Process payment FIRST (0.1 USDC)
     // const newBalance = (user.usdc_balance || 0) - CAST_COST;

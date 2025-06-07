@@ -1,3 +1,5 @@
+import { Database } from "./types/database";
+
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY;
 const NEYNAR_BASE_URL = "https://api.neynar.com/v2";
 
@@ -27,6 +29,7 @@ export async function convertTwitterMentionsToFarcaster(
   // Find all @mentions in the content
   const mentionRegex = /@(\w+)/g;
   const mentions = content.match(mentionRegex);
+  console.log("mentions", mentions);
 
   if (!mentions || mentions.length === 0) {
     return content;
@@ -37,24 +40,31 @@ export async function convertTwitterMentionsToFarcaster(
   // Process each mention
   for (const mention of mentions) {
     const twitterUsername = mention.replace("@", "");
+    console.log("twitterUsername", twitterUsername);
 
     try {
       // Search for Farcaster user by Twitter username
       const farcasterUsername =
         await findFarcasterUserByTwitter(twitterUsername);
 
+      console.log("farcasterUsername", farcasterUsername);
+
       if (farcasterUsername) {
+        console.log("farcasterUsername found");
         // Replace Twitter mention with Farcaster mention
         convertedContent = convertedContent.replace(
           new RegExp(`@${twitterUsername}`, "g"),
           `@${farcasterUsername}`,
         );
       } else {
+        console.log("farcasterUsername not found");
         // If no Farcaster user found, use the fallback format
         convertedContent = convertedContent.replace(
           new RegExp(`@${twitterUsername}`, "g"),
           `${twitterUsername}.twitter`,
         );
+
+        console.log("convertedContent", convertedContent);
       }
     } catch (error) {
       console.error(`Error converting mention @${twitterUsername}:`, error);
@@ -111,43 +121,48 @@ async function findFarcasterUserByTwitter(
  * @param tweetData - The tweet data object
  * @returns Promise<{content: string, embeds: string[]}> - Parsed cast content and embeds
  */
-export async function parseTweetToFarcasterCast(tweetData: any): Promise<{
+export async function parseTweetToFarcasterCast(
+  tweet: Database["public"]["Tables"]["tweets"]["Row"],
+): Promise<{
   content: string;
   embeds: string[];
 }> {
-  let content = tweetData.content || tweetData.text || "";
+  let content = tweet.content || tweet.content || "";
   const embeds: string[] = [];
 
+  if (tweet.is_retweet) {
+    embeds.push(tweet.twitter_url || "");
+    return {
+      content: "",
+      embeds,
+    };
+  }
   // Convert Twitter mentions to Farcaster format
   content = await convertTwitterMentionsToFarcaster(content);
 
+  // Remove Twitter shortened URLs (t.co links)
+  content = content.replace(/https:\/\/t\.co\/\S+/g, "").trim();
+
   // Handle quoted tweets
-  if (tweetData.quoted_tweet_url) {
-    // Add quoted tweet URL as embed
-    embeds.push(tweetData.quoted_tweet_url);
+  if (tweet.quoted_tweet_url) {
+    embeds.push(tweet.quoted_tweet_url);
   }
 
   // Handle media URLs
-  if (tweetData.media_urls) {
-    const mediaUrls = Array.isArray(tweetData.media_urls)
-      ? tweetData.media_urls
-      : typeof tweetData.media_urls === "string"
-        ? [tweetData.media_urls]
-        : Object.values(tweetData.media_urls);
+  if (tweet.media_urls) {
+    const mediaUrls = Array.isArray(tweet.media_urls)
+      ? tweet.media_urls
+      : typeof tweet.media_urls === "string"
+        ? [tweet.media_urls]
+        : Object.values(tweet.media_urls);
 
-    // Add media URLs as embeds
+    // Add media URLs to content
     mediaUrls.forEach((url: any) => {
       if (typeof url === "string" && url.trim()) {
         embeds.push(url);
       }
     });
   }
-
-  // Clean up content - remove t.co links that are replaced by embeds
-  content = content.replace(/https:\/\/t\.co\/\S+/g, "").trim();
-
-  // Remove extra whitespace
-  content = content.replace(/\s+/g, " ").trim();
 
   return {
     content,
