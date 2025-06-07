@@ -362,6 +362,7 @@ export default function Tweets({ fid }: TweetsProps) {
     editedContent: string,
     mediaUrls: string[],
     quotedTweetUrl: string | null,
+    isRetweetRemoved: boolean,
   ) => {
     setIsEditLoading(true);
     const currentTweet = showTweets[currentIndex];
@@ -382,6 +383,7 @@ export default function Tweets({ fid }: TweetsProps) {
         content: editedContent,
         mediaUrls: mediaUrls,
         quotedTweetUrl: quotedTweetUrl,
+        isRetweetRemoved: isRetweetRemoved,
       });
 
       console.log("Edited content saved successfully");
@@ -394,6 +396,7 @@ export default function Tweets({ fid }: TweetsProps) {
           content: editedContent,
           mediaUrls: mediaUrls,
           quotedTweetUrl: quotedTweetUrl,
+          isRetweetRemoved: isRetweetRemoved,
         });
 
         console.log("Edited tweet cast successfully");

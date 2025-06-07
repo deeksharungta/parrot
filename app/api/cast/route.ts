@@ -68,7 +68,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { tweetId, fid, mediaUrls, quotedTweetUrl } = body;
+    const {
+      tweetId,
+      fid,
+      content,
+      mediaUrls,
+      quotedTweetUrl,
+      isRetweetRemoved,
+    } = body;
 
     if (!tweetId || !fid) {
       return NextResponse.json(
@@ -193,7 +200,13 @@ export async function POST(request: NextRequest) {
       const embeds: string[] = [];
 
       if (tweet.is_retweet) {
-        embeds.push(tweet.twitter_url || "");
+        if (content && content.trim().length > 0) {
+          parsedCast.content = content;
+        }
+
+        if (!isRetweetRemoved) {
+          embeds.push(tweet.twitter_url || "");
+        }
       } else {
         // Use provided quoted tweet URL or fall back to database value
         const finalQuotedTweetUrl =
@@ -257,18 +270,18 @@ export async function POST(request: NextRequest) {
       });
 
       // Convert amount to proper USDC units (6 decimals)
-      const amountInUnits = parseUnits(CAST_COST.toString(), 6);
+      // const amountInUnits = parseUnits(CAST_COST.toString(), 6);
 
-      transactionHash = await walletClient.writeContract({
-        address: USDC_ADDRESS,
-        abi: erc20Abi,
-        functionName: "transferFrom",
-        args: [
-          user.wallet_address as `0x${string}`,
-          SPENDER_ADDRESS,
-          amountInUnits,
-        ],
-      });
+      // transactionHash = await walletClient.writeContract({
+      //   address: USDC_ADDRESS,
+      //   abi: erc20Abi,
+      //   functionName: "transferFrom",
+      //   args: [
+      //     user.wallet_address as `0x${string}`,
+      //     SPENDER_ADDRESS,
+      //     amountInUnits,
+      //   ],
+      // });
 
       console.log("Payment transaction successful:", transactionHash);
     } catch (paymentError) {

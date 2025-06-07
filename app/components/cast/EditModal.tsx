@@ -14,6 +14,7 @@ interface EditModalProps {
     content: string,
     mediaUrls: string[],
     quotedTweetUrl: string | null,
+    isRetweetRemoved: boolean,
   ) => void;
   onClose: () => void;
   isLoading: boolean;
@@ -34,6 +35,7 @@ export function EditModal({
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   const [quotedTweetUrl, setQuotedTweetUrl] = useState<string | null>(null);
   const [showRetweet, setShowRetweet] = useState(true);
+  const [isRetweetRemoved, setIsRetweetRemoved] = useState(false);
 
   // @ mention functionality
   const [showUserDropdown, setShowUserDropdown] = useState(false);
@@ -89,6 +91,7 @@ export function EditModal({
       setMediaUrls([]);
       setQuotedTweetUrl(null);
       setShowRetweet(true);
+      setIsRetweetRemoved(false);
       setShowUserDropdown(false);
       setCurrentMentionQuery("");
     }
@@ -104,10 +107,11 @@ export function EditModal({
 
   const removeRetweet = () => {
     setShowRetweet(false);
+    setIsRetweetRemoved(true);
   };
 
   const handleSave = () => {
-    onSave(content, mediaUrls, quotedTweetUrl);
+    onSave(content, mediaUrls, quotedTweetUrl, isRetweetRemoved);
   };
 
   // Handle @ mention detection
@@ -282,7 +286,7 @@ export function EditModal({
                   className="w-full p-3 rounded-xl resize-none focus:outline-none focus:border-transparent bg-[#f8f8f8] text-sm leading-relaxed touch-manipulation rows-6"
                   rows={4}
                   maxLength={280}
-                  placeholder="What's happening? Use @ to mention users"
+                  placeholder={"What's happening? Use @ to mention users"}
                 />
                 <UserMentionDropdown
                   users={userSearchData?.result?.users || []}
@@ -430,7 +434,11 @@ export function EditModal({
               <Button
                 className="mt-6 w-full text-base py-3 touch-manipulation"
                 onClick={handleSave}
-                disabled={isLoading || content.length === 0}
+                disabled={
+                  isLoading ||
+                  (!isRetweet && content.length === 0) ||
+                  (isRetweet && content.length === 0 && !showRetweet)
+                }
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center space-x-2">

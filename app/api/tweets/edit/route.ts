@@ -4,7 +4,8 @@ import { supabase } from "@/lib/supabase";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { tweetId, content, mediaUrls, quotedTweetUrl } = body;
+    const { tweetId, content, mediaUrls, quotedTweetUrl, isRetweetRemoved } =
+      body;
 
     if (!tweetId || content === undefined) {
       return NextResponse.json(
@@ -41,6 +42,10 @@ export async function POST(request: NextRequest) {
     // Update quoted tweet URL if provided
     if (quotedTweetUrl !== undefined) {
       updateData.quoted_tweet_url = quotedTweetUrl;
+    }
+
+    if (isRetweetRemoved) {
+      updateData.retweet_tweet_id = null;
     }
 
     // Update tweet with edited content
