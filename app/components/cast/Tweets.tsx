@@ -43,7 +43,20 @@ export default function Tweets({ fid }: TweetsProps) {
     updateTweetStatus: updateTweetStatusHandler,
   } = useUserTweets(fid);
 
-  const showTweets = tweets || [];
+  // Keep the original tweets array stable during the swiping session
+  const [stableTweets, setStableTweets] = useState<any[]>([]);
+  const [processedTweetIds, setProcessedTweetIds] = useState<Set<string>>(
+    new Set(),
+  );
+
+  // Update stable tweets only when new tweets are loaded, not when they're filtered
+  React.useEffect(() => {
+    if (tweets && tweets.length > 0 && stableTweets.length === 0) {
+      setStableTweets(tweets);
+    }
+  }, [tweets, stableTweets.length]);
+
+  const showTweets = stableTweets;
 
   // Fetch user data to check for signer_uuid and allowance
   const { data: userData } = useGetUser(fid);
@@ -157,15 +170,12 @@ export default function Tweets({ fid }: TweetsProps) {
     const currentTweet = showTweets[currentIndex];
     console.log("Tweet rejected:", currentTweet?.tweet_id);
 
-    // Update tweet status in database
+    // Track this tweet as processed
     if (currentTweet?.tweet_id) {
-      try {
-        await updateTweetStatusHandler(currentTweet.tweet_id, "rejected");
-      } catch (error) {
-        console.error("Error updating tweet status:", error);
-      }
+      setProcessedTweetIds((prev) => new Set(prev).add(currentTweet.tweet_id));
     }
 
+    // Move to next tweet immediately for better UX
     setSwipeDirection("left");
     setTimeout(() => {
       setIsAnimating(true);
@@ -175,6 +185,20 @@ export default function Tweets({ fid }: TweetsProps) {
         setIsAnimating(false);
       }, 50);
     }, 100);
+
+    // Update tweet status in database asynchronously to avoid reloading
+    if (currentTweet?.tweet_id) {
+      try {
+        // Don't await this to prevent blocking the UI transition
+        updateTweetStatusHandler(currentTweet.tweet_id, "rejected").catch(
+          (error) => {
+            console.error("Error updating tweet status:", error);
+          },
+        );
+      } catch (error) {
+        console.error("Error updating tweet status:", error);
+      }
+    }
   };
 
   const handleEdit = () => {
@@ -218,6 +242,11 @@ export default function Tweets({ fid }: TweetsProps) {
     await sdk.haptics.impactOccurred("medium");
     const currentTweet = showTweets[currentIndex];
     console.log("Tweet approved, starting cast flow:", currentTweet?.tweet_id);
+
+    // Track this tweet as processed
+    if (currentTweet?.tweet_id) {
+      setProcessedTweetIds((prev) => new Set(prev).add(currentTweet.tweet_id));
+    }
 
     // Start the cast flow
     if (currentTweet?.tweet_id && userData?.user?.neynar_signer_uuid) {
@@ -369,6 +398,13 @@ export default function Tweets({ fid }: TweetsProps) {
         console.log("Edited tweet cast successfully");
       } else {
         throw new Error("Signer UUID not available");
+      }
+
+      // Track this tweet as processed
+      if (currentTweet?.tweet_id) {
+        setProcessedTweetIds((prev) =>
+          new Set(prev).add(currentTweet.tweet_id),
+        );
       }
 
       // Close modal and proceed to next tweet after successful edit + cast
