@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const { data: currentTweet, error: fetchError } = await supabase
       .from("tweets")
       .select("edit_count")
-      .eq("id", tweetId)
+      .eq("tweet_id", tweetId)
       .single();
 
     if (fetchError || !currentTweet) {
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
         edit_count: (currentTweet.edit_count || 0) + 1,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", tweetId)
+      .eq("tweet_id", tweetId)
       .select()
       .single();
 
