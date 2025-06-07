@@ -4,6 +4,8 @@ import { toast } from "sonner";
 interface EditTweetData {
   tweetId: string;
   content: string;
+  mediaUrls?: string[];
+  quotedTweetUrl?: string | null;
 }
 
 interface EditTweetResponse {
@@ -61,6 +63,8 @@ export const useCastTweet = () => {
       tweetId: string;
       fid: number;
       content: string;
+      mediaUrls?: string[];
+      quotedTweetUrl?: string | null;
     }): Promise<any> => {
       const response = await fetch("/api/cast", {
         method: "POST",

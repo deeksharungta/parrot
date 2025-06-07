@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { tweetId, fid } = body;
+    const { tweetId, fid, mediaUrls, quotedTweetUrl } = body;
 
     if (!tweetId || !fid) {
       return NextResponse.json(
@@ -182,7 +182,54 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Tweet not found" }, { status: 404 });
     }
 
-    const parsedCast = await parseTweetToFarcasterCast(tweet);
+    // Parse tweet content with potential overrides for edited values
+    let parsedCast = await parseTweetToFarcasterCast(tweet);
+
+    // Override with edited values if provided
+    if (mediaUrls !== undefined || quotedTweetUrl !== undefined) {
+      console.log("mediaUrls", mediaUrls);
+      console.log("quotedTweetUrl", quotedTweetUrl);
+
+      const embeds: string[] = [];
+
+      if (tweet.is_retweet) {
+        embeds.push(tweet.twitter_url || "");
+      } else {
+        // Use provided quoted tweet URL or fall back to database value
+        const finalQuotedTweetUrl =
+          quotedTweetUrl !== undefined
+            ? quotedTweetUrl
+            : tweet.quoted_tweet_url;
+        if (finalQuotedTweetUrl) {
+          embeds.push(finalQuotedTweetUrl);
+        }
+
+        // Use provided media URLs or fall back to database value
+        const finalMediaUrls =
+          mediaUrls !== undefined ? mediaUrls : tweet.media_urls;
+        if (finalMediaUrls) {
+          const mediaUrlsArray = Array.isArray(finalMediaUrls)
+            ? finalMediaUrls
+            : typeof finalMediaUrls === "string"
+              ? [finalMediaUrls]
+              : Object.values(finalMediaUrls);
+
+          mediaUrlsArray.forEach((url: any) => {
+            if (typeof url === "string" && url.trim()) {
+              embeds.push(url);
+            }
+          });
+        }
+      }
+
+      console.log("embeds", embeds);
+
+      // Update the parsed cast with the new embeds
+      parsedCast = {
+        ...parsedCast,
+        embeds,
+      };
+    }
 
     // Process payment FIRST (0.1 USDC)
     const newBalance = (user.usdc_balance || 0) - CAST_COST;

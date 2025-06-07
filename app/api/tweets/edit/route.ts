@@ -4,9 +4,9 @@ import { supabase } from "@/lib/supabase";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { tweetId, content } = body;
+    const { tweetId, content, mediaUrls, quotedTweetUrl } = body;
 
-    if (!tweetId || !content) {
+    if (!tweetId || content === undefined) {
       return NextResponse.json(
         { error: "tweetId and content are required" },
         { status: 400 },
@@ -25,15 +25,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Tweet not found" }, { status: 404 });
     }
 
+    // Prepare update data
+    const updateData: any = {
+      content: content,
+      is_edited: true,
+      edit_count: (currentTweet.edit_count || 0) + 1,
+      updated_at: new Date().toISOString(),
+    };
+
+    // Update media URLs if provided
+    if (mediaUrls !== undefined) {
+      updateData.media_urls = mediaUrls.length > 0 ? mediaUrls : null;
+    }
+
+    // Update quoted tweet URL if provided
+    if (quotedTweetUrl !== undefined) {
+      updateData.quoted_tweet_url = quotedTweetUrl;
+    }
+
     // Update tweet with edited content
     const { data: updatedTweet, error: updateError } = await supabase
       .from("tweets")
-      .update({
-        content: content,
-        is_edited: true,
-        edit_count: (currentTweet.edit_count || 0) + 1,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq("tweet_id", tweetId)
       .select()
       .single();

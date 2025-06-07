@@ -380,6 +380,8 @@ export default function Tweets({ fid }: TweetsProps) {
       await editTweetMutation.mutateAsync({
         tweetId: currentTweet.tweet_id,
         content: editedContent,
+        mediaUrls: mediaUrls,
+        quotedTweetUrl: quotedTweetUrl,
       });
 
       console.log("Edited content saved successfully");
@@ -390,6 +392,8 @@ export default function Tweets({ fid }: TweetsProps) {
           tweetId: currentTweet.tweet_id,
           fid: fid,
           content: editedContent,
+          mediaUrls: mediaUrls,
+          quotedTweetUrl: quotedTweetUrl,
         });
 
         console.log("Edited tweet cast successfully");
