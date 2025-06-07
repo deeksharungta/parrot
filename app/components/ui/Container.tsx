@@ -5,10 +5,12 @@ export default function Container({
   title,
   description,
   children,
+  rightIcon,
 }: {
   title: string;
   description: string;
   children: React.ReactNode;
+  rightIcon?: React.ReactNode;
 }) {
   return (
     <motion.div
@@ -21,14 +23,25 @@ export default function Container({
         transition: { duration: 0.2 },
       }}
     >
-      <motion.p
-        className="font-semibold text-base text-[#100C20]"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
-      >
-        {title}
-      </motion.p>
+      <div className="flex items-center justify-between">
+        <motion.p
+          className="font-semibold text-base text-[#100C20]"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+        >
+          {title}
+        </motion.p>
+        {rightIcon && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, delay: 0.15 }}
+          >
+            {rightIcon}
+          </motion.div>
+        )}
+      </div>
       <motion.p
         className="font-normal text-sm text-[#8C8A94]"
         initial={{ opacity: 0, y: 10 }}
