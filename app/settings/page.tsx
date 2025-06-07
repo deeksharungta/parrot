@@ -7,15 +7,33 @@ import DisconnectNeynar from "../components/settings/DisconnectNeynar";
 import Navbar from "../components/ui/Navbar";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { motion } from "framer-motion";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function SettingsPage() {
   const { isFrameReady, setFrameReady } = useMiniKit();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!isFrameReady) {
       setFrameReady();
     }
   }, [isFrameReady, setFrameReady]);
+
+  // Auto-refresh when user returns to the settings page (e.g., from auth)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Page became visible, refresh user data
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ["users"] });
+        }, 500);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [queryClient]);
 
   const settingsItems = [
     { component: YoloMode, delay: 0.3 },

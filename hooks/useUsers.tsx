@@ -151,6 +151,11 @@ export const useUpdateUser = () => {
         user: data.user,
         exists: true,
       });
+
+      // If Neynar connection changed, invalidate twitter account query for settings page
+      if ("neynar_signer_uuid" in variables) {
+        queryClient.invalidateQueries({ queryKey: ["users"] });
+      }
     },
   });
 };
@@ -193,6 +198,11 @@ export const useUpsertUser = () => {
         user: data.user,
         exists: true,
       });
+
+      // If Neynar connection changed, invalidate twitter account query for settings page
+      if ("neynar_signer_uuid" in variables) {
+        queryClient.invalidateQueries({ queryKey: ["users"] });
+      }
     },
   });
 };

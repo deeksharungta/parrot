@@ -4,6 +4,7 @@ import { erc20Abi, parseUnits, formatUnits } from "viem";
 import { USDC_ADDRESS, SPENDER_ADDRESS } from "@/lib/constant";
 import { useUpdateUser } from "./useUsers";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
+import { useQueryClient } from "@tanstack/react-query";
 
 export interface UseUSDCApprovalReturn {
   // State
@@ -32,6 +33,7 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
   const { writeContractAsync } = useWriteContract();
   const updateUser = useUpdateUser();
   const { context } = useMiniKit();
+  const queryClient = useQueryClient();
 
   const { address, isConnected } = useAccount();
 
@@ -88,6 +90,9 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
         // Don't fail the entire operation if database save fails
       }
 
+      // Invalidate all related queries to refresh UI
+      await queryClient.invalidateQueries({ queryKey: ["users"] });
+
       setIsApproving(false);
       refetchAllowance();
     } catch (err: any) {
@@ -133,6 +138,9 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
         console.error("Failed to save revocation to database:", dbError);
         // Don't fail the entire operation if database save fails
       }
+
+      // Invalidate all related queries to refresh UI
+      await queryClient.invalidateQueries({ queryKey: ["users"] });
 
       setIsRevoking(false);
       refetchAllowance();
