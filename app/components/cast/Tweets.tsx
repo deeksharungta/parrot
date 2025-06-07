@@ -248,37 +248,36 @@ export default function Tweets({ fid }: TweetsProps) {
       setProcessedTweetIds((prev) => new Set(prev).add(currentTweet.tweet_id));
     }
 
-    // Start the cast flow
-    if (currentTweet?.tweet_id && userData?.user?.neynar_signer_uuid) {
-      try {
-        setIsEditLoading(true);
+    // Show swipe animation and move to next tweet immediately
+    setSwipeDirection("right");
+    setTimeout(() => {
+      setIsAnimating(true);
+      setTimeout(() => {
+        setCurrentIndex(currentIndex + 1);
+        setSwipeDirection(null);
+        setIsAnimating(false);
+      }, 50);
+    }, 100);
 
-        // Cast the tweet to Farcaster
-        await castTweetMutation.mutateAsync({
+    // Cast the tweet in the background
+    if (currentTweet?.tweet_id && userData?.user?.neynar_signer_uuid) {
+      castTweetMutation.mutate(
+        {
           tweetId: currentTweet.tweet_id,
           fid: fid,
           content: currentTweet.content || "",
-        });
-
-        await sdk.haptics.notificationOccurred("success");
-        console.log("Tweet cast successfully");
-
-        // Move to next tweet
-        setSwipeDirection("right");
-        setTimeout(() => {
-          setIsAnimating(true);
-          setTimeout(() => {
-            setCurrentIndex(currentIndex + 1);
-            setSwipeDirection(null);
-            setIsAnimating(false);
-          }, 50);
-        }, 100);
-      } catch (error) {
-        console.error("Error casting tweet:", error);
-        await sdk.haptics.notificationOccurred("error");
-      } finally {
-        setIsEditLoading(false);
-      }
+        },
+        {
+          onSuccess: async () => {
+            await sdk.haptics.notificationOccurred("success");
+            console.log("Tweet cast successfully");
+          },
+          onError: async (error) => {
+            console.error("Error casting tweet:", error);
+            await sdk.haptics.notificationOccurred("error");
+          },
+        },
+      );
     }
   };
 
@@ -542,14 +541,9 @@ export default function Tweets({ fid }: TweetsProps) {
         </button>
         <button
           onClick={handleApprove}
-          disabled={isEditLoading || castTweetMutation.isPending}
-          className="rounded-full bg-[#F8F8F8] p-4 flex items-center justify-center hover:bg-[#ECECED] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="rounded-full bg-[#F8F8F8] p-4 flex items-center justify-center hover:bg-[#ECECED] transition-colors"
         >
-          {isEditLoading || castTweetMutation.isPending ? (
-            <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-          ) : (
-            <ArrowRight />
-          )}
+          <ArrowRight />
         </button>
       </div>
 
