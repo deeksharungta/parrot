@@ -86,12 +86,12 @@ export const useCastTweet = () => {
       queryClient.invalidateQueries({ queryKey: ["userTweets"] });
 
       // Show success toast
-      toast.success("Tweet Casted Successfully!");
+      toast("Tweet Casted Successfully!");
 
       console.log("Tweet cast successfully:", data.message);
     },
     onError: (error) => {
-      toast.error("Error Casting Tweet");
+      toast("Error Casting Tweet");
       console.error("Error casting tweet:", error);
     },
   });

@@ -66,10 +66,10 @@ export default function RootLayout({
               fontSize: "14px",
               fontWeight: "500",
               padding: "12px 16px",
-              boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
+              boxShadow: "0px 0px 0px 0px",
             },
           }}
-          closeButton
+          closeButton={false}
           richColors
           expand={false}
           offset={16}

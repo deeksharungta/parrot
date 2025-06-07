@@ -95,7 +95,7 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
       await queryClient.invalidateQueries({ queryKey: ["users"] });
 
       // Show success toast
-      toast.success(`USDC Approved!`, {
+      toast(`USDC Approved!`, {
         description: `$${amount} spending limit set successfully`,
       });
 
@@ -149,7 +149,7 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
       await queryClient.invalidateQueries({ queryKey: ["users"] });
 
       // Show success toast
-      toast.success("USDC Revoked!", {
+      toast("USDC Revoked!", {
         description: "Spending allowance removed successfully",
       });
 

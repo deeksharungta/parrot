@@ -33,7 +33,7 @@ export default function YoloMode() {
       },
       {
         onSuccess: () => {
-          toast.success("YOLO Mode Disabled");
+          toast("YOLO Mode Disabled");
         },
       },
     );
@@ -66,11 +66,11 @@ export default function YoloMode() {
 
         // Show appropriate toast based on action
         if (isConfiguring) {
-          toast.success("YOLO Mode Settings Updated", {
+          toast("YOLO Mode Settings Updated", {
             description: "Your preferences have been saved",
           });
         } else {
-          toast.success("YOLO Mode Enabled!", {
+          toast("YOLO Mode Enabled!", {
             description: "Tweets will now be auto-casted",
           });
         }
