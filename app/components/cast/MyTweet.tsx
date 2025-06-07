@@ -156,27 +156,37 @@ export default function MyTweet({
               {tweet.quoted_tweet && <QuotedTweet tweet={tweet.quoted_tweet} />}
             </div>
           ) : (
-            <div className="flex items-start gap-2 mb-3">
-              <Image
-                src={tweet.user.profile_image_url_https}
-                alt={tweet.user.name}
-                width={32}
-                height={32}
-                className="rounded-full"
-              />
-              <div>
-                <p className="text-[#100C20] text-base font-semibold flex items-center gap-1">
-                  {tweet.user.name}{" "}
-                  {tweet.user.is_blue_verified ? <BlueTick /> : null}
-                </p>
-                <p className="text-[#8C8A94] text-sm flex items-center gap-1">
-                  @{tweet.user.screen_name} ·{" "}
-                  <span className="text-[#8C8A94] text-sm">
-                    {getRelativeTime(tweet.created_at)}
-                  </span>
-                </p>
+            <>
+              <div className="flex items-start gap-2 mb-3">
+                <Image
+                  src={tweet.user.profile_image_url_https}
+                  alt={tweet.user.name}
+                  width={32}
+                  height={32}
+                  className="rounded-full"
+                />
+                <div>
+                  <p className="text-[#100C20] text-base font-semibold flex items-center gap-1">
+                    {tweet.user.name}{" "}
+                    {tweet.user.is_blue_verified ? <BlueTick /> : null}
+                  </p>
+                  <p className="text-[#8C8A94] text-sm flex items-center gap-1">
+                    @{tweet.user.screen_name} ·{" "}
+                    <span className="text-[#8C8A94] text-sm">
+                      {getRelativeTime(tweet.created_at)}
+                    </span>
+                  </p>
+                </div>
               </div>
-            </div>
+              {tweet.in_reply_to_status_id_str && (
+                <TweetInReplyTo tweet={tweet} />
+              )}
+              <TweetBody tweet={tweet} />
+              {tweet.mediaDetails?.length ? (
+                <TweetMedia tweet={tweet} components={components} />
+              ) : null}
+              {tweet.quoted_tweet && <QuotedTweet tweet={tweet.quoted_tweet} />}
+            </>
           )}
         </TweetContainer>
       </div>
