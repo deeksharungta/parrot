@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 interface EditTweetData {
   tweetId: string;
@@ -84,9 +85,13 @@ export const useCastTweet = () => {
       queryClient.invalidateQueries({ queryKey: ["tweets"] });
       queryClient.invalidateQueries({ queryKey: ["userTweets"] });
 
+      // Show success toast
+      toast.success("Tweet Casted Successfully!");
+
       console.log("Tweet cast successfully:", data.message);
     },
     onError: (error) => {
+      toast.error("Error Casting Tweet");
       console.error("Error casting tweet:", error);
     },
   });

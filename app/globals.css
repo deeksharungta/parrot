@@ -86,3 +86,94 @@ textarea:focus-visible {
     max-width: 24rem;
   }
 }
+
+/* Sonner toast customizations */
+[data-sonner-toaster] {
+  --normal-bg: #ffffff;
+  --normal-border: #ececed;
+  --normal-text: #100c20;
+  --success-bg: #ffffff;
+  --success-border: #22c55e;
+  --success-text: #100c20;
+  --error-bg: #ffffff;
+  --error-border: #ef4444;
+  --error-text: #100c20;
+  --toast-width: 356px;
+  --toast-border-radius: 16px;
+  --toast-gap: 8px;
+}
+
+[data-sonner-toast] {
+  background: var(--normal-bg) !important;
+  border: 1px solid var(--normal-border) !important;
+  color: var(--normal-text) !important;
+  font-family: var(--font-outfit) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  padding: 12px 16px !important;
+  border-radius: var(--toast-border-radius) !important;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1) !important;
+}
+
+[data-sonner-toast][data-type="success"] {
+  border-color: var(--success-border) !important;
+}
+
+[data-sonner-toast][data-type="error"] {
+  border-color: var(--error-border) !important;
+}
+
+[data-sonner-toast] [data-title] {
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  color: var(--normal-text) !important;
+  margin-bottom: 2px !important;
+}
+
+[data-sonner-toast] [data-description] {
+  font-weight: 400 !important;
+  font-size: 13px !important;
+  color: #8c8a94 !important;
+  margin: 0 !important;
+}
+
+[data-sonner-toast] [data-close-button] {
+  background: transparent !important;
+  border: none !important;
+  color: #8c8a94 !important;
+  font-size: 16px !important;
+  right: 8px !important;
+  top: 8px !important;
+}
+
+/* Toast entry/exit animations */
+[data-sonner-toast][data-mounted="true"] {
+  animation: toast-slide-in 0.3s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+[data-sonner-toast][data-removed="true"] {
+  animation: toast-slide-out 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes toast-slide-in {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-slide-out {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}

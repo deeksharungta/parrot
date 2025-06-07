@@ -6,6 +6,7 @@ import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { Loader2 } from "lucide-react";
 import YoloModeModal from "../modals/YoloModeModal";
 import Settings from "../icons/Settings";
+import { toast } from "sonner";
 
 export default function YoloMode() {
   const { context } = useMiniKit();
@@ -25,10 +26,17 @@ export default function YoloMode() {
   };
 
   const handleDisableYoloMode = () => {
-    updateUser.mutate({
-      farcaster_fid: context?.user?.fid ?? 0,
-      yolo_mode: false,
-    });
+    updateUser.mutate(
+      {
+        farcaster_fid: context?.user?.fid ?? 0,
+        yolo_mode: false,
+      },
+      {
+        onSuccess: () => {
+          toast.success("YOLO Mode Disabled");
+        },
+      },
+    );
   };
 
   const handleSaveSettings = (settings: {
@@ -55,6 +63,17 @@ export default function YoloMode() {
     updateUser.mutate(updateData, {
       onSuccess: () => {
         setShowModal(false);
+
+        // Show appropriate toast based on action
+        if (isConfiguring) {
+          toast.success("YOLO Mode Settings Updated", {
+            description: "Your preferences have been saved",
+          });
+        } else {
+          toast.success("YOLO Mode Enabled!", {
+            description: "Tweets will now be auto-casted",
+          });
+        }
       },
     });
   };

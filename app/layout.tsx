@@ -3,6 +3,7 @@ import { Outfit } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { Viewport } from "next";
+import { Toaster } from "sonner";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -53,6 +54,26 @@ export default function RootLayout({
     <html lang="en" className={outfit.variable}>
       <body className="font-sans antialiased bg-white text-gray-900">
         <Providers>{children}</Providers>
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            style: {
+              background: "#FFFFFF",
+              border: "1px solid #ECECED",
+              borderRadius: "16px",
+              color: "#100C20",
+              fontFamily: "var(--font-outfit)",
+              fontSize: "14px",
+              fontWeight: "500",
+              padding: "12px 16px",
+              boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
+            },
+          }}
+          closeButton
+          richColors
+          expand={false}
+          offset={16}
+        />
       </body>
     </html>
   );

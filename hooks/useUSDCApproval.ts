@@ -5,6 +5,7 @@ import { USDC_ADDRESS, SPENDER_ADDRESS } from "@/lib/constant";
 import { useUpdateUser } from "./useUsers";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export interface UseUSDCApprovalReturn {
   // State
@@ -93,6 +94,11 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
       // Invalidate all related queries to refresh UI
       await queryClient.invalidateQueries({ queryKey: ["users"] });
 
+      // Show success toast
+      toast.success(`USDC Approved!`, {
+        description: `$${amount} spending limit set successfully`,
+      });
+
       setIsApproving(false);
       refetchAllowance();
     } catch (err: any) {
@@ -141,6 +147,11 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
 
       // Invalidate all related queries to refresh UI
       await queryClient.invalidateQueries({ queryKey: ["users"] });
+
+      // Show success toast
+      toast.success("USDC Revoked!", {
+        description: "Spending allowance removed successfully",
+      });
 
       setIsRevoking(false);
       refetchAllowance();
