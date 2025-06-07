@@ -98,78 +98,78 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // // Check if user has approved spending and has sufficient balance
-    // if (!user.spending_approved) {
-    //   return NextResponse.json(
-    //     { error: "USDC spending not approved. Please approve spending first." },
-    //     { status: 403 },
-    //   );
-    // }
+    // Check if user has approved spending and has sufficient balance
+    if (!user.spending_approved) {
+      return NextResponse.json(
+        { error: "USDC spending not approved. Please approve spending first." },
+        { status: 403 },
+      );
+    }
 
-    // if (!user.usdc_balance || user.usdc_balance < CAST_COST) {
-    //   return NextResponse.json(
-    //     { error: "Insufficient USDC balance. Please top up your account." },
-    //     { status: 402 },
-    //   );
-    // }
+    if (!user.usdc_balance || user.usdc_balance < CAST_COST) {
+      return NextResponse.json(
+        { error: "Insufficient USDC balance. Please top up your account." },
+        { status: 402 },
+      );
+    }
 
-    // // Check spending limit
-    // if (
-    //   user.spending_limit &&
-    //   (user.total_spent || 0) + CAST_COST > user.spending_limit
-    // ) {
-    //   return NextResponse.json(
-    //     {
-    //       error:
-    //         "Spending limit exceeded. Please increase your spending limit.",
-    //     },
-    //     { status: 403 },
-    //   );
-    // }
+    // Check spending limit
+    if (
+      user.spending_limit &&
+      (user.total_spent || 0) + CAST_COST > user.spending_limit
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Spending limit exceeded. Please increase your spending limit.",
+        },
+        { status: 403 },
+      );
+    }
 
-    // // Check onchain allowance using viem
-    // if (!user.wallet_address) {
-    //   return NextResponse.json(
-    //     { error: "Wallet address not found for user" },
-    //     { status: 400 },
-    //   );
-    // }
+    // Check onchain allowance using viem
+    if (!user.wallet_address) {
+      return NextResponse.json(
+        { error: "Wallet address not found for user" },
+        { status: 400 },
+      );
+    }
 
-    // const publicClient = createPublicClient({
-    //   chain: base,
-    //   transport: http(),
-    // });
+    const publicClient = createPublicClient({
+      chain: base,
+      transport: http(),
+    });
 
-    // try {
-    //   const allowance = await publicClient.readContract({
-    //     address: USDC_ADDRESS,
-    //     abi: erc20Abi,
-    //     functionName: "allowance",
-    //     args: [user.wallet_address as `0x${string}`, SPENDER_ADDRESS],
-    //   });
+    try {
+      const allowance = await publicClient.readContract({
+        address: USDC_ADDRESS,
+        abi: erc20Abi,
+        functionName: "allowance",
+        args: [user.wallet_address as `0x${string}`, SPENDER_ADDRESS],
+      });
 
-    //   const requiredAmount = parseUnits(CAST_COST.toString(), 6); // USDC has 6 decimals
+      const requiredAmount = parseUnits(CAST_COST.toString(), 6); // USDC has 6 decimals
 
-    // if (allowance < requiredAmount) {
-    //   return NextResponse.json(
-    //     {
-    //       error:
-    //         "Insufficient USDC allowance. Please approve spending first.",
-    //       requiredAllowance: CAST_COST,
-    //       currentAllowance: Number(allowance) / 1000000, // Convert from wei to USDC
-    //     },
-    //     { status: 403 },
-    //   );
-    // }
+      if (allowance < requiredAmount) {
+        return NextResponse.json(
+          {
+            error:
+              "Insufficient USDC allowance. Please approve spending first.",
+            requiredAllowance: CAST_COST,
+            currentAllowance: Number(allowance) / 1000000, // Convert from wei to USDC
+          },
+          { status: 403 },
+        );
+      }
 
-    //   console.log(`Allowance check passed: ${allowance} >= ${requiredAmount}`);
-    // } catch (allowanceError) {
-    //   console.error("Failed to check onchain allowance:", allowanceError);
-    //   return NextResponse.json(
-    //     { error: "Failed to verify onchain allowance" },
-    //     { status: 500 },
-    //   );
-    // }
+      console.log(`Allowance check passed: ${allowance} >= ${requiredAmount}`);
+    } catch (allowanceError) {
+      console.error("Failed to check onchain allowance:", allowanceError);
+      return NextResponse.json(
+        { error: "Failed to verify onchain allowance" },
+        { status: 500 },
+      );
+    }
 
     // Get tweet data from database
     const { data: tweet, error: tweetError } = await supabase
@@ -185,52 +185,52 @@ export async function POST(request: NextRequest) {
     const parsedCast = await parseTweetToFarcasterCast(tweet);
 
     // Process payment FIRST (0.1 USDC)
-    // const newBalance = (user.usdc_balance || 0) - CAST_COST;
-    // const newTotalSpent = (user.total_spent || 0) + CAST_COST;
+    const newBalance = (user.usdc_balance || 0) - CAST_COST;
+    const newTotalSpent = (user.total_spent || 0) + CAST_COST;
 
-    // // Execute actual USDC payment via blockchain transaction
-    // let transactionHash = null;
-    // try {
-    //   const privateKey = process.env.PRIVATE_KEY as `0x${string}`;
+    // Execute actual USDC payment via blockchain transaction
+    let transactionHash = null;
+    try {
+      const privateKey = process.env.PRIVATE_KEY as `0x${string}`;
 
-    //   if (!privateKey) {
-    //     console.error("Private key not configured");
-    //     return NextResponse.json(
-    //       { error: "Payment system not configured" },
-    //       { status: 500 },
-    //     );
-    //   }
+      if (!privateKey) {
+        console.error("Private key not configured");
+        return NextResponse.json(
+          { error: "Payment system not configured" },
+          { status: 500 },
+        );
+      }
 
-    //   const account = privateKeyToAccount(privateKey);
+      const account = privateKeyToAccount(privateKey);
 
-    //   const walletClient = createWalletClient({
-    //     account,
-    //     chain: base,
-    //     transport: http(),
-    //   });
+      const walletClient = createWalletClient({
+        account,
+        chain: base,
+        transport: http(),
+      });
 
-    //   // Convert amount to proper USDC units (6 decimals)
-    //   const amountInUnits = parseUnits(CAST_COST.toString(), 6);
+      // Convert amount to proper USDC units (6 decimals)
+      const amountInUnits = parseUnits(CAST_COST.toString(), 6);
 
-    //   transactionHash = await walletClient.writeContract({
-    //     address: USDC_ADDRESS,
-    //     abi: erc20Abi,
-    //     functionName: "transferFrom",
-    //     args: [
-    //       user.wallet_address as `0x${string}`,
-    //       SPENDER_ADDRESS,
-    //       amountInUnits,
-    //     ],
-    //   });
+      transactionHash = await walletClient.writeContract({
+        address: USDC_ADDRESS,
+        abi: erc20Abi,
+        functionName: "transferFrom",
+        args: [
+          user.wallet_address as `0x${string}`,
+          SPENDER_ADDRESS,
+          amountInUnits,
+        ],
+      });
 
-    //   console.log("Payment transaction successful:", transactionHash);
-    // } catch (paymentError) {
-    //   console.error("Payment processing error:", paymentError);
-    //   return NextResponse.json(
-    //     { error: "Failed to process USDC payment" },
-    //     { status: 500 },
-    //   );
-    // }
+      console.log("Payment transaction successful:", transactionHash);
+    } catch (paymentError) {
+      console.error("Payment processing error:", paymentError);
+      return NextResponse.json(
+        { error: "Failed to process USDC payment" },
+        { status: 500 },
+      );
+    }
 
     // Cast to Farcaster using Neynar API (AFTER payment is confirmed)
     const castPayload: any = {
@@ -263,49 +263,49 @@ export async function POST(request: NextRequest) {
 
     const castData = await castResponse.json();
 
-    // // Only update user balance and create records if payment transaction succeeded
-    // // Update user balance and total spent in a transaction
-    // const { error: updateUserError } = await supabase
-    //   .from("users")
-    //   .update({
-    //     usdc_balance: newBalance,
-    //     total_spent: newTotalSpent,
-    //     updated_at: new Date().toISOString(),
-    //   })
-    //   .eq("farcaster_fid", fid);
+    // Only update user balance and create records if payment transaction succeeded
+    // Update user balance and total spent in a transaction
+    const { error: updateUserError } = await supabase
+      .from("users")
+      .update({
+        usdc_balance: newBalance,
+        total_spent: newTotalSpent,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("farcaster_fid", fid);
 
-    // if (updateUserError) {
-    //   console.error("Failed to update user balance:", updateUserError);
-    //   return NextResponse.json(
-    //     { error: "Failed to update user balance after payment" },
-    //     { status: 500 },
-    //   );
-    // }
+    if (updateUserError) {
+      console.error("Failed to update user balance:", updateUserError);
+      return NextResponse.json(
+        { error: "Failed to update user balance after payment" },
+        { status: 500 },
+      );
+    }
 
-    // // Create transaction record with blockchain transaction hash
-    // const { error: transactionError } = await supabase
-    //   .from("transactions")
-    //   .insert({
-    //     user_id: user.id,
-    //     tweet_id: tweetId,
-    //     transaction_type: "cast_payment",
-    //     amount: CAST_COST,
-    //     currency: "USDC",
-    //     status: "completed",
-    //     transaction_hash: transactionHash,
-    //     description: `Payment for casting tweet to Farcaster`,
-    //     metadata: {
-    //       cast_hash: castData.cast?.hash,
-    //       fid: fid,
-    //       cast_url: `https://warpcast.com/${castData.cast?.author?.username || "user"}/${castData.cast?.hash?.slice(0, 10) || "cast"}`,
-    //       payment_transaction_hash: transactionHash,
-    //     },
-    //   });
+    // Create transaction record with blockchain transaction hash
+    const { error: transactionError } = await supabase
+      .from("transactions")
+      .insert({
+        user_id: user.id,
+        tweet_id: tweet.id,
+        transaction_type: "cast_payment",
+        amount: CAST_COST,
+        currency: "USDC",
+        status: "completed",
+        transaction_hash: transactionHash,
+        description: `Payment for casting tweet to Farcaster`,
+        metadata: {
+          cast_hash: castData.cast?.hash,
+          fid: fid,
+          cast_url: `https://warpcast.com/${castData.cast?.author?.username || "user"}/${castData.cast?.hash?.slice(0, 10) || "cast"}`,
+          payment_transaction_hash: transactionHash,
+        },
+      });
 
-    // if (transactionError) {
-    //   console.error("Failed to create transaction record:", transactionError);
-    //   // Don't fail the entire operation if transaction logging fails
-    // }
+    if (transactionError) {
+      console.error("Failed to create transaction record:", transactionError);
+      // Don't fail the entire operation if transaction logging fails
+    }
 
     // Update tweet status in database
     const castUrl = `https://warpcast.com/${castData.cast?.author?.username || "user"}/${castData.cast?.hash?.slice(0, 10) || "cast"}`;
