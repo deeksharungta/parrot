@@ -21,8 +21,6 @@ interface ApiError {
 
 // Hook to edit tweet content
 export const useEditTweet = () => {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async (editData: EditTweetData): Promise<EditTweetResponse> => {
       const response = await fetch("/api/tweets/edit", {
@@ -43,10 +41,6 @@ export const useEditTweet = () => {
       return response.json();
     },
     onSuccess: (data) => {
-      // Invalidate tweet queries to refresh the UI
-      queryClient.invalidateQueries({ queryKey: ["tweets"] });
-      queryClient.invalidateQueries({ queryKey: ["userTweets"] });
-
       console.log("Tweet edited successfully:", data.message);
     },
     onError: (error) => {

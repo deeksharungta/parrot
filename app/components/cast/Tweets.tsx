@@ -400,6 +400,8 @@ export default function Tweets({ fid }: TweetsProps) {
         });
 
         console.log("Edited tweet cast successfully");
+
+        setShowEditModal(false);
       } else {
         throw new Error("Signer UUID not available");
       }
