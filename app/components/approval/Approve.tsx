@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react";
 
 export default function Approve() {
   const [spendingLimit, setSpendingLimit] = useState(10);
-  const presetLimits = [5, 10, 25, 50, 100, 500];
+  const presetLimits = [1, 10, 25, 50, 100, 500];
 
   const { isApproving, isConnected, handleApprove, currentAllowanceFormatted } =
     useUSDCApproval();
