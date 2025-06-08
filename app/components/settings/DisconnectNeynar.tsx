@@ -3,14 +3,14 @@
 import { useEffect } from "react";
 import Container from "../ui/Container";
 import Button from "../ui/Button";
-import { useGetUser } from "@/hooks/useUsers";
+import { useCurrentUser } from "@/hooks/useUsers";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { sdk } from "@farcaster/frame-sdk";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function DisconnectNeynar() {
   const { context } = useMiniKit();
-  const { data: userData, refetch } = useGetUser(context?.user?.fid);
+  const { data: userData, refetch } = useCurrentUser();
   const queryClient = useQueryClient();
 
   const handleOpenAuth = async () => {

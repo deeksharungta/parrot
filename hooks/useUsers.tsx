@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { Database } from "@/lib/types/database";
 
 // Type definitions
@@ -216,4 +217,10 @@ export const useUserExists = (fid: number | undefined) => {
     user: data?.user ?? null,
     ...rest,
   };
+};
+
+// Custom hook for current user - prevents duplicate calls across components
+export const useCurrentUser = () => {
+  const { context } = useMiniKit();
+  return useGetUser(context?.user?.fid);
 };

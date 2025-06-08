@@ -6,11 +6,11 @@ import Header from "../components/ui/Header";
 import Tweets from "../components/cast/Tweets";
 import { ConnectNeynar } from "../components/cast/ConnectNeynar";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
-import { useGetUser } from "@/hooks/useUsers";
+import { useCurrentUser } from "@/hooks/useUsers";
 
 export default function CastPage() {
   const { isFrameReady, setFrameReady, context } = useMiniKit();
-  const { data: userData } = useGetUser(context?.user?.fid);
+  const { data: userData } = useCurrentUser();
   const [showConnectNeynar, setShowConnectNeynar] = useState(false);
 
   useEffect(() => {

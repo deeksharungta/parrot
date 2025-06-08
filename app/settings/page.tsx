@@ -20,20 +20,7 @@ export default function SettingsPage() {
   }, [isFrameReady, setFrameReady]);
 
   // Auto-refresh when user returns to the settings page (e.g., from auth)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        // Page became visible, refresh user data
-        setTimeout(() => {
-          queryClient.invalidateQueries({ queryKey: ["users"] });
-        }, 500);
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () =>
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [queryClient]);
+  // Removed broad query invalidation to prevent excessive API calls
 
   const settingsItems = [
     { component: YoloMode, delay: 0.3 },

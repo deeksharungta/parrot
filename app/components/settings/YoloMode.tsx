@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Container from "../ui/Container";
 import Button from "../ui/Button";
-import { useGetUser, useUpdateUser } from "@/hooks/useUsers";
+import { useCurrentUser, useUpdateUser } from "@/hooks/useUsers";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { Loader2 } from "lucide-react";
 import YoloModeModal from "../modals/YoloModeModal";
@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 export default function YoloMode() {
   const { context } = useMiniKit();
-  const { data: userData } = useGetUser(context?.user?.fid);
+  const { data: userData } = useCurrentUser();
   const updateUser = useUpdateUser();
   const [showModal, setShowModal] = useState(false);
   const [isConfiguring, setIsConfiguring] = useState(false);

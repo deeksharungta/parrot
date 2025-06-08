@@ -91,8 +91,12 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
         // Don't fail the entire operation if database save fails
       }
 
-      // Invalidate all related queries to refresh UI
-      await queryClient.invalidateQueries({ queryKey: ["users"] });
+      // Only invalidate the specific user query instead of all users
+      if (context.user.fid) {
+        queryClient.invalidateQueries({
+          queryKey: ["users", "fid", context.user.fid],
+        });
+      }
 
       // Show success toast
       toast(`USDC Approved!`, {
@@ -145,8 +149,12 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
         // Don't fail the entire operation if database save fails
       }
 
-      // Invalidate all related queries to refresh UI
-      await queryClient.invalidateQueries({ queryKey: ["users"] });
+      // Only invalidate the specific user query instead of all users
+      if (context.user.fid) {
+        queryClient.invalidateQueries({
+          queryKey: ["users", "fid", context.user.fid],
+        });
+      }
 
       // Show success toast
       toast("USDC Revoked!", {
