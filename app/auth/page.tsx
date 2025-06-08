@@ -185,7 +185,7 @@ export default function AuthPage() {
             transition={{ delay: 0.8 }}
           >
             <motion.a
-              href="/"
+              href="https://farcaster.xyz/miniapps/RtJVZsmn7GY4/xcast"
               className="block w-full"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
