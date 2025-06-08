@@ -125,11 +125,17 @@ export default function UserProfiles() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 1.2 }}
       >
-        <Link href="/cast" className="w-full">
-          <Button disabled={isLoading}>
-            {isLoading ? "Loading..." : "Continue fetching tweets"}
+        {twitterAccount?.username ? (
+          <Link href="/cast" className="w-full">
+            <Button disabled={isLoading || !twitterAccount?.username}>
+              {isLoading ? "Loading..." : "Continue fetching tweets"}
+            </Button>
+          </Link>
+        ) : (
+          <Button disabled={isLoading || !twitterAccount?.username}>
+            Verify your Twitter account with Farcaster
           </Button>
-        </Link>
+        )}
       </motion.div>
     </motion.div>
   );
