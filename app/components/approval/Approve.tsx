@@ -63,8 +63,14 @@ export default function Approve() {
 
       <p className="text-[#8C8A94] text-xs font-normal text-center px-5 mt-1">
         ${spendingLimit} covers nearly {Math.floor(spendingLimit * 10)} casts —
-        enough for 1 month if you cast {Math.floor(spendingLimit / 3)} time
-        {Math.floor(spendingLimit / 3) > 1 ? "s" : ""} a day.
+        enough for {spendingLimit === 1 ? "10 days" : "1 month"} if you cast{" "}
+        {spendingLimit === 1 ? "1" : Math.floor(spendingLimit / 3)} time
+        {spendingLimit === 1
+          ? ""
+          : Math.floor(spendingLimit / 3) > 1
+            ? "s"
+            : ""}{" "}
+        a day.
       </p>
     </Container>
   );
