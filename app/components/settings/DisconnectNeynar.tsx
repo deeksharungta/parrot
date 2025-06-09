@@ -52,7 +52,7 @@ export default function DisconnectNeynar() {
 
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
-  }, [storedSigner, approveSignerMutation, refetch]);
+  }, [storedSigner]);
 
   const handleSignIn = async () => {
     setLoading(true);
@@ -95,7 +95,7 @@ export default function DisconnectNeynar() {
           disabled={loading || createSignerMutation.isPending}
         >
           {loading || createSignerMutation.isPending
-            ? "Creating..."
+            ? "Connecting..."
             : "Connect Neynar"}
         </Button>
       )}
