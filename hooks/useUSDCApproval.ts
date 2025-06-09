@@ -1,11 +1,17 @@
 import { useState } from "react";
-import { useAccount, useWriteContract, useReadContract } from "wagmi";
+import {
+  useAccount,
+  useWriteContract,
+  useReadContract,
+  useWaitForTransactionReceipt,
+} from "wagmi";
 import { erc20Abi, parseUnits, formatUnits } from "viem";
 import { USDC_ADDRESS, SPENDER_ADDRESS } from "@/lib/constant";
 import { useUpdateUser } from "./useUsers";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import React from "react";
 
 export interface UseUSDCApprovalReturn {
   // State
@@ -31,6 +37,8 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
   const [isApproving, setIsApproving] = useState(false);
   const [isRevoking, setIsRevoking] = useState(false);
   const [error, setError] = useState<string>("");
+  const [pendingTxHash, setPendingTxHash] = useState<string | undefined>();
+
   const { writeContractAsync } = useWriteContract();
   const updateUser = useUpdateUser();
   const { context } = useMiniKit();
@@ -50,6 +58,22 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
       },
     },
   );
+
+  // Wait for transaction confirmation
+  const { data: txReceipt } = useWaitForTransactionReceipt({
+    hash: pendingTxHash as `0x${string}`,
+    query: {
+      enabled: !!pendingTxHash,
+    },
+  });
+
+  // Refetch allowance when transaction is confirmed
+  React.useEffect(() => {
+    if (txReceipt && txReceipt.status === "success") {
+      refetchAllowance();
+      setPendingTxHash(undefined);
+    }
+  }, [txReceipt, refetchAllowance]);
 
   const handleApprove = async (amount: number) => {
     if (!isConnected || !address) {
@@ -75,6 +99,9 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
         functionName: "approve",
         args: [SPENDER_ADDRESS, amountBigInt],
       });
+
+      // Set pending transaction hash to wait for confirmation
+      setPendingTxHash(hash);
 
       // Save approval to Supabase users table
       try {
@@ -104,7 +131,6 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
       });
 
       setIsApproving(false);
-      refetchAllowance();
     } catch (err: any) {
       setIsApproving(false);
       setError(err.message || "Failed to approve USDC spending");
@@ -134,6 +160,9 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
         args: [SPENDER_ADDRESS, BigInt(0)], // Set allowance to 0 to revoke
       });
 
+      // Set pending transaction hash to wait for confirmation
+      setPendingTxHash(hash);
+
       // Save revocation to Supabase users table
       try {
         await updateUser.mutateAsync({
@@ -162,7 +191,6 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
       });
 
       setIsRevoking(false);
-      refetchAllowance();
     } catch (err: any) {
       setIsRevoking(false);
       setError(err.message || "Failed to revoke USDC allowance");
