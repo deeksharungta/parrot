@@ -50,7 +50,7 @@ export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
 
     // Also check when window regains focus (user returns from approval)
     const handleFocus = () => {
-      setTimeout(checkApproval, 100); // Small delay to ensure approval is processed
+      setTimeout(checkApproval, 1000); // Small delay to ensure approval is processed
     };
 
     window.addEventListener("focus", handleFocus);
