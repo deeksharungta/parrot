@@ -7,6 +7,7 @@ import {
   setFarcasterSignerCookie,
   deleteFarcasterSignerCookie,
 } from "@/lib/utils/cookies";
+import sdk from "@farcaster/frame-sdk";
 
 // Type definitions
 export interface FarcasterUser {
@@ -55,7 +56,7 @@ export const useCreateSigner = () => {
 
       // Redirect to approval URL
       if (signerData.signer_approval_url) {
-        window.open(signerData.signer_approval_url, "_blank");
+        sdk.actions.openUrl(signerData.signer_approval_url);
       }
     },
     onError: (error) => {
