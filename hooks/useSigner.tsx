@@ -127,7 +127,9 @@ export const useApproveSigner = () => {
         queryClient.setQueryData(signerKeys.byUuid(data.signer_uuid), data);
 
         // Refresh user data
-        queryClient.invalidateQueries({ queryKey: ["users"] });
+        queryClient.invalidateQueries({
+          queryKey: ["users", "fid", context?.user?.fid],
+        });
       }
     },
     onError: (error) => {
@@ -163,7 +165,9 @@ export const useDisconnectSigner = () => {
       queryClient.removeQueries({ queryKey: ["storedSigner"] });
 
       // Refresh user data
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({
+        queryKey: ["users", "fid", context?.user?.fid],
+      });
     },
     onError: (error) => {
       console.error("Failed to disconnect signer:", error);

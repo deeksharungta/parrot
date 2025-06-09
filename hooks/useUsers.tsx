@@ -155,7 +155,9 @@ export const useUpdateUser = () => {
 
       // If Neynar connection changed, invalidate twitter account query for settings page
       if ("neynar_signer_uuid" in variables) {
-        queryClient.invalidateQueries({ queryKey: ["users"] });
+        queryClient.invalidateQueries({
+          queryKey: ["users", "fid", variables.farcaster_fid],
+        });
       }
     },
   });
@@ -202,7 +204,9 @@ export const useUpsertUser = () => {
 
       // If Neynar connection changed, invalidate twitter account query for settings page
       if ("neynar_signer_uuid" in variables) {
-        queryClient.invalidateQueries({ queryKey: ["users"] });
+        queryClient.invalidateQueries({
+          queryKey: ["users", "fid", variables.farcaster_fid],
+        });
       }
     },
   });

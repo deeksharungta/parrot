@@ -1,3 +1,5 @@
+import { FarcasterUser } from "@/hooks/useSigner";
+
 export const getCookie = (name: string): string | null => {
   if (typeof document === "undefined") return null;
 
@@ -90,7 +92,7 @@ export const getFarcasterSignerFromCookie = () => {
   }
 };
 
-export const setFarcasterSignerCookie = (signerData: any) => {
+export const setFarcasterSignerCookie = (signerData: FarcasterUser) => {
   setCookie("farcaster_signer", JSON.stringify(signerData), {
     days: 30, // Store for 30 days
     secure: true,

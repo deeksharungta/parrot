@@ -1,13 +1,13 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import Cross from "../icons/Cross";
 import Button from "../ui/Button";
+import { ConnectionStatusModal } from "../ui/ConnectionStatusModal";
 import { useCurrentUser } from "@/hooks/useUsers";
 import {
+  useApproveSigner,
   useCreateSigner,
   useStoredSigner,
-  useDisconnectSigner,
-  useApproveSigner,
 } from "@/hooks/useSigner";
 
 interface ConnectNeynarProps {
@@ -19,15 +19,14 @@ export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
   const { data: userData, refetch } = useCurrentUser();
   const [loading, setLoading] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
-
-  // Get stored signer from cookies
-  const { data: storedSigner } = useStoredSigner();
-
   // Create signer mutation
   const createSignerMutation = useCreateSigner();
 
   // Approve signer mutation
   const approveSignerMutation = useApproveSigner();
+
+  // Get stored signer from cookies
+  const { data: storedSigner } = useStoredSigner();
 
   // Check for approval when component mounts or user returns
   useEffect(() => {
@@ -39,8 +38,7 @@ export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
         try {
           await approveSignerMutation.mutateAsync(storedSigner.signer_uuid);
           refetch(); // Refresh user data
-          // Close connect modal and show status modal
-          onClose();
+          // Show status modal instead of immediately closing
           setShowStatusModal(true);
         } catch (error) {
           // Silent fail - user hasn't approved yet
@@ -52,7 +50,7 @@ export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
 
     // Also check when window regains focus (user returns from approval)
     const handleFocus = () => {
-      setTimeout(checkApproval, 1000); // Small delay to ensure approval is processed
+      setTimeout(checkApproval, 100); // Small delay to ensure approval is processed
     };
 
     window.addEventListener("focus", handleFocus);
@@ -72,8 +70,18 @@ export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
 
   const isConnected = userData?.user?.neynar_signer_uuid;
 
+  const handleStatusModalClose = () => {
+    setShowStatusModal(false);
+    onClose(); // Close the main connect modal
+  };
+
   return (
     <>
+      <ConnectionStatusModal
+        isOpen={showStatusModal}
+        onClose={handleStatusModalClose}
+        status="connected"
+      />
       <AnimatePresence>
         {isOpen && (
           <>
@@ -141,7 +149,7 @@ export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
                 }
               >
                 {loading || createSignerMutation.isPending
-                  ? "Creating..."
+                  ? "Connecting..."
                   : isConnected
                     ? "Already Connected"
                     : "Connect with Neynar"}
