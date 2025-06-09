@@ -4,8 +4,14 @@ import { supabase } from "@/lib/supabase";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { tweetId, content, mediaUrls, quotedTweetUrl, isRetweetRemoved } =
-      body;
+    const {
+      tweetId,
+      content,
+      mediaUrls,
+      quotedTweetUrl,
+      isRetweetRemoved,
+      videoUrls,
+    } = body;
 
     if (!tweetId || content === undefined) {
       return NextResponse.json(
@@ -34,9 +40,21 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString(),
     };
 
-    // Update media URLs if provided
-    if (mediaUrls !== undefined) {
-      updateData.media_urls = mediaUrls.length > 0 ? mediaUrls : null;
+    // Update media URLs if provided - handle both images and videos
+    if (mediaUrls !== undefined || videoUrls !== undefined) {
+      const mediaData: Record<string, any> = {};
+
+      if (mediaUrls && mediaUrls.length > 0) {
+        mediaData.images = mediaUrls;
+      }
+
+      if (videoUrls && videoUrls.length > 0) {
+        mediaData.videos = videoUrls;
+      }
+
+      // Only store media_urls if we have any media
+      updateData.media_urls =
+        Object.keys(mediaData).length > 0 ? mediaData : null;
     }
 
     // Update quoted tweet URL if provided

@@ -15,11 +15,13 @@ interface EditModalProps {
     mediaUrls: string[],
     quotedTweetUrl: string | null,
     isRetweetRemoved: boolean,
+    videoUrls?: Array<{ url: string; bitrate: number; content_type: string }>,
   ) => void;
   onClose: () => void;
   isLoading: boolean;
   isOpen: boolean;
   isRetweet?: boolean;
+  databaseTweet?: any; // Database tweet data with custom media structure
 }
 
 export function EditModal({
@@ -29,10 +31,14 @@ export function EditModal({
   isLoading,
   isOpen,
   isRetweet = false,
+  databaseTweet,
 }: EditModalProps) {
   const { data: tweetData } = useTweet(tweetId);
   const [content, setContent] = useState("");
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
+  const [videoUrls, setVideoUrls] = useState<
+    Array<{ url: string; bitrate: number; content_type: string }>
+  >([]);
   const [quotedTweetUrl, setQuotedTweetUrl] = useState<string | null>(null);
   const [showRetweet, setShowRetweet] = useState(true);
   const [isRetweetRemoved, setIsRetweetRemoved] = useState(false);
@@ -62,33 +68,59 @@ export function EditModal({
 
   // Update state when tweet data loads
   useEffect(() => {
-    if (tweetData && isOpen) {
+    if ((tweetData || databaseTweet) && isOpen) {
+      // Use database tweet data if available, otherwise fall back to Twitter API data
+      const tweet = databaseTweet || tweetData;
+
       if (isRetweet) {
         // For retweets, keep the text area empty
         setContent("");
       } else {
         // For regular tweets, use the cleaned content
-        setContent(cleanupTweetContent(tweetData.text || ""));
+        const text = databaseTweet
+          ? databaseTweet.content || databaseTweet.original_content || ""
+          : tweetData?.text || "";
+        setContent(cleanupTweetContent(text));
       }
 
-      setMediaUrls(
-        tweetData.mediaDetails?.map((media: any) => media.media_url_https) ||
-          [],
-      );
+      // Handle media from database structure or Twitter API
+      if (databaseTweet && databaseTweet.media_urls) {
+        if (
+          typeof databaseTweet.media_urls === "object" &&
+          !Array.isArray(databaseTweet.media_urls)
+        ) {
+          // New structure with images and videos
+          setMediaUrls(databaseTweet.media_urls.images || []);
+          setVideoUrls(databaseTweet.media_urls.videos || []);
+        } else if (Array.isArray(databaseTweet.media_urls)) {
+          // Old structure - assume they're all images
+          setMediaUrls(databaseTweet.media_urls);
+          setVideoUrls([]);
+        }
+      } else if (tweetData) {
+        // Twitter API data
+        setMediaUrls(
+          tweetData.mediaDetails?.map((media: any) => media.media_url_https) ||
+            [],
+        );
+        setVideoUrls([]);
+      }
+
       setQuotedTweetUrl(
-        tweetData.quoted_tweet
+        tweetData?.quoted_tweet
           ? `https://twitter.com/${tweetData.quoted_tweet.user.screen_name}/status/${tweetData.quoted_tweet.id_str}`
           : null,
       );
       setShowRetweet(true);
     }
-  }, [tweetData, isOpen, isRetweet]);
+  }, [tweetData, databaseTweet, isOpen, isRetweet]);
 
   // Reset all edits when modal is closed
   useEffect(() => {
     if (!isOpen) {
       setContent("");
       setMediaUrls([]);
+      setVideoUrls([]);
       setQuotedTweetUrl(null);
       setShowRetweet(true);
       setIsRetweetRemoved(false);
@@ -101,6 +133,10 @@ export function EditModal({
     setMediaUrls((prev) => prev.filter((_, index) => index !== indexToRemove));
   };
 
+  const removeVideo = (indexToRemove: number) => {
+    setVideoUrls((prev) => prev.filter((_, index) => index !== indexToRemove));
+  };
+
   const removeQuoteTweet = () => {
     setQuotedTweetUrl(null);
   };
@@ -111,7 +147,7 @@ export function EditModal({
   };
 
   const handleSave = () => {
-    onSave(content, mediaUrls, quotedTweetUrl, isRetweetRemoved);
+    onSave(content, mediaUrls, quotedTweetUrl, isRetweetRemoved, videoUrls);
   };
 
   // Handle @ mention detection
@@ -320,6 +356,36 @@ export function EditModal({
                 </div>
               )}
 
+              {videoUrls.length > 0 && !isRetweet && (
+                <div className="mt-2">
+                  <div className="grid grid-cols-1 gap-2">
+                    {videoUrls.map((videoObj, index) => (
+                      <div key={index} className="relative group">
+                        <video
+                          src={videoObj.url}
+                          controls
+                          preload="metadata"
+                          className="w-full h-auto max-h-32 object-cover rounded-lg"
+                          playsInline
+                        >
+                          Your browser does not support the video tag.
+                        </video>
+                        <button
+                          onClick={() => removeVideo(index)}
+                          className="absolute top-1 right-1 bg-white/90 backdrop-blur-sm rounded-full p-2 opacity-100 transition-opacity hover:bg-white touch-manipulation"
+                        >
+                          <Trash />
+                        </button>
+                        <div className="absolute bottom-1 left-1 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                          {videoObj.content_type} •{" "}
+                          {Math.round(videoObj.bitrate / 1000)}k
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Display retweet content */}
               {isRetweet && tweetData && showRetweet && (
                 <div className="mt-2">
@@ -370,6 +436,31 @@ export function EditModal({
                                       height={100}
                                       className="rounded-lg object-cover w-full h-24"
                                     />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {/* Display videos inside retweet */}
+                          {videoUrls.length > 0 && (
+                            <div className="mt-2">
+                              <div className="grid grid-cols-1 gap-2">
+                                {videoUrls.map((videoObj, index) => (
+                                  <div key={index} className="relative">
+                                    <video
+                                      src={videoObj.url}
+                                      controls
+                                      preload="metadata"
+                                      className="w-full h-auto max-h-24 object-cover rounded-lg"
+                                      playsInline
+                                    >
+                                      Your browser does not support the video
+                                      tag.
+                                    </video>
+                                    <div className="absolute bottom-1 left-1 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                                      {videoObj.content_type} •{" "}
+                                      {Math.round(videoObj.bitrate / 1000)}k
+                                    </div>
                                   </div>
                                 ))}
                               </div>

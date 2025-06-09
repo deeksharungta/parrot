@@ -7,6 +7,7 @@ interface EditTweetData {
   mediaUrls?: string[];
   quotedTweetUrl?: string | null;
   isRetweetRemoved?: boolean;
+  videoUrls?: Array<{ url: string; bitrate: number; content_type: string }>;
 }
 
 interface EditTweetResponse {
@@ -61,6 +62,7 @@ export const useCastTweet = () => {
       mediaUrls?: string[];
       quotedTweetUrl?: string | null;
       isRetweetRemoved?: boolean;
+      videoUrls?: Array<{ url: string; bitrate: number; content_type: string }>;
     }): Promise<any> => {
       const response = await fetch("/api/cast", {
         method: "POST",

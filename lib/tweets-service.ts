@@ -53,6 +53,11 @@ export interface TwitterApiTweet {
     };
   };
   media_url?: string[];
+  video_url?: Array<{
+    url: string;
+    bitrate: number;
+    content_type: string;
+  }>;
   timestamp?: number;
   [key: string]: any;
 }
@@ -246,6 +251,19 @@ export async function saveTweetsToDatabase(
       // But we also want to handle cases where we want the original author's info
       const userInfo = tweet.user;
 
+      // Combine media URLs and video URLs into a single media_urls object
+      // New structure: { images: string[], videos: Array<{url: string, bitrate: number, content_type: string}> }
+      // This allows us to store both images and videos with their metadata
+      const mediaUrls: Record<string, any> = {};
+
+      if (tweet.media_url && tweet.media_url.length > 0) {
+        mediaUrls.images = tweet.media_url;
+      }
+
+      if (tweet.video_url && tweet.video_url.length > 0) {
+        mediaUrls.videos = tweet.video_url;
+      }
+
       return {
         user_id: userId,
         tweet_id: tweet.tweet_id,
@@ -257,7 +275,7 @@ export async function saveTweetsToDatabase(
         is_edited: false,
         edit_count: 0,
         auto_cast: false,
-        media_urls: tweet.media_url || null,
+        media_urls: Object.keys(mediaUrls).length > 0 ? mediaUrls : null,
         quoted_tweet_url: tweet.quoted_status_id
           ? `https://twitter.com/i/status/${tweet.quoted_status_id}`
           : null,

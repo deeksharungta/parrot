@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
       mediaUrls,
       quotedTweetUrl,
       isRetweetRemoved,
+      videoUrls,
     } = body;
 
     if (!tweetId || !fid) {
@@ -193,7 +194,11 @@ export async function POST(request: NextRequest) {
     let parsedCast = await parseTweetToFarcasterCast(tweet);
 
     // Override with edited values if provided
-    if (mediaUrls !== undefined || quotedTweetUrl !== undefined) {
+    if (
+      mediaUrls !== undefined ||
+      quotedTweetUrl !== undefined ||
+      videoUrls !== undefined
+    ) {
       console.log("mediaUrls", mediaUrls);
       console.log("quotedTweetUrl", quotedTweetUrl);
 
@@ -220,18 +225,51 @@ export async function POST(request: NextRequest) {
         // Use provided media URLs or fall back to database value
         const finalMediaUrls =
           mediaUrls !== undefined ? mediaUrls : tweet.media_urls;
-        if (finalMediaUrls) {
-          const mediaUrlsArray = Array.isArray(finalMediaUrls)
-            ? finalMediaUrls
-            : typeof finalMediaUrls === "string"
-              ? [finalMediaUrls]
-              : Object.values(finalMediaUrls);
+        const finalVideoUrls =
+          videoUrls !== undefined ? videoUrls : tweet.media_urls?.videos || [];
 
-          mediaUrlsArray.forEach((url: any) => {
-            if (typeof url === "string" && url.trim()) {
-              embeds.push(url);
+        if (finalMediaUrls || finalVideoUrls.length > 0) {
+          // Handle new structure with images and videos
+          if (
+            typeof finalMediaUrls === "object" &&
+            !Array.isArray(finalMediaUrls)
+          ) {
+            // Handle images
+            if (finalMediaUrls.images && Array.isArray(finalMediaUrls.images)) {
+              finalMediaUrls.images.forEach((url: string) => {
+                if (url && url.trim()) {
+                  embeds.push(url);
+                }
+              });
             }
-          });
+
+            // Handle videos from database structure
+            if (finalMediaUrls.videos && Array.isArray(finalMediaUrls.videos)) {
+              finalMediaUrls.videos.forEach((video: any) => {
+                if (video && video.url && video.url.trim()) {
+                  embeds.push(video.url);
+                }
+              });
+            }
+          }
+
+          // Handle videos from edit parameters
+          if (finalVideoUrls && finalVideoUrls.length > 0) {
+            finalVideoUrls.forEach((video: any) => {
+              if (video && video.url && video.url.trim()) {
+                embeds.push(video.url);
+              }
+            });
+          }
+
+          // Handle legacy media format (if not already handled above)
+          if (finalMediaUrls && Array.isArray(finalMediaUrls)) {
+            finalMediaUrls.forEach((url: any) => {
+              if (typeof url === "string" && url.trim()) {
+                embeds.push(url);
+              }
+            });
+          }
         }
       }
 

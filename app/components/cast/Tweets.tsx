@@ -363,6 +363,7 @@ export default function Tweets({ fid }: TweetsProps) {
     mediaUrls: string[],
     quotedTweetUrl: string | null,
     isRetweetRemoved: boolean,
+    videoUrls?: Array<{ url: string; bitrate: number; content_type: string }>,
   ) => {
     setIsEditLoading(true);
     const currentTweet = showTweets[currentIndex];
@@ -384,6 +385,7 @@ export default function Tweets({ fid }: TweetsProps) {
         mediaUrls: mediaUrls,
         quotedTweetUrl: quotedTweetUrl,
         isRetweetRemoved: isRetweetRemoved,
+        videoUrls: videoUrls,
       });
 
       console.log("Edited content saved successfully");
@@ -397,6 +399,7 @@ export default function Tweets({ fid }: TweetsProps) {
           mediaUrls: mediaUrls,
           quotedTweetUrl: quotedTweetUrl,
           isRetweetRemoved: isRetweetRemoved,
+          videoUrls: videoUrls,
         });
 
         console.log("Edited tweet cast successfully");
@@ -568,6 +571,7 @@ export default function Tweets({ fid }: TweetsProps) {
         isLoading={isEditLoading}
         isOpen={showEditModal}
         isRetweet={currentTweet?.is_retweet || false}
+        databaseTweet={currentTweet}
       />
 
       <ConnectNeynar

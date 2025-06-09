@@ -150,18 +150,43 @@ export async function parseTweetToFarcasterCast(
 
   // Handle media URLs
   if (tweet.media_urls) {
-    const mediaUrls = Array.isArray(tweet.media_urls)
-      ? tweet.media_urls
-      : typeof tweet.media_urls === "string"
-        ? [tweet.media_urls]
-        : Object.values(tweet.media_urls);
-
-    // Add media URLs to content
-    mediaUrls.forEach((url: any) => {
-      if (typeof url === "string" && url.trim()) {
-        embeds.push(url);
+    // Handle new structure with images and videos
+    if (
+      typeof tweet.media_urls === "object" &&
+      !Array.isArray(tweet.media_urls)
+    ) {
+      // Handle images
+      if (tweet.media_urls.images && Array.isArray(tweet.media_urls.images)) {
+        tweet.media_urls.images.forEach((url: string) => {
+          if (url && url.trim()) {
+            embeds.push(url);
+          }
+        });
       }
-    });
+
+      // Handle videos - use the highest quality video URL
+      if (tweet.media_urls.videos && Array.isArray(tweet.media_urls.videos)) {
+        tweet.media_urls.videos.forEach((video: any) => {
+          if (video && video.url && video.url.trim()) {
+            embeds.push(video.url);
+          }
+        });
+      }
+    } else {
+      // Handle legacy format (for backward compatibility)
+      const mediaUrls = Array.isArray(tweet.media_urls)
+        ? tweet.media_urls
+        : typeof tweet.media_urls === "string"
+          ? [tweet.media_urls]
+          : Object.values(tweet.media_urls);
+
+      // Add media URLs to content
+      mediaUrls.forEach((url: any) => {
+        if (typeof url === "string" && url.trim()) {
+          embeds.push(url);
+        }
+      });
+    }
   }
 
   return {
