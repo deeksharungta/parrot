@@ -7,7 +7,7 @@ import { useCurrentUser } from "@/hooks/useUsers";
 import {
   useApproveSigner,
   useCreateSigner,
-  useStoredSigner,
+  useSignerApprovalStatus,
 } from "@/hooks/useSigner";
 
 interface ConnectNeynarProps {
@@ -25,18 +25,18 @@ export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
   // Approve signer mutation
   const approveSignerMutation = useApproveSigner();
 
-  // Get stored signer from cookies
-  const { data: storedSigner } = useStoredSigner();
+  // Get signer approval status from database
+  const { data: signerStatus } = useSignerApprovalStatus();
 
   // Check for approval when component mounts or user returns
   useEffect(() => {
     const checkApproval = async () => {
       if (
-        storedSigner?.signer_uuid &&
-        storedSigner.status === "pending_approval"
+        signerStatus?.signer_uuid &&
+        signerStatus.signer_approval_status === "pending"
       ) {
         try {
-          await approveSignerMutation.mutateAsync(storedSigner.signer_uuid);
+          await approveSignerMutation.mutateAsync(signerStatus.signer_uuid);
           refetch(); // Refresh user data
           // Show status modal instead of immediately closing
           setShowStatusModal(true);
@@ -55,7 +55,7 @@ export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
 
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
-  }, [storedSigner, approveSignerMutation, refetch, onClose]);
+  }, [signerStatus, approveSignerMutation, refetch, onClose]);
 
   const handleConnectNeynar = async () => {
     setLoading(true);

@@ -6,7 +6,7 @@ import Button from "../ui/Button";
 import { useCurrentUser } from "@/hooks/useUsers";
 import {
   useCreateSigner,
-  useStoredSigner,
+  useSignerApprovalStatus,
   useDisconnectSigner,
   useApproveSigner,
 } from "@/hooks/useSigner";
@@ -15,8 +15,8 @@ export default function DisconnectNeynar() {
   const { data: userData, refetch } = useCurrentUser();
   const [loading, setLoading] = useState(false);
 
-  // Get stored signer from cookies
-  const { data: storedSigner } = useStoredSigner();
+  // Get signer approval status from database
+  const { data: signerStatus } = useSignerApprovalStatus();
 
   // Create signer mutation
   const createSignerMutation = useCreateSigner();
@@ -31,11 +31,11 @@ export default function DisconnectNeynar() {
   useEffect(() => {
     const checkApproval = async () => {
       if (
-        storedSigner?.signer_uuid &&
-        storedSigner.status === "pending_approval"
+        signerStatus?.signer_uuid &&
+        signerStatus.signer_approval_status === "pending"
       ) {
         try {
-          await approveSignerMutation.mutateAsync(storedSigner.signer_uuid);
+          await approveSignerMutation.mutateAsync(signerStatus.signer_uuid);
           refetch(); // Refresh user data
         } catch (error) {
           // Silent fail - user hasn't approved yet
@@ -52,7 +52,7 @@ export default function DisconnectNeynar() {
 
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
-  }, [storedSigner]);
+  }, [signerStatus, approveSignerMutation, refetch]);
 
   const handleSignIn = async () => {
     setLoading(true);

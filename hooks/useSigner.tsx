@@ -1,12 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
-import { useUpdateUser } from "./useUsers";
-
-import {
-  getFarcasterSignerFromCookie,
-  setFarcasterSignerCookie,
-  deleteFarcasterSignerCookie,
-} from "@/lib/utils/cookies";
+import { useUpdateUser, useCurrentUser } from "./useUsers";
 import sdk from "@farcaster/frame-sdk";
 
 // Type definitions
@@ -16,6 +10,7 @@ export interface FarcasterUser {
   status: string;
   signer_approval_url?: string;
   fid?: number;
+  signer_approval_status?: "pending" | "approved" | "rejected";
 }
 
 // Query Keys
@@ -27,6 +22,8 @@ export const signerKeys = {
 
 // CREATE - Create new signer and redirect
 export const useCreateSigner = () => {
+  const { context } = useMiniKit();
+  const { mutate: updateUser } = useUpdateUser();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -45,14 +42,26 @@ export const useCreateSigner = () => {
       return response.json();
     },
     onSuccess: (signerData) => {
-      // Store in cookies
-      setFarcasterSignerCookie(signerData);
+      console.log("Signer created successfully", signerData);
+
+      // Set signer approval status to pending when creating new signer
+      if (context?.user?.fid) {
+        updateUser({
+          farcaster_fid: context.user.fid,
+          signer_approval_status: "pending",
+        });
+      }
 
       // Update query cache
       queryClient.setQueryData(
         signerKeys.byUuid(signerData.signer_uuid),
         signerData,
       );
+
+      // Refresh signer approval status
+      queryClient.invalidateQueries({
+        queryKey: ["signerApprovalStatus", context?.user?.fid],
+      });
 
       // Redirect to approval URL
       if (signerData.signer_approval_url) {
@@ -65,27 +74,28 @@ export const useCreateSigner = () => {
   });
 };
 
-// Hook to get stored signer from cookies
-export const useStoredSigner = () => {
-  return useQuery({
-    queryKey: ["storedSigner"],
-    queryFn: (): FarcasterUser | null => {
-      // Get signer data from cookies
-      const cookieData = getFarcasterSignerFromCookie();
-      if (cookieData) {
-        try {
-          return cookieData;
-        } catch (error) {
-          console.error("Error parsing stored Farcaster user:", error);
-          deleteFarcasterSignerCookie();
-          return null;
-        }
-      }
+// Hook to get signer approval status from database
+export const useSignerApprovalStatus = () => {
+  const { context } = useMiniKit();
+  const { data: userData } = useCurrentUser();
 
-      return null;
+  return useQuery({
+    queryKey: ["signerApprovalStatus", context?.user?.fid],
+    queryFn: async (): Promise<{
+      signer_approval_status: string;
+      signer_uuid: string | null;
+    } | null> => {
+      if (!context?.user?.fid) return null;
+
+      // Return data from current user which should include signer info
+      return {
+        signer_approval_status:
+          userData?.user?.signer_approval_status || "pending",
+        signer_uuid: userData?.user?.neynar_signer_uuid || null,
+      };
     },
-    staleTime: Infinity, // This data doesn't change often
-    gcTime: Infinity, // Keep in cache indefinitely
+    enabled: !!context?.user?.fid,
+    staleTime: 30000, // 30 seconds
   });
 };
 
@@ -112,14 +122,12 @@ export const useApproveSigner = () => {
     },
     onSuccess: (data) => {
       if (data.status === "approved") {
-        // Store in cookies
-        setFarcasterSignerCookie(data);
-
         // Save to database
         if (context?.user?.fid) {
           updateUser({
             farcaster_fid: context.user.fid,
             neynar_signer_uuid: data.signer_uuid,
+            signer_approval_status: "approved",
           });
         }
 
@@ -129,6 +137,11 @@ export const useApproveSigner = () => {
         // Refresh user data
         queryClient.invalidateQueries({
           queryKey: ["users", "fid", context?.user?.fid],
+        });
+
+        // Refresh signer approval status
+        queryClient.invalidateQueries({
+          queryKey: ["signerApprovalStatus", context?.user?.fid],
         });
       }
     },
@@ -154,15 +167,13 @@ export const useDisconnectSigner = () => {
       updateUser({
         farcaster_fid: context.user.fid,
         neynar_signer_uuid: null,
+        signer_approval_status: "pending",
       });
     },
     onSuccess: () => {
-      // Remove from cookies
-      deleteFarcasterSignerCookie();
-
       // Clear query cache
       queryClient.removeQueries({ queryKey: signerKeys.all });
-      queryClient.removeQueries({ queryKey: ["storedSigner"] });
+      queryClient.removeQueries({ queryKey: ["signerApprovalStatus"] });
 
       // Refresh user data
       queryClient.invalidateQueries({

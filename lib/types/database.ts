@@ -11,6 +11,7 @@ export interface Database {
           farcaster_username: string | null;
           farcaster_display_name: string | null;
           neynar_signer_uuid: string | null;
+          signer_approval_status: "pending" | "approved" | "rejected" | null;
           yolo_mode: boolean | null;
           yolo_cast_retweets: boolean | null;
           yolo_cast_quote_tweets: boolean | null;
@@ -34,6 +35,7 @@ export interface Database {
           farcaster_username?: string | null;
           farcaster_display_name?: string | null;
           neynar_signer_uuid?: string | null;
+          signer_approval_status?: "pending" | "approved" | "rejected" | null;
           yolo_mode?: boolean | null;
           yolo_cast_retweets?: boolean | null;
           yolo_cast_quote_tweets?: boolean | null;
@@ -57,6 +59,7 @@ export interface Database {
           farcaster_username?: string | null;
           farcaster_display_name?: string | null;
           neynar_signer_uuid?: string | null;
+          signer_approval_status?: "pending" | "approved" | "rejected" | null;
           yolo_mode?: boolean | null;
           yolo_cast_retweets?: boolean | null;
           yolo_cast_quote_tweets?: boolean | null;
