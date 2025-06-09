@@ -8,9 +8,11 @@ export const getCookie = (name: string): string | null => {
 
   if (parts.length === 2) {
     const cookieValue = parts.pop()?.split(";").shift();
+    console.log("Cookie found for", name, cookieValue);
     return cookieValue ? decodeURIComponent(cookieValue) : null;
   }
 
+  console.log("No cookie found for", name, document.cookie);
   return null;
 };
 
