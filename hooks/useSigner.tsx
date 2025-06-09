@@ -45,10 +45,11 @@ export const useCreateSigner = () => {
     onSuccess: (signerData) => {
       console.log("Signer created successfully", signerData);
 
-      // Set signer approval status to pending when creating new signer
+      // Set signer approval status to pending and save signer_uuid when creating new signer
       if (context?.user?.fid) {
         updateUser({
           farcaster_fid: context.user.fid,
+          neynar_signer_uuid: signerData.signer_uuid,
           signer_approval_status: "pending",
         });
       }
