@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Cross from "../icons/Cross";
 import Button from "../ui/Button";
 import { ConnectionStatusModal } from "../ui/ConnectionStatusModal";
@@ -8,6 +8,7 @@ import {
   useApproveSigner,
   useCreateSigner,
   useSignerApprovalStatus,
+  usePollingSignerApproval,
 } from "@/hooks/useSigner";
 
 interface ConnectNeynarProps {
@@ -28,34 +29,34 @@ export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
   // Get signer approval status from database
   const { data: signerStatus } = useSignerApprovalStatus();
 
-  // Check for approval when component mounts or user returns
+  // Poll for signer approval when status is pending
+  const { isApproved } = usePollingSignerApproval(
+    signerStatus?.signer_uuid || null,
+    signerStatus?.signer_approval_status === "pending",
+  );
+
+  // Show status modal when approval is detected
+  React.useEffect(() => {
+    if (isApproved) {
+      setShowStatusModal(true);
+    }
+  }, [isApproved]);
+
+  // Check for approval when window regains focus (user returns from approval)
   useEffect(() => {
-    const checkApproval = async () => {
+    const handleFocus = () => {
       if (
         signerStatus?.signer_uuid &&
         signerStatus.signer_approval_status === "pending"
       ) {
-        try {
-          await approveSignerMutation.mutateAsync(signerStatus.signer_uuid);
-          refetch(); // Refresh user data
-          // Show status modal instead of immediately closing
-          setShowStatusModal(true);
-        } catch (error) {
-          // Silent fail - user hasn't approved yet
-        }
+        // The polling hook will handle the approval check automatically
+        refetch(); // Just refresh user data
       }
-    };
-
-    checkApproval();
-
-    // Also check when window regains focus (user returns from approval)
-    const handleFocus = () => {
-      setTimeout(checkApproval, 1000); // Small delay to ensure approval is processed
     };
 
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
-  }, [signerStatus, approveSignerMutation, refetch, onClose]);
+  }, [signerStatus, refetch]);
 
   const handleConnectNeynar = async () => {
     setLoading(true);

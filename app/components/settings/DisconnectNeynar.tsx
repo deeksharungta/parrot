@@ -8,7 +8,7 @@ import {
   useCreateSigner,
   useSignerApprovalStatus,
   useDisconnectSigner,
-  useApproveSigner,
+  usePollingSignerApproval,
 } from "@/hooks/useSigner";
 
 export default function DisconnectNeynar() {
@@ -24,35 +24,27 @@ export default function DisconnectNeynar() {
   // Disconnect signer mutation
   const disconnectSignerMutation = useDisconnectSigner();
 
-  // Approve signer mutation
-  const approveSignerMutation = useApproveSigner();
+  // Poll for signer approval when status is pending
+  usePollingSignerApproval(
+    signerStatus?.signer_uuid || null,
+    signerStatus?.signer_approval_status === "pending",
+  );
 
-  // Check for approval when component mounts or user returns
+  // Check for approval when window regains focus (user returns from approval)
   useEffect(() => {
-    const checkApproval = async () => {
+    const handleFocus = () => {
       if (
         signerStatus?.signer_uuid &&
         signerStatus.signer_approval_status === "pending"
       ) {
-        try {
-          await approveSignerMutation.mutateAsync(signerStatus.signer_uuid);
-          refetch(); // Refresh user data
-        } catch (error) {
-          // Silent fail - user hasn't approved yet
-        }
+        // The polling hook will handle the approval check automatically
+        refetch(); // Just refresh user data
       }
-    };
-
-    checkApproval();
-
-    // Also check when window regains focus (user returns from approval)
-    const handleFocus = () => {
-      setTimeout(checkApproval, 1000); // Small delay to ensure approval is processed
     };
 
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
-  }, [signerStatus, approveSignerMutation, refetch]);
+  }, [signerStatus, refetch]);
 
   const handleSignIn = async () => {
     setLoading(true);

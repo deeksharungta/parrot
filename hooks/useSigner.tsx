@@ -1,3 +1,4 @@
+import React, { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { useUpdateUser, useCurrentUser } from "./useUsers";
@@ -97,6 +98,72 @@ export const useSignerApprovalStatus = () => {
     enabled: !!context?.user?.fid,
     staleTime: 30000, // 30 seconds
   });
+};
+
+// Hook to poll for signer approval status from Neynar API
+export const usePollingSignerApproval = (
+  signer_uuid: string | null,
+  enabled: boolean = true,
+) => {
+  const { context } = useMiniKit();
+  const { mutate: updateUser } = useUpdateUser();
+  const queryClient = useQueryClient();
+  const [isApproved, setIsApproved] = React.useState(false);
+
+  const query = useQuery({
+    queryKey: ["pollingSignerApproval", signer_uuid],
+    queryFn: async (): Promise<FarcasterUser | null> => {
+      if (!signer_uuid) return null;
+
+      const response = await fetch(`/api/signer?signer_uuid=${signer_uuid}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to check signer status");
+      }
+
+      return response.json();
+    },
+    enabled: enabled && !!signer_uuid && !isApproved,
+    refetchInterval: 3000, // Poll every 3 seconds
+    refetchIntervalInBackground: true,
+  });
+
+  // Handle approval detection using useEffect
+  const { data } = query;
+
+  useEffect(() => {
+    if (
+      data &&
+      data.status === "approved" &&
+      context?.user?.fid &&
+      !isApproved
+    ) {
+      setIsApproved(true);
+
+      // Update user in database when approval is detected
+      updateUser({
+        farcaster_fid: context.user.fid,
+        neynar_signer_uuid: data.signer_uuid,
+        signer_approval_status: "approved",
+      });
+
+      // Refresh related queries
+      queryClient.invalidateQueries({
+        queryKey: ["users", "fid", context.user.fid],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["signerApprovalStatus", context.user.fid],
+      });
+    }
+  }, [data, context?.user?.fid, updateUser, queryClient, isApproved]);
+
+  return { ...query, isApproved };
 };
 
 // UPDATE - Mark signer as approved (call this when user returns from approval)
