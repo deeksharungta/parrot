@@ -8,6 +8,7 @@ import { useGetTwitterAccount } from "@/hooks/useGetTwitterAccount";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useCreateUser, useGetUser, UserInsert } from "@/hooks/useUsers";
+import sdk from "@farcaster/frame-sdk";
 
 const SkeletonLoader = ({ width = "w-16" }: { width?: string }) => (
   <motion.div
@@ -132,7 +133,14 @@ export default function UserProfiles() {
             </Button>
           </Link>
         ) : (
-          <Button disabled={isLoading || !twitterAccount?.username}>
+          <Button
+            disabled={isLoading}
+            onClick={() => {
+              sdk.actions.openUrl(
+                "https://farcaster.xyz/~/settings/verifications",
+              );
+            }}
+          >
             Verify your Twitter account with Farcaster
           </Button>
         )}
