@@ -5,7 +5,6 @@ import Button from "../ui/Button";
 import { ConnectionStatusModal } from "../ui/ConnectionStatusModal";
 import { useCurrentUser } from "@/hooks/useUsers";
 import {
-  useApproveSigner,
   useCreateSigner,
   useSignerApprovalStatus,
   usePollingSignerApproval,
@@ -23,11 +22,14 @@ export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
   // Create signer mutation
   const createSignerMutation = useCreateSigner();
 
-  // Approve signer mutation
-  const approveSignerMutation = useApproveSigner();
-
   // Get signer approval status from database
   const { data: signerStatus } = useSignerApprovalStatus();
+
+  console.log("ConnectNeynar - signerStatus:", signerStatus);
+  console.log(
+    "ConnectNeynar - polling enabled:",
+    signerStatus?.signer_approval_status === "pending",
+  );
 
   // Poll for signer approval when status is pending
   const { isApproved } = usePollingSignerApproval(
@@ -61,7 +63,11 @@ export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
   const handleConnectNeynar = async () => {
     setLoading(true);
     try {
-      await createSignerMutation.mutateAsync();
+      const approvalUrl = await createSignerMutation.mutateAsync();
+      // If an approval URL is returned, open it in a new window
+      if (approvalUrl && typeof approvalUrl === "string") {
+        window.open(approvalUrl, "_blank", "noopener,noreferrer");
+      }
     } catch (error) {
       console.error("Failed to create signer:", error);
     } finally {
@@ -69,7 +75,9 @@ export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
     }
   };
 
-  const isConnected = userData?.user?.neynar_signer_uuid;
+  const isConnected =
+    userData?.user?.neynar_signer_uuid &&
+    userData?.user?.signer_approval_status === "approved";
 
   const handleStatusModalClose = () => {
     setShowStatusModal(false);

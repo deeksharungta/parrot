@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Container from "../ui/Container";
 import Button from "../ui/Button";
 import { useCurrentUser } from "@/hooks/useUsers";
+import QRCode from "react-qr-code";
 import {
   useCreateSigner,
   useSignerApprovalStatus,
@@ -12,7 +13,7 @@ import {
 } from "@/hooks/useSigner";
 
 export default function DisconnectNeynar() {
-  const { data: userData, refetch } = useCurrentUser();
+  const { data: userData } = useCurrentUser();
   const [loading, setLoading] = useState(false);
 
   // Get signer approval status from database
@@ -24,8 +25,12 @@ export default function DisconnectNeynar() {
   // Disconnect signer mutation
   const disconnectSignerMutation = useDisconnectSigner();
 
-  // Poll for signer approval when status is pending
-  usePollingSignerApproval(
+  // Poll for signer approval when status is pending - this contains the approval URL
+  const {
+    data: signerData,
+    isApproved,
+    refetch,
+  } = usePollingSignerApproval(
     signerStatus?.signer_uuid || null,
     signerStatus?.signer_approval_status === "pending",
   );
@@ -38,7 +43,7 @@ export default function DisconnectNeynar() {
         signerStatus.signer_approval_status === "pending"
       ) {
         // The polling hook will handle the approval check automatically
-        refetch(); // Just refresh user data
+        refetch();
       }
     };
 
@@ -49,7 +54,11 @@ export default function DisconnectNeynar() {
   const handleSignIn = async () => {
     setLoading(true);
     try {
-      await createSignerMutation.mutateAsync();
+      const approvalUrl = await createSignerMutation.mutateAsync();
+      // If an approval URL is returned, open it in a new window
+      if (approvalUrl && typeof approvalUrl === "string") {
+        window.open(approvalUrl, "_blank", "noopener,noreferrer");
+      }
     } catch (error) {
       console.error("Failed to create signer:", error);
     } finally {
@@ -69,7 +78,13 @@ export default function DisconnectNeynar() {
     }
   };
 
-  const isConnected = userData?.user?.neynar_signer_uuid;
+  const isConnected =
+    userData?.user?.neynar_signer_uuid &&
+    userData?.user?.signer_approval_status === "approved";
+  const shouldShowQRCode =
+    !isConnected &&
+    signerData?.signer_approval_url &&
+    signerStatus?.signer_approval_status === "pending";
 
   return (
     <Container

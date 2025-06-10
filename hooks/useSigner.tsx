@@ -79,24 +79,35 @@ export const useCreateSigner = () => {
 // Hook to get signer approval status from database
 export const useSignerApprovalStatus = () => {
   const { context } = useMiniKit();
-  const { data: userData } = useCurrentUser();
+  const { data: userData, isLoading: userDataLoading } = useCurrentUser();
 
   return useQuery({
-    queryKey: ["signerApprovalStatus", context?.user?.fid],
+    queryKey: [
+      "signerApprovalStatus",
+      context?.user?.fid,
+      userData?.user?.neynar_signer_uuid,
+      userData?.user?.signer_approval_status,
+    ],
     queryFn: async (): Promise<{
       signer_approval_status: string;
       signer_uuid: string | null;
     } | null> => {
       if (!context?.user?.fid) return null;
 
+      console.log("userData", userData);
+
       // Return data from current user which should include signer info
-      return {
+      const result = {
         signer_approval_status:
           userData?.user?.signer_approval_status || "pending",
         signer_uuid: userData?.user?.neynar_signer_uuid || null,
       };
+
+      console.log("useSignerApprovalStatus returning:", result);
+
+      return result;
     },
-    enabled: !!context?.user?.fid,
+    enabled: !!context?.user?.fid && !userDataLoading && !!userData,
     staleTime: 30000, // 30 seconds
   });
 };
@@ -111,10 +122,20 @@ export const usePollingSignerApproval = (
   const queryClient = useQueryClient();
   const [isApproved, setIsApproved] = React.useState(false);
 
+  // Add debugging logs
+  console.log("usePollingSignerApproval debug:", {
+    signer_uuid,
+    enabled,
+    isApproved,
+    finalEnabled: enabled && !!signer_uuid && !isApproved,
+  });
+
   const query = useQuery({
     queryKey: ["pollingSignerApproval", signer_uuid],
     queryFn: async (): Promise<FarcasterUser | null> => {
       if (!signer_uuid) return null;
+
+      console.log("Polling signer approval for:", signer_uuid);
 
       const response = await fetch(`/api/signer?signer_uuid=${signer_uuid}`, {
         method: "GET",
