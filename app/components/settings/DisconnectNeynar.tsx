@@ -88,11 +88,11 @@ export default function DisconnectNeynar() {
 
   return (
     <Container
-      title={isConnected ? "Disconnect Neynar" : "Connect Neynar"}
+      title={isConnected ? "Disconnect Signer" : "Authorize Signer"}
       description={
         isConnected
           ? "If you disconnect, we won't be able to cast tweets on your behalf."
-          : "to cast tweets, we need access to your Neynar signer"
+          : "to cast tweets, we need to authorize your signer"
       }
     >
       {!isConnected && (
@@ -103,7 +103,7 @@ export default function DisconnectNeynar() {
         >
           {loading || createSignerMutation.isPending
             ? "Connecting..."
-            : "Connect Neynar"}
+            : "Authorize Signer"}
         </Button>
       )}
 
@@ -115,7 +115,7 @@ export default function DisconnectNeynar() {
         >
           {loading || disconnectSignerMutation.isPending
             ? "Disconnecting..."
-            : "Disconnect Neynar"}
+            : "Disconnect Signer"}
         </Button>
       )}
     </Container>

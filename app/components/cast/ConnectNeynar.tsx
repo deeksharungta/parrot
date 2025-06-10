@@ -101,7 +101,7 @@ export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
             <div className="flex items-center justify-between">
               {!showSuccessState && (
                 <h3 className="text-base font-semibold text-[#100c20]">
-                  Connect with Neynar
+                  Authorize Signer
                 </h3>
               )}
               <button
@@ -139,8 +139,8 @@ export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
 
                 {/* Description */}
                 <p className="text-sm text-[#8C8A94] mb-6">
-                  Your Neynar signer has been successfully connected. You can
-                  now cast tweets.
+                  Your signer has been successfully authorized. You can now cast
+                  tweets.
                 </p>
 
                 {/* Continue Button */}
@@ -151,7 +151,7 @@ export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
             ) : (
               <>
                 <p className="text-sm text-[#8C8A94]">
-                  to cast tweets, we need access to your Neynar signer
+                  to cast tweets, we need to authorize your signer
                 </p>
                 <div className="my-6 overflow-hidden">
                   <svg
@@ -172,9 +172,9 @@ export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
                     Secure Authentication
                   </p>
                   <p className="text-sm font-light text-[#0BABFB]">
-                    You'll be redirected to Neynar to securely authorize xCast.
-                    This allows us to cast on your behalf without storing
-                    sensitive keys.
+                    You'll be redirected to securely authorize xCast. This
+                    allows us to cast on your behalf without storing sensitive
+                    keys.
                   </p>
                 </div>
                 <Button
@@ -188,7 +188,7 @@ export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
                     ? "Connecting..."
                     : isConnected
                       ? "Already Connected"
-                      : "Connect with Neynar"}
+                      : "Authorize Signer"}
                 </Button>
               </>
             )}
