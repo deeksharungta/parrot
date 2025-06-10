@@ -206,7 +206,10 @@ export default function Tweets({ fid }: TweetsProps) {
     console.log("Edit tweet:", currentTweet?.tweet_id);
 
     // Check if user has signer_uuid before opening edit modal
-    if (!hasSignerUuid) {
+    if (
+      !hasSignerUuid ||
+      userData?.user?.signer_approval_status !== "approved"
+    ) {
       setShowConnectNeynar(true);
       return;
     }
@@ -225,7 +228,10 @@ export default function Tweets({ fid }: TweetsProps) {
 
   const handleApprove = async () => {
     // Check if user has signer_uuid before approving
-    if (!hasSignerUuid) {
+    if (
+      !hasSignerUuid ||
+      userData?.user?.signer_approval_status !== "approved"
+    ) {
       setShowConnectNeynar(true);
       return;
     }
