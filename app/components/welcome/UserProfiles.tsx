@@ -115,7 +115,9 @@ export default function UserProfiles() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3 }}
             >
-              @{twitterAccount?.username}
+              {twitterAccount?.username
+                ? `@${twitterAccount?.username}`
+                : "Not Connected"}
             </motion.p>
           )}
         </motion.div>
@@ -133,16 +135,22 @@ export default function UserProfiles() {
             </Button>
           </Link>
         ) : (
-          <Button
-            disabled={isLoading}
-            onClick={() => {
-              sdk.actions.openUrl(
-                "https://farcaster.xyz/~/settings/verifications",
-              );
-            }}
-          >
-            Verify your Twitter account with Farcaster
-          </Button>
+          <>
+            <Button
+              disabled={isLoading}
+              onClick={() => {
+                sdk.actions.openUrl(
+                  "https://farcaster.xyz/~/settings/verifications",
+                );
+              }}
+            >
+              Connect X to FC
+            </Button>
+            <p className="text-xs text-center font-normal text-[#8C8A94] mt-1">
+              To get started, connect your X account to Farcaster. We'll fetch
+              your posts automatically once it's linked.
+            </p>
+          </>
         )}
       </motion.div>
     </motion.div>
