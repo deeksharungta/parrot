@@ -10,7 +10,7 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import { parseTweetToFarcasterCast } from "@/lib/cast-utils";
 import { base } from "viem/chains";
-import { USDC_ADDRESS, SPENDER_ADDRESS } from "@/lib/constant";
+import { USDC_ADDRESS, SPENDER_ADDRESS } from "@/lib/constants";
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY;
 const NEYNAR_BASE_URL = "https://api.neynar.com/v2";

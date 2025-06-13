@@ -6,7 +6,7 @@ import {
   useWaitForTransactionReceipt,
 } from "wagmi";
 import { erc20Abi, parseUnits, formatUnits } from "viem";
-import { USDC_ADDRESS, SPENDER_ADDRESS } from "@/lib/constant";
+import { USDC_ADDRESS, SPENDER_ADDRESS } from "@/lib/constants";
 import { useUpdateUser } from "./useUsers";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { useQueryClient } from "@tanstack/react-query";
