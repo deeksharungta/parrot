@@ -9,8 +9,14 @@ export default function Demo() {
   const { signIn, logout, isSignedIn, isLoading, error } = useSignIn();
   const { data: user, refetch: refetchUser } = useCurrentUser();
   const { mutate: updateUser, isPending: isUpdating } = useUpdateUser();
-  const { isFrameReady } = useMiniKit();
+  const { isFrameReady, setFrameReady } = useMiniKit();
   const [customName, setCustomName] = useState("");
+
+  useEffect(() => {
+    if (!isFrameReady) {
+      setFrameReady();
+    }
+  }, [isFrameReady, setFrameReady]);
 
   useEffect(() => {
     refetchUser();
