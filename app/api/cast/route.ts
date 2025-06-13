@@ -156,15 +156,23 @@ export async function POST(request: NextRequest) {
         args: [user.wallet_address as `0x${string}`, SPENDER_ADDRESS],
       });
 
+      const balance = await publicClient.readContract({
+        address: USDC_ADDRESS,
+        abi: erc20Abi,
+        functionName: "balanceOf",
+        args: [user.wallet_address as `0x${string}`],
+      });
+
       const requiredAmount = parseUnits(CAST_COST.toString(), 6); // USDC has 6 decimals
 
-      if (allowance < requiredAmount) {
+      if (allowance < requiredAmount || balance < requiredAmount) {
         return NextResponse.json(
           {
             error:
-              "Insufficient USDC allowance. Please approve spending first.",
+              "Insufficient USDC allowance or balance. Please approve spending first.",
             requiredAllowance: CAST_COST,
             currentAllowance: Number(allowance) / 1000000, // Convert from wei to USDC
+            currentBalance: Number(balance) / 1000000, // Convert from wei to USDC
           },
           { status: 403 },
         );
@@ -341,6 +349,8 @@ export async function POST(request: NextRequest) {
       // Convert amount to proper USDC units (6 decimals)
       const amountInUnits = parseUnits(CAST_COST.toString(), 6);
 
+      console.log("amountInUnits", amountInUnits);
+
       transactionHash = await walletClient.writeContract({
         address: USDC_ADDRESS,
         abi: erc20Abi,
@@ -351,6 +361,8 @@ export async function POST(request: NextRequest) {
           amountInUnits,
         ],
       });
+
+      console.log("transactionHash", transactionHash);
 
       console.log("Payment transaction successful:", transactionHash);
     } catch (paymentError) {
