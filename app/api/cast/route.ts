@@ -282,6 +282,37 @@ export async function POST(request: NextRequest) {
       };
     }
 
+    // Cast to Farcaster using Neynar API (AFTER payment is confirmed)
+    const castPayload: any = {
+      signer_uuid: user.neynar_signer_uuid,
+      text: parsedCast.content,
+    };
+
+    // Add embeds if available (images, quoted tweets, etc.)
+    if (parsedCast.embeds && parsedCast.embeds.length > 0) {
+      castPayload.embeds = parsedCast.embeds.map((url) => ({ url }));
+    }
+
+    const castResponse = await fetch(`${NEYNAR_BASE_URL}/farcaster/cast`, {
+      method: "POST",
+      headers: {
+        "x-api-key": NEYNAR_API_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(castPayload),
+    });
+
+    if (!castResponse.ok) {
+      const errorText = await castResponse.text();
+      console.error("Neynar cast error:", castResponse.status, errorText);
+      return NextResponse.json(
+        { error: "Failed to cast to Farcaster" },
+        { status: castResponse.status },
+      );
+    }
+
+    const castData = await castResponse.json();
+
     // Process payment FIRST (0.1 USDC)
     const newBalance = (user.usdc_balance || 0) - CAST_COST;
     const newTotalSpent = (user.total_spent || 0) + CAST_COST;
@@ -330,38 +361,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Cast to Farcaster using Neynar API (AFTER payment is confirmed)
-    const castPayload: any = {
-      signer_uuid: user.neynar_signer_uuid,
-      text: parsedCast.content,
-    };
-
-    // Add embeds if available (images, quoted tweets, etc.)
-    if (parsedCast.embeds && parsedCast.embeds.length > 0) {
-      castPayload.embeds = parsedCast.embeds.map((url) => ({ url }));
-    }
-
-    const castResponse = await fetch(`${NEYNAR_BASE_URL}/farcaster/cast`, {
-      method: "POST",
-      headers: {
-        "x-api-key": NEYNAR_API_KEY,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(castPayload),
-    });
-
-    if (!castResponse.ok) {
-      const errorText = await castResponse.text();
-      console.error("Neynar cast error:", castResponse.status, errorText);
-      return NextResponse.json(
-        { error: "Failed to cast to Farcaster" },
-        { status: castResponse.status },
-      );
-    }
-
-    const castData = await castResponse.json();
-
-    // Only update user balance and create records if payment transaction succeeded
     // Update user balance and total spent in a transaction
     const { error: updateUserError } = await supabase
       .from("users")
