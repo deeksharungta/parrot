@@ -22,9 +22,8 @@ export default function CastPage() {
   // Check for neynar signer uuid and show modal if not present
   useEffect(() => {
     if (
-      userData &&
-      !userData.user?.neynar_signer_uuid &&
-      userData.user?.signer_approval_status !== "approved"
+      (userData && !userData.user?.neynar_signer_uuid) ||
+      (userData && userData.user?.signer_approval_status !== "approved")
     ) {
       setShowConnectNeynar(true);
     }
