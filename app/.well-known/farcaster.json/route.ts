@@ -12,7 +12,7 @@ export async function GET() {
     },
     frame: {
       version: "1",
-      name: "XCast",
+      name: "Parrot",
       iconUrl: `${appUrl}/icon.png`,
       homeUrl: appUrl,
       imageUrl: `${appUrl}/image.png`,

@@ -21,7 +21,7 @@ export default function Approve() {
   return (
     <Container
       title="Approve USDC"
-      description="set a spending limit for xCast. You can top up anytime, and we'll notify you when it's running low."
+      description="set a spending limit for parrot. You can top up anytime, and we'll notify you when it's running low."
     >
       <div className="text-left">
         <div className="flex justify-between items-center mb-4">

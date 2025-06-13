@@ -9,6 +9,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useCreateUser, useGetUser, UserInsert } from "@/hooks/useUsers";
 import sdk from "@farcaster/frame-sdk";
+import { useDeviceDetection } from "@/hooks/useDeviceDetection";
 
 const SkeletonLoader = ({ width = "w-16" }: { width?: string }) => (
   <motion.div
@@ -20,6 +21,7 @@ const SkeletonLoader = ({ width = "w-16" }: { width?: string }) => (
 
 export default function UserProfiles() {
   const { context } = useMiniKit();
+  const { isMobile } = useDeviceDetection();
   const { twitterAccount, isLoading, isError } = useGetTwitterAccount(
     context?.user?.fid,
   );
@@ -140,7 +142,9 @@ export default function UserProfiles() {
               disabled={isLoading}
               onClick={() => {
                 sdk.actions.openUrl(
-                  "https://farcaster.xyz/~/settings/verifications",
+                  isMobile
+                    ? "https://farcaster.xyz/~/settings/verifications"
+                    : "https://farcaster.xyz/~/settings",
                 );
               }}
             >

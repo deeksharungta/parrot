@@ -28,7 +28,7 @@ export const useCreateSigner = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (): Promise<FarcasterUser> => {
+    mutationFn: async (): Promise<string | null> => {
       const response = await fetch("/api/signer", {
         method: "POST",
         headers: {
@@ -40,10 +40,7 @@ export const useCreateSigner = () => {
         throw new Error("Failed to create signer");
       }
 
-      return response.json();
-    },
-    onSuccess: (signerData) => {
-      console.log("Signer created successfully", signerData);
+      const signerData: FarcasterUser = await response.json();
 
       // Set signer approval status to pending and save signer_uuid when creating new signer
       if (context?.user?.fid) {
@@ -65,10 +62,12 @@ export const useCreateSigner = () => {
         queryKey: ["signerApprovalStatus", context?.user?.fid],
       });
 
-      // Redirect to approval URL
-      if (signerData.signer_approval_url) {
-        sdk.actions.openUrl(signerData.signer_approval_url);
-      }
+      // Return just the approval URL
+      return signerData.signer_approval_url || null;
+    },
+    onSuccess: (approvalUrl) => {
+      console.log("Signer created successfully, approval URL:", approvalUrl);
+      // Note: Removed automatic redirect - let the component handle device-specific logic
     },
     onError: (error) => {
       console.error("Failed to create signer:", error);

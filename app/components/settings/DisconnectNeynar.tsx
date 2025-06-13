@@ -4,17 +4,24 @@ import { useState, useEffect } from "react";
 import Container from "../ui/Container";
 import Button from "../ui/Button";
 import { useCurrentUser } from "@/hooks/useUsers";
-import QRCode from "react-qr-code";
+import { useDeviceDetection } from "@/hooks/useDeviceDetection";
 import {
   useCreateSigner,
   useSignerApprovalStatus,
   useDisconnectSigner,
   usePollingSignerApproval,
 } from "@/hooks/useSigner";
+import sdk from "@farcaster/frame-sdk";
+import QRCodeModal from "./QRModal";
 
 export default function DisconnectNeynar() {
   const { data: userData } = useCurrentUser();
+  const { isMobile } = useDeviceDetection();
   const [loading, setLoading] = useState(false);
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [currentApprovalUrl, setCurrentApprovalUrl] = useState<string | null>(
+    null,
+  );
 
   // Get signer approval status from database
   const { data: signerStatus } = useSignerApprovalStatus();
@@ -51,13 +58,35 @@ export default function DisconnectNeynar() {
     return () => window.removeEventListener("focus", handleFocus);
   }, [signerStatus, refetch]);
 
+  // Close modal when approved
+  useEffect(() => {
+    if (isApproved) {
+      setShowQRModal(false);
+      setCurrentApprovalUrl(null);
+    }
+  }, [isApproved]);
+
   const handleSignIn = async () => {
+    console.log(
+      "🚀 Sign-in initiated - Current device type:",
+      isMobile ? "📱 MOBILE" : "💻 DESKTOP",
+    );
     setLoading(true);
     try {
       const approvalUrl = await createSignerMutation.mutateAsync();
-      // If an approval URL is returned, open it in a new window
+
+      // If an approval URL is returned, handle based on device type
       if (approvalUrl && typeof approvalUrl === "string") {
-        window.open(approvalUrl, "_blank", "noopener,noreferrer");
+        setCurrentApprovalUrl(approvalUrl);
+        if (isMobile) {
+          console.log("📱 Mobile detected: Redirecting to approval URL");
+          // On mobile, redirect directly to the approval URL
+          sdk.actions.openUrl(approvalUrl);
+        } else {
+          console.log("💻 Desktop detected: Opening QR code modal");
+          // On desktop, show the QR code modal
+          setShowQRModal(true);
+        }
       }
     } catch (error) {
       console.error("Failed to create signer:", error);
@@ -81,43 +110,51 @@ export default function DisconnectNeynar() {
   const isConnected =
     userData?.user?.neynar_signer_uuid &&
     userData?.user?.signer_approval_status === "approved";
-  const shouldShowQRCode =
-    !isConnected &&
-    signerData?.signer_approval_url &&
-    signerStatus?.signer_approval_status === "pending";
 
   return (
-    <Container
-      title={isConnected ? "Disconnect Signer" : "Authorize Signer"}
-      description={
-        isConnected
-          ? "If you disconnect, we won't be able to cast tweets on your behalf."
-          : "to cast tweets, we need to authorize your signer"
-      }
-    >
-      {!isConnected && (
-        <Button
-          variant="primary"
-          onClick={handleSignIn}
-          disabled={loading || createSignerMutation.isPending}
-        >
-          {loading || createSignerMutation.isPending
-            ? "Connecting..."
-            : "Authorize Signer"}
-        </Button>
-      )}
+    <>
+      <Container
+        title={isConnected ? "Disconnect Signer" : "Authorize Signer"}
+        description={
+          isConnected
+            ? "If you disconnect, we won't be able to cast tweets on your behalf."
+            : "to cast tweets, we need to authorize your signer"
+        }
+      >
+        {!isConnected && (
+          <Button
+            variant="primary"
+            onClick={handleSignIn}
+            disabled={loading || createSignerMutation.isPending}
+          >
+            {loading || createSignerMutation.isPending
+              ? "Connecting..."
+              : "Authorize Signer"}
+          </Button>
+        )}
 
-      {isConnected && (
-        <Button
-          variant="secondary"
-          onClick={handleDisconnect}
-          disabled={loading || disconnectSignerMutation.isPending}
-        >
-          {loading || disconnectSignerMutation.isPending
-            ? "Disconnecting..."
-            : "Disconnect Signer"}
-        </Button>
+        {isConnected && (
+          <Button
+            variant="secondary"
+            onClick={handleDisconnect}
+            disabled={loading || disconnectSignerMutation.isPending}
+          >
+            {loading || disconnectSignerMutation.isPending
+              ? "Disconnecting..."
+              : "Disconnect Signer"}
+          </Button>
+        )}
+      </Container>
+      {currentApprovalUrl && (
+        <QRCodeModal
+          isOpen={showQRModal}
+          onClose={() => {
+            setShowQRModal(false);
+            setCurrentApprovalUrl(null);
+          }}
+          approvalUrl={currentApprovalUrl}
+        />
       )}
-    </Container>
+    </>
   );
 }

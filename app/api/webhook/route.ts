@@ -66,8 +66,8 @@ export async function POST(request: Request) {
           );
           await sendFrameNotification({
             fid,
-            title: `Welcome to XCast`,
-            body: `Thank you for adding XCast`,
+            title: `Welcome to Parrot`,
+            body: `Thank you for adding Parrot`,
           });
         } else {
           await deleteUserNotificationDetails(fid, "frame_removed");
@@ -88,8 +88,8 @@ export async function POST(request: Request) {
         );
         await sendFrameNotification({
           fid,
-          title: `Welcome to XCast`,
-          body: `Thank you for enabling notifications for XCast`,
+          title: `Welcome to Parrot`,
+          body: `Thank you for enabling notifications for Parrot`,
         });
 
         break;
