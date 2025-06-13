@@ -155,22 +155,25 @@ export async function parseTweetToFarcasterCast(
       typeof tweet.media_urls === "object" &&
       !Array.isArray(tweet.media_urls)
     ) {
-      // Handle images
+      // Handle images - limit to first 2
       if (tweet.media_urls.images && Array.isArray(tweet.media_urls.images)) {
-        tweet.media_urls.images.forEach((url: string) => {
+        tweet.media_urls.images.slice(0, 2).forEach((url: string) => {
           if (url && url.trim()) {
             embeds.push(url);
           }
         });
       }
 
-      // Handle videos - use the highest quality video URL
+      // Handle videos - limit to first 2 (if no images or remaining slots)
       if (tweet.media_urls.videos && Array.isArray(tweet.media_urls.videos)) {
-        tweet.media_urls.videos.forEach((video: any) => {
-          if (video && video.url && video.url.trim()) {
-            embeds.push(video.url);
-          }
-        });
+        const remainingSlots = 2 - embeds.length;
+        tweet.media_urls.videos
+          .slice(0, remainingSlots)
+          .forEach((video: any) => {
+            if (video && video.url && video.url.trim()) {
+              embeds.push(video.url);
+            }
+          });
       }
     } else {
       // Handle legacy format (for backward compatibility)
@@ -180,8 +183,8 @@ export async function parseTweetToFarcasterCast(
           ? [tweet.media_urls]
           : Object.values(tweet.media_urls);
 
-      // Add media URLs to content
-      mediaUrls.forEach((url: any) => {
+      // Add media URLs - limit to first 2
+      mediaUrls.slice(0, 2).forEach((url: any) => {
         if (typeof url === "string" && url.trim()) {
           embeds.push(url);
         }
