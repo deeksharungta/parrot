@@ -16,10 +16,15 @@ export const POST = async (req: NextRequest) => {
 
   let user = existingUser;
 
+  // Declare isValidSignature variable
+  let isValidSignature: boolean;
+
   if (!user) {
     // Fetch user from Neynar if not in database
     const { users } = await neynarClient.fetchBulkUsers([fid]);
+    console.log("users", users);
     const neynarUser = users[0];
+    console.log("neynarUser", neynarUser);
 
     if (!neynarUser) {
       return NextResponse.json(
@@ -30,10 +35,8 @@ export const POST = async (req: NextRequest) => {
 
     user = {
       farcaster_fid: fid,
-      username: neynarUser.username,
-      display_name: neynarUser.display_name,
-      pfp_url: neynarUser.pfp_url,
-      custody_address: neynarUser.custody_address,
+      farcaster_username: neynarUser.username,
+      farcaster_display_name: neynarUser.display_name,
     };
 
     // Save user to database
@@ -52,14 +55,32 @@ export const POST = async (req: NextRequest) => {
     }
 
     user = newUser;
-  }
 
-  // Verify signature matches custody address
-  const isValidSignature = await verifyMessage({
-    address: user.custody_address as `0x${string}`,
-    message,
-    signature,
-  });
+    // Verify signature matches custody address (get from neynarUser since we don't store it)
+    isValidSignature = await verifyMessage({
+      address: neynarUser.custody_address as `0x${string}`,
+      message,
+      signature,
+    });
+  } else {
+    // For existing users, we need to get custody address from Neynar for verification
+    const { users } = await neynarClient.fetchBulkUsers([fid]);
+    const neynarUser = users[0];
+
+    if (!neynarUser) {
+      return NextResponse.json(
+        { error: "User not found in Neynar" },
+        { status: 404 },
+      );
+    }
+
+    // Verify signature matches custody address
+    isValidSignature = await verifyMessage({
+      address: neynarUser.custody_address as `0x${string}`,
+      message,
+      signature,
+    });
+  }
 
   if (!isValidSignature) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
