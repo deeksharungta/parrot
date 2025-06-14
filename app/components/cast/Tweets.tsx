@@ -15,6 +15,7 @@ import { useGetUser } from "@/hooks/useUsers";
 import { useUSDCApproval } from "@/hooks/useUSDCApproval";
 import { useEditTweet, useCastTweet } from "@/hooks/useTweetEdit";
 import { useCastThread } from "@/hooks/useThreads";
+import ThreadTweetCard from "./ThreadTweetCard";
 
 interface RetweetInfo {
   retweetedBy: {
@@ -53,7 +54,18 @@ export default function Tweets({ fid }: TweetsProps) {
   // Update stable tweets only when new tweets are loaded, not when they're filtered
   React.useEffect(() => {
     if (tweets && tweets.length > 0 && stableTweets.length === 0) {
-      setStableTweets(tweets);
+      // Filter to only show thread starters or non-thread tweets
+      const filteredTweets = tweets.filter((tweet) => {
+        // Show non-thread tweets
+        if (!tweet.is_thread_tweet) return true;
+
+        // For thread tweets, only show if it's position 1 or thread start
+        if (tweet.is_thread_start || tweet.thread_position === 1) return true;
+
+        return false;
+      });
+
+      setStableTweets(filteredTweets);
     }
   }, [tweets, stableTweets.length]);
 
@@ -537,11 +549,24 @@ export default function Tweets({ fid }: TweetsProps) {
         {(swipeDirection || isDragging) &&
           currentIndex < showTweets.length - 1 && (
             <div className="absolute inset-0 z-10">
-              <TweetCard
-                tweetId={showTweets[currentIndex + 1]?.tweet_id || ""}
-                isRetweet={showTweets[currentIndex + 1]?.is_retweet || false}
-                retweetInfo={createRetweetInfo(showTweets[currentIndex + 1])}
-              />
+              {showTweets[currentIndex + 1]?.is_thread_tweet &&
+              showTweets[currentIndex + 1]?.conversation_id ? (
+                <ThreadTweetCard
+                  tweetId={showTweets[currentIndex + 1]?.tweet_id || ""}
+                  conversationId={
+                    showTweets[currentIndex + 1]?.conversation_id || ""
+                  }
+                  fid={fid}
+                  isRetweet={showTweets[currentIndex + 1]?.is_retweet || false}
+                  retweetInfo={createRetweetInfo(showTweets[currentIndex + 1])}
+                />
+              ) : (
+                <TweetCard
+                  tweetId={showTweets[currentIndex + 1]?.tweet_id || ""}
+                  isRetweet={showTweets[currentIndex + 1]?.is_retweet || false}
+                  retweetInfo={createRetweetInfo(showTweets[currentIndex + 1])}
+                />
+              )}
             </div>
           )}
 
@@ -566,11 +591,21 @@ export default function Tweets({ fid }: TweetsProps) {
               transition: isDragging ? "none" : "all 150ms ease-out",
             }}
           >
-            <TweetCard
-              tweetId={currentTweet?.tweet_id || ""}
-              isRetweet={currentTweet?.is_retweet || false}
-              retweetInfo={createRetweetInfo(currentTweet)}
-            />
+            {currentTweet?.is_thread_tweet && currentTweet?.conversation_id ? (
+              <ThreadTweetCard
+                tweetId={currentTweet?.tweet_id || ""}
+                conversationId={currentTweet?.conversation_id || ""}
+                fid={fid}
+                isRetweet={currentTweet?.is_retweet || false}
+                retweetInfo={createRetweetInfo(currentTweet)}
+              />
+            ) : (
+              <TweetCard
+                tweetId={currentTweet?.tweet_id || ""}
+                isRetweet={currentTweet?.is_retweet || false}
+                retweetInfo={createRetweetInfo(currentTweet)}
+              />
+            )}
           </div>
         )}
       </div>

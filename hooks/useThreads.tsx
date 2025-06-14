@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { castThread, getThreadCastPreview } from "@/lib/client-tweets-service";
+import { toast } from "sonner";
 
 export interface ThreadCastResult {
   success: boolean;
@@ -58,6 +59,7 @@ export function useCastThread() {
       return await castThread(conversationId, fid);
     },
     onSuccess: (data, variables) => {
+      toast("Tweet Casted Successfully!");
       // Invalidate relevant queries
       queryClient.invalidateQueries({
         queryKey: ["threadPreview", variables.conversationId],
