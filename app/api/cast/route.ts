@@ -486,7 +486,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
         total_spent: newTotalSpent,
         updated_at: new Date().toISOString(),
       })
-      .eq("farcaster_fid", fid);
+      .eq("farcaster_fid", userFid);
 
     if (updateUserError) {
       console.error("Failed to update user balance:", updateUserError);
@@ -510,7 +510,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
         description: `Payment for casting tweet to Farcaster`,
         metadata: {
           cast_hash: castData.cast?.hash,
-          fid: fid,
+          fid: userFid,
           cast_url: `https://warpcast.com/${castData.cast?.author?.username || "user"}/${castData.cast?.hash?.slice(0, 10) || "cast"}`,
           payment_transaction_hash: transactionHash,
         },

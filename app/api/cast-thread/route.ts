@@ -502,7 +502,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
           total_spent: newTotalSpent,
           updated_at: new Date().toISOString(),
         })
-        .eq("farcaster_fid", fid);
+        .eq("farcaster_fid", userFid);
 
       if (updateUserError) {
         console.error("Failed to update user balance:", updateUserError);
