@@ -1,16 +1,80 @@
 import { MESSAGE_EXPIRATION_TIME } from "@/lib/constants";
 import { sdk } from "@farcaster/frame-sdk";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 
 export const useSignIn = () => {
   const [isSignedIn, setIsSignedIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start with loading true to check token
   const [error, setError] = useState<string | null>(null);
+
+  // Function to validate token against backend
+  const validateToken = useCallback(async (token: string) => {
+    try {
+      const res = await fetch("/api/auth/validate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
+        },
+        body: JSON.stringify({ token }),
+      });
+
+      if (!res.ok) {
+        return false;
+      }
+
+      const data = await res.json();
+      return data.isValid;
+    } catch (error) {
+      console.error("Token validation error:", error);
+      return false;
+    }
+  }, []);
+
+  // Check for existing token on component mount
+  useEffect(() => {
+    const checkExistingAuth = async () => {
+      try {
+        const storedToken = localStorage.getItem("token");
+
+        if (storedToken) {
+          console.log("Found stored token, validating...");
+          const isValid = await validateToken(storedToken);
+
+          if (isValid) {
+            console.log("Token is valid, user is signed in");
+            setIsSignedIn(true);
+          } else {
+            console.log("Token is invalid, removing from localStorage");
+            localStorage.removeItem("token");
+            setIsSignedIn(false);
+          }
+        } else {
+          console.log("No stored token found");
+          setIsSignedIn(false);
+        }
+      } catch (error) {
+        console.error("Error checking existing auth:", error);
+        setIsSignedIn(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkExistingAuth();
+  }, [validateToken]);
 
   const signIn = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
+
+      // First check if user is already signed in
+      if (isSignedIn) {
+        console.log("User is already signed in");
+        setIsLoading(false);
+        return;
+      }
 
       // Wait for SDK to be ready
       if (!sdk.context) {

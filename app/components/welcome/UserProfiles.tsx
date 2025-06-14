@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import Button from "../ui/Button";
 import Image from "next/image";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
@@ -35,15 +35,18 @@ export default function UserProfiles() {
   );
   const { data: userData } = useGetUser(context?.user?.fid);
   const createUserMutation = useCreateUser();
+  const signInAttempted = useRef(false);
 
-  // Handle sign-in flow
+  // Handle sign-in flow - only attempt once if not already signed in
   useEffect(() => {
     if (isSignedIn) {
       refetchUser();
-    } else {
+    } else if (!signInAttempted.current && !isSignInLoading && !isSignedIn) {
+      // Only attempt sign-in if we're not loading and not already signed in
+      signInAttempted.current = true;
       signIn();
     }
-  }, [isSignedIn, refetchUser, signIn]);
+  }, [isSignedIn, refetchUser, signIn, isSignInLoading]);
 
   // Create user in database when context is available and user doesn't exist
   useEffect(() => {
@@ -154,7 +157,7 @@ export default function UserProfiles() {
               {isSignInLoading
                 ? "Signing you in..."
                 : isLoading
-                  ? "Loading..."
+                  ? "Checking authentication..."
                   : "Continue fetching tweets"}
             </Button>
           </Link>
@@ -170,7 +173,11 @@ export default function UserProfiles() {
                 );
               }}
             >
-              {isSignInLoading ? "Signing you in..." : "Connect X to FC"}
+              {isSignInLoading
+                ? "Signing you in..."
+                : isLoading
+                  ? "Checking authentication..."
+                  : "Connect X to FC"}
             </Button>
             <p className="text-xs text-center font-normal text-[#8C8A94] mt-1">
               To get started, connect your X account to Farcaster. We'll fetch
