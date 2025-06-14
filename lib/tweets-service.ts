@@ -66,34 +66,104 @@ export interface TwitterApiTweet {
   retweet_tweet_id?: string;
   quoted_status_id?: string;
   in_reply_to_status_id?: string;
+  conversation_id?: string;
+
+  // Engagement metrics
+  favorite_count?: number;
+  retweet_count?: number;
+  reply_count?: number;
+  quote_count?: number;
+  views?: number;
+  video_view_count?: number;
+  bookmark_count?: number;
+
+  // Tweet metadata
+  language?: string;
+  timestamp?: number;
+  source?: string;
+
+  // Additional fields
+  binding_values?: any;
+  expanded_url?: string;
+  extended_entities?: {
+    media?: Array<{
+      display_url?: string;
+      expanded_url?: string;
+      id_str?: string;
+      indices?: number[];
+      media_key?: string;
+      media_url_https?: string;
+      type?: string;
+      url?: string;
+      ext_media_availability?: {
+        status?: string;
+      };
+      sizes?: {
+        large?: { h: number; w: number; resize: string };
+        medium?: { h: number; w: number; resize: string };
+        small?: { h: number; w: number; resize: string };
+        thumb?: { h: number; w: number; resize: string };
+      };
+      original_info?: {
+        height?: number;
+        width?: number;
+        focus_rects?: any[];
+      };
+      video_info?: {
+        aspect_ratio?: number[];
+        duration_millis?: number;
+        variants?: Array<{
+          bitrate?: number;
+          content_type?: string;
+          url?: string;
+        }>;
+      };
+      features?: any;
+      additional_media_info?: any;
+      media_results?: any;
+      source_status_id_str?: string;
+      source_user_id_str?: string;
+    }>;
+  };
+  community_note?: any;
+
   user?: {
+    creation_date?: string;
     user_id?: string;
     username?: string;
     name?: string;
-    profile_pic_url?: string;
-    is_blue_verified?: boolean;
+    follower_count?: number;
+    following_count?: number;
+    favourites_count?: number;
+    is_private?: boolean;
     is_verified?: boolean;
+    is_blue_verified?: boolean;
+    location?: string;
+    profile_pic_url?: string;
+    profile_banner_url?: string;
+    description?: string;
+    external_url?: string;
+    number_of_tweets?: number;
+    bot?: boolean;
+    timestamp?: number;
+    has_nft_avatar?: boolean;
+    category?: any;
+    default_profile?: boolean;
+    default_profile_image?: boolean;
+    listed_count?: number;
+    verified_type?: string | null;
   };
-  retweet_status?: {
-    tweet_id: string;
-    text: string;
-    creation_date?: string;
-    user?: {
-      user_id?: string;
-      username?: string;
-      name?: string;
-      profile_pic_url?: string;
-      is_blue_verified?: boolean;
-      is_verified?: boolean;
-    };
-  };
-  media_url?: string[];
+
+  retweet_status?: TwitterApiTweet;
+  quoted_status?: TwitterApiTweet;
+
+  media_url?: string[] | null;
   video_url?: Array<{
     url: string;
     bitrate: number;
     content_type: string;
-  }>;
-  timestamp?: number;
+  }> | null;
+
   [key: string]: any;
 }
 
@@ -281,6 +351,27 @@ export async function saveTweetsToDatabase(
   try {
     console.log("Saving tweets to database", tweets.length);
 
+    // First, let's organize tweets by conversation to identify threads
+    const conversationMap = new Map<string, TwitterApiTweet[]>();
+
+    tweets.forEach((tweet) => {
+      if (tweet.conversation_id) {
+        if (!conversationMap.has(tweet.conversation_id)) {
+          conversationMap.set(tweet.conversation_id, []);
+        }
+        conversationMap.get(tweet.conversation_id)!.push(tweet);
+      }
+    });
+
+    // Sort tweets in each conversation by creation date
+    conversationMap.forEach((conversationTweets) => {
+      conversationTweets.sort((a, b) => {
+        const dateA = new Date(a.creation_date || 0).getTime();
+        const dateB = new Date(b.creation_date || 0).getTime();
+        return dateA - dateB;
+      });
+    });
+
     const tweetsToInsert: TweetInsert[] = tweets.map((tweet) => {
       // For retweets, we want to store the retweeter's information (not the original tweet author)
       // But we also want to handle cases where we want the original author's info
@@ -295,10 +386,39 @@ export async function saveTweetsToDatabase(
         finalMediaUrls.videos = tweet.video_url;
       }
 
+      // Thread analysis
+      let threadPosition: number | null = null;
+      let threadTotalCount: number | null = null;
+      let isThreadTweet = false;
+      let isThreadStart = false;
+
+      if (tweet.conversation_id) {
+        const conversationTweets =
+          conversationMap.get(tweet.conversation_id) || [];
+        threadTotalCount = conversationTweets.length;
+
+        if (threadTotalCount > 1) {
+          isThreadTweet = true;
+          // Find position in the thread (1-based index)
+          threadPosition =
+            conversationTweets.findIndex((t) => t.tweet_id === tweet.tweet_id) +
+            1;
+          // First tweet in the conversation is the thread start
+          isThreadStart = threadPosition === 1;
+        } else {
+          // Single tweet "conversation" - not really a thread
+          isThreadTweet = false;
+          isThreadStart = false;
+          threadPosition = null;
+          threadTotalCount = null;
+        }
+      }
+
       return {
         user_id: userId,
         tweet_id: tweet.tweet_id,
         content: tweet.text, // Store original content, full details will be fetched when casting
+        original_content: tweet.text, // Store original unchanged content
         twitter_url: `https://twitter.com/i/status/${tweet.tweet_id}`,
         twitter_created_at: tweet.creation_date || new Date().toISOString(),
         cast_status: "pending",
@@ -318,6 +438,13 @@ export async function saveTweetsToDatabase(
         twitter_display_name: userInfo?.name || null,
         is_blue_tick_verified:
           userInfo?.is_blue_verified || userInfo?.is_verified || false,
+        // Thread-related fields
+        conversation_id: tweet.conversation_id || null,
+        in_reply_to_tweet_id: tweet.in_reply_to_status_id || null,
+        is_thread_tweet: isThreadTweet,
+        thread_position: threadPosition,
+        thread_total_count: threadTotalCount,
+        is_thread_start: isThreadStart,
       };
     });
 
@@ -429,6 +556,156 @@ export async function fetchAndSaveFreshTweets(fid: number): Promise<{
       user: null,
       error: error instanceof Error ? error.message : "Unknown error",
     };
+  }
+}
+
+// Get all tweets in a thread/conversation
+export async function getThreadTweets(
+  conversationId: string,
+): Promise<Tweet[]> {
+  try {
+    const { data: tweets, error } = await supabase
+      .from("tweets")
+      .select("*")
+      .eq("conversation_id", conversationId)
+      .order("thread_position", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching thread tweets:", error);
+      return [];
+    }
+
+    return tweets || [];
+  } catch (error) {
+    console.error("Error in getThreadTweets:", error);
+    return [];
+  }
+}
+
+// Get thread information for a specific tweet
+export async function getThreadInfo(tweetId: string): Promise<{
+  threadTweets: Tweet[];
+  currentPosition: number;
+  totalCount: number;
+  isPartOfThread: boolean;
+}> {
+  try {
+    // First get the tweet to find its conversation_id
+    const { data: tweet, error: tweetError } = await supabase
+      .from("tweets")
+      .select("*")
+      .eq("tweet_id", tweetId)
+      .single();
+
+    if (tweetError || !tweet) {
+      return {
+        threadTweets: [],
+        currentPosition: 0,
+        totalCount: 0,
+        isPartOfThread: false,
+      };
+    }
+
+    if (!tweet.conversation_id || !tweet.is_thread_tweet) {
+      return {
+        threadTweets: [tweet],
+        currentPosition: 1,
+        totalCount: 1,
+        isPartOfThread: false,
+      };
+    }
+
+    // Get all tweets in the thread
+    const threadTweets = await getThreadTweets(tweet.conversation_id);
+
+    return {
+      threadTweets,
+      currentPosition: tweet.thread_position || 1,
+      totalCount: tweet.thread_total_count || threadTweets.length,
+      isPartOfThread: threadTweets.length > 1,
+    };
+  } catch (error) {
+    console.error("Error in getThreadInfo:", error);
+    return {
+      threadTweets: [],
+      currentPosition: 0,
+      totalCount: 0,
+      isPartOfThread: false,
+    };
+  }
+}
+
+// Get all threads for a user (grouped by conversation)
+export async function getUserThreads(userId: string): Promise<{
+  threads: Array<{
+    conversationId: string;
+    tweets: Tweet[];
+    threadStart: Tweet;
+    totalCount: number;
+    lastUpdated: string;
+  }>;
+  singleTweets: Tweet[];
+}> {
+  try {
+    const { data: allTweets, error } = await supabase
+      .from("tweets")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("cast_status", "pending")
+      .order("twitter_created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching user tweets:", error);
+      return { threads: [], singleTweets: [] };
+    }
+
+    const threadMap = new Map<string, Tweet[]>();
+    const singleTweets: Tweet[] = [];
+
+    // Group tweets by conversation
+    allTweets?.forEach((tweet) => {
+      if (tweet.is_thread_tweet && tweet.conversation_id) {
+        if (!threadMap.has(tweet.conversation_id)) {
+          threadMap.set(tweet.conversation_id, []);
+        }
+        threadMap.get(tweet.conversation_id)!.push(tweet);
+      } else {
+        singleTweets.push(tweet);
+      }
+    });
+
+    // Convert threads to organized format
+    const threads = Array.from(threadMap.entries()).map(
+      ([conversationId, tweets]) => {
+        const sortedTweets = tweets.sort(
+          (a, b) => (a.thread_position || 0) - (b.thread_position || 0),
+        );
+        const threadStart = sortedTweets[0];
+        const lastUpdated = sortedTweets.reduce((latest, tweet) => {
+          const tweetDate = new Date(tweet.updated_at || tweet.created_at);
+          return tweetDate > latest ? tweetDate : latest;
+        }, new Date(0));
+
+        return {
+          conversationId,
+          tweets: sortedTweets,
+          threadStart,
+          totalCount: tweets.length,
+          lastUpdated: lastUpdated.toISOString(),
+        };
+      },
+    );
+
+    // Sort threads by last updated
+    threads.sort(
+      (a, b) =>
+        new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime(),
+    );
+
+    return { threads, singleTweets };
+  } catch (error) {
+    console.error("Error in getUserThreads:", error);
+    return { threads: [], singleTweets: [] };
   }
 }
 

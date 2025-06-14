@@ -109,6 +109,12 @@ export interface Database {
           twitter_username: string | null;
           twitter_display_name: string | null;
           is_blue_tick_verified: boolean | null;
+          conversation_id: string | null;
+          in_reply_to_tweet_id: string | null;
+          is_thread_tweet: boolean | null;
+          thread_position: number | null;
+          thread_total_count: number | null;
+          is_thread_start: boolean | null;
         };
         Insert: {
           id?: string;
@@ -141,6 +147,12 @@ export interface Database {
           twitter_username?: string | null;
           twitter_display_name?: string | null;
           is_blue_tick_verified?: boolean | null;
+          conversation_id?: string | null;
+          in_reply_to_tweet_id?: string | null;
+          is_thread_tweet?: boolean | null;
+          thread_position?: number | null;
+          thread_total_count?: number | null;
+          is_thread_start?: boolean | null;
         };
         Update: {
           content?: string;
@@ -171,6 +183,12 @@ export interface Database {
           twitter_username?: string | null;
           twitter_display_name?: string | null;
           is_blue_tick_verified?: boolean | null;
+          conversation_id?: string | null;
+          in_reply_to_tweet_id?: string | null;
+          is_thread_tweet?: boolean | null;
+          thread_position?: number | null;
+          thread_total_count?: number | null;
+          is_thread_start?: boolean | null;
         };
       };
       notifications: {
