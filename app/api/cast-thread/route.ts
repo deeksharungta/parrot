@@ -12,6 +12,7 @@ import { parseTweetToFarcasterCast } from "@/lib/cast-utils";
 import { base } from "viem/chains";
 import { USDC_ADDRESS, SPENDER_ADDRESS } from "@/lib/constants";
 import { getThreadTweets } from "@/lib/tweets-service";
+import { TwitterApiTweet } from "@/lib/tweets-service";
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY;
 const NEYNAR_BASE_URL = "https://api.neynar.com/v2";
@@ -20,6 +21,94 @@ const API_SECRET_KEY = process.env.API_SECRET_KEY;
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(",") || [
   "http://localhost:3000",
 ];
+
+const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
+const RAPIDAPI_HOST = "twitter154.p.rapidapi.com";
+
+// Rate limiter for RapidAPI (5 requests per second)
+class RateLimiter {
+  private requests: number[] = [];
+  private readonly maxRequests: number;
+  private readonly timeWindow: number; // in milliseconds
+
+  constructor(maxRequests: number = 5, timeWindowMs: number = 1000) {
+    this.maxRequests = maxRequests;
+    this.timeWindow = timeWindowMs;
+  }
+
+  async waitForSlot(): Promise<void> {
+    const now = Date.now();
+
+    // Remove requests older than the time window
+    this.requests = this.requests.filter(
+      (time) => now - time < this.timeWindow,
+    );
+
+    // If we're at the limit, wait until we can make another request
+    if (this.requests.length >= this.maxRequests) {
+      const oldestRequest = this.requests[0];
+      const waitTime = this.timeWindow - (now - oldestRequest) + 10; // Add 10ms buffer
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
+      return this.waitForSlot(); // Recursively check again
+    }
+
+    // Record this request
+    this.requests.push(now);
+  }
+}
+
+// Global rate limiter instance for RapidAPI
+const rapidApiRateLimiter = new RateLimiter(5, 1000);
+
+// Helper function to check if tweet content is truncated
+function isTweetTruncated(content: string): boolean {
+  // Remove https://t.co URLs from content to get actual text length
+  const contentWithoutUrls = content.replace(/https:\/\/t\.co\/\w+/g, "");
+  return contentWithoutUrls.length >= 278;
+}
+
+// Helper function to fetch full tweet details for truncated tweets
+async function fetchTweetDetails(
+  tweetId: string,
+): Promise<TwitterApiTweet | null> {
+  try {
+    if (!RAPIDAPI_KEY) {
+      console.error("RapidAPI key not configured");
+      return null;
+    }
+
+    // Wait for rate limit slot before making the API call
+    await rapidApiRateLimiter.waitForSlot();
+
+    // Direct RapidAPI call
+    const response = await fetch(
+      `https://${RAPIDAPI_HOST}/tweet/details?tweet_id=${tweetId}`,
+      {
+        method: "GET",
+        headers: {
+          "X-RapidAPI-Key": RAPIDAPI_KEY,
+          "X-RapidAPI-Host": RAPIDAPI_HOST,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(
+        "Error fetching tweet details:",
+        response.status,
+        errorText,
+      );
+      return null;
+    }
+
+    const tweetDetails = await response.json();
+    return tweetDetails;
+  } catch (error) {
+    console.error("Error in fetchTweetDetails:", error);
+    return null;
+  }
+}
 
 interface ThreadCastResult {
   success: boolean;
@@ -37,6 +126,7 @@ interface ThreadCastResult {
 }
 
 export async function OPTIONS(request: NextRequest) {
+  // Handle CORS preflight requests
   const origin = request.headers.get("origin");
   if (
     !origin ||
@@ -51,14 +141,14 @@ export async function OPTIONS(request: NextRequest) {
       "Access-Control-Allow-Origin": origin,
       "Access-Control-Allow-Methods": "POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type, x-api-key",
-      "Access-Control-Max-Age": "86400",
+      "Access-Control-Max-Age": "86400", // 24 hours
     },
   });
 }
 
 export async function POST(request: NextRequest) {
   try {
-    // Security checks
+    // Security Check 1: Origin validation
     const origin =
       request.headers.get("origin") || request.headers.get("referer");
     if (
@@ -71,6 +161,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Security Check 2: API Key validation
     const apiKey = request.headers.get("x-api-key");
     if (!apiKey || apiKey !== API_SECRET_KEY) {
       return NextResponse.json(
@@ -96,7 +187,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user from database
+    // Get user from database to check wallet and spending approval
     const { data: user, error: userError } = await supabase
       .from("users")
       .select("*")
@@ -134,7 +225,7 @@ export async function POST(request: NextRequest) {
 
     const totalCost = CAST_COST;
 
-    // Check user permissions and balance
+    // Check if user has approved spending and has sufficient balance
     if (!user.spending_approved) {
       return NextResponse.json(
         { error: "USDC spending not approved. Please approve spending first." },
@@ -170,7 +261,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check onchain allowance
+    // Check onchain allowance using viem
     if (!user.wallet_address) {
       return NextResponse.json(
         { error: "Wallet address not found for user" },
@@ -198,19 +289,22 @@ export async function POST(request: NextRequest) {
         args: [user.wallet_address as `0x${string}`],
       });
 
-      const requiredAmount = parseUnits(totalCost.toString(), 6);
+      const requiredAmount = parseUnits(totalCost.toString(), 6); // USDC has 6 decimals
 
       if (allowance < requiredAmount || balance < requiredAmount) {
         return NextResponse.json(
           {
-            error: "Insufficient USDC allowance or balance.",
+            error:
+              "Insufficient USDC allowance or balance. Please approve spending first.",
             requiredAllowance: totalCost,
-            currentAllowance: Number(allowance) / 1000000,
-            currentBalance: Number(balance) / 1000000,
+            currentAllowance: Number(allowance) / 1000000, // Convert from wei to USDC
+            currentBalance: Number(balance) / 1000000, // Convert from wei to USDC
           },
           { status: 403 },
         );
       }
+
+      console.log(`Allowance check passed: ${allowance} >= ${requiredAmount}`);
     } catch (allowanceError) {
       console.error("Failed to check onchain allowance:", allowanceError);
       return NextResponse.json(
@@ -225,8 +319,69 @@ export async function POST(request: NextRequest) {
 
     for (const tweet of pendingTweets) {
       try {
+        // Check if tweet content is truncated and fetch full details if needed
+        let finalTweetContent = tweet.content;
+        let updatedMediaUrls = tweet.media_urls;
+
+        if (isTweetTruncated(tweet.content)) {
+          console.log(
+            `Tweet ${tweet.tweet_id} appears to be truncated, fetching full details...`,
+          );
+          const fullTweetDetails = await fetchTweetDetails(tweet.tweet_id!);
+
+          if (fullTweetDetails && fullTweetDetails.text) {
+            finalTweetContent = fullTweetDetails.text;
+            console.log(
+              `Updated content for tweet ${tweet.tweet_id} with full text`,
+            );
+
+            // Also update media URLs from full details if available
+            const newMediaUrls: Record<string, any> = {};
+            if (
+              fullTweetDetails.media_url &&
+              fullTweetDetails.media_url.length > 0
+            ) {
+              newMediaUrls.images = fullTweetDetails.media_url;
+            }
+            if (
+              fullTweetDetails.video_url &&
+              fullTweetDetails.video_url.length > 0
+            ) {
+              newMediaUrls.videos = fullTweetDetails.video_url;
+            }
+
+            if (Object.keys(newMediaUrls).length > 0) {
+              updatedMediaUrls = newMediaUrls;
+            }
+
+            // Update the tweet in the database with the full content
+            const { error: updateError } = await supabase
+              .from("tweets")
+              .update({
+                content: finalTweetContent,
+                media_urls: updatedMediaUrls,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("tweet_id", tweet.tweet_id);
+
+            if (updateError) {
+              console.error(
+                "Failed to update tweet with full content:",
+                updateError,
+              );
+            }
+          }
+        }
+
+        // Create updated tweet object for parsing
+        const updatedTweet = {
+          ...tweet,
+          content: finalTweetContent,
+          media_urls: updatedMediaUrls,
+        };
+
         // Parse tweet content
-        const parsedCast = await parseTweetToFarcasterCast(tweet);
+        const parsedCast = await parseTweetToFarcasterCast(updatedTweet);
 
         // Prepare cast payload
         const castPayload: any = {
@@ -234,7 +389,7 @@ export async function POST(request: NextRequest) {
           text: parsedCast.content,
         };
 
-        // Add embeds if available
+        // Add embeds if available (images, quoted tweets, etc.)
         if (parsedCast.embeds && parsedCast.embeds.length > 0) {
           castPayload.embeds = parsedCast.embeds.map((url) => ({ url }));
         }
@@ -248,7 +403,7 @@ export async function POST(request: NextRequest) {
           castPayload.parent = lastCastHash;
         }
 
-        // Cast to Farcaster
+        // Cast to Farcaster using Neynar API
         const castResponse = await fetch(`${NEYNAR_BASE_URL}/farcaster/cast`, {
           method: "POST",
           headers: {
@@ -260,7 +415,11 @@ export async function POST(request: NextRequest) {
 
         if (!castResponse.ok) {
           const errorText = await castResponse.text();
-          console.error(`Cast failed for tweet ${tweet.tweet_id}:`, errorText);
+          console.error(
+            `Neynar cast error for tweet ${tweet.tweet_id}:`,
+            castResponse.status,
+            errorText,
+          );
 
           castResults.push({
             tweetId: tweet.tweet_id!,
@@ -321,24 +480,37 @@ export async function POST(request: NextRequest) {
     // Only charge if entire thread was successfully cast
     const actualCost = isFullThreadSuccess ? CAST_COST : 0;
 
-    // Process payment only if entire thread was successfully cast
+    // Process payment FIRST (0.1 USDC) - only if entire thread was successfully cast
+    const newBalance = (user.usdc_balance || 0) - actualCost;
+    const newTotalSpent = (user.total_spent || 0) + actualCost;
+
+    // Execute actual USDC payment via blockchain transaction
     let transactionHash: string | null = null;
 
     if (actualCost > 0) {
       try {
         const privateKey = process.env.PRIVATE_KEY as `0x${string}`;
+
         if (!privateKey) {
-          throw new Error("Private key not configured");
+          console.error("Private key not configured");
+          return NextResponse.json(
+            { error: "Payment system not configured" },
+            { status: 500 },
+          );
         }
 
         const account = privateKeyToAccount(privateKey);
+
         const walletClient = createWalletClient({
           account,
           chain: base,
           transport: http(),
         });
 
+        // Convert amount to proper USDC units (6 decimals)
         const amountInUnits = parseUnits(actualCost.toString(), 6);
+
+        console.log("amountInUnits", amountInUnits);
 
         transactionHash = await walletClient.writeContract({
           address: USDC_ADDRESS,
@@ -351,39 +523,61 @@ export async function POST(request: NextRequest) {
           ],
         });
 
-        // Update user balance
-        const newBalance = (user.usdc_balance || 0) - actualCost;
-        const newTotalSpent = (user.total_spent || 0) + actualCost;
+        console.log("transactionHash", transactionHash);
 
-        await supabase
-          .from("users")
-          .update({
-            usdc_balance: newBalance,
-            total_spent: newTotalSpent,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("farcaster_fid", fid);
+        console.log("Payment transaction successful:", transactionHash);
+      } catch (paymentError) {
+        console.error("Payment processing error:", paymentError);
+        return NextResponse.json(
+          {
+            error: "Thread cast successfully but payment failed",
+            castResults,
+            totalCost: actualCost,
+          },
+          { status: 500 },
+        );
+      }
 
-        // Update all successfully cast tweets with payment info
-        for (const successfulCast of successfulCasts) {
-          const tweet = pendingTweets.find(
-            (t) => t.tweet_id === successfulCast.tweetId,
-          );
-          if (tweet) {
-            await supabase
-              .from("tweets")
-              .update({
-                cast_price: CAST_COST,
-                payment_approved: true,
-                payment_processed: true,
-                updated_at: new Date().toISOString(),
-              })
-              .eq("id", tweet.id);
-          }
+      // Update user balance and total spent in a transaction
+      const { error: updateUserError } = await supabase
+        .from("users")
+        .update({
+          usdc_balance: newBalance,
+          total_spent: newTotalSpent,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("farcaster_fid", fid);
+
+      if (updateUserError) {
+        console.error("Failed to update user balance:", updateUserError);
+        return NextResponse.json(
+          { error: "Failed to update user balance after payment" },
+          { status: 500 },
+        );
+      }
+
+      // Update all successfully cast tweets with payment info
+      for (const successfulCast of successfulCasts) {
+        const tweet = pendingTweets.find(
+          (t) => t.tweet_id === successfulCast.tweetId,
+        );
+        if (tweet) {
+          await supabase
+            .from("tweets")
+            .update({
+              cast_price: CAST_COST,
+              payment_approved: true,
+              payment_processed: true,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", tweet.id);
         }
+      }
 
-        // Create transaction record
-        await supabase.from("transactions").insert({
+      // Create transaction record with blockchain transaction hash
+      const { error: transactionError } = await supabase
+        .from("transactions")
+        .insert({
           user_id: user.id,
           transaction_type: "cast_payment",
           amount: actualCost,
@@ -396,18 +590,13 @@ export async function POST(request: NextRequest) {
             thread_tweets: successfulCasts.length,
             total_cost: actualCost,
             cast_results: castResults,
+            payment_transaction_hash: transactionHash,
           },
         });
-      } catch (paymentError) {
-        console.error("Payment processing error:", paymentError);
-        return NextResponse.json(
-          {
-            error: "Thread partially cast but payment failed",
-            castResults,
-            totalCost: actualCost,
-          },
-          { status: 500 },
-        );
+
+      if (transactionError) {
+        console.error("Failed to create transaction record:", transactionError);
+        // Don't fail the entire operation if transaction logging fails
       }
     }
 
@@ -425,6 +614,8 @@ export async function POST(request: NextRequest) {
     }
 
     const response = NextResponse.json(result);
+
+    // Add CORS headers
     response.headers.set("Access-Control-Allow-Origin", origin);
     response.headers.set("Access-Control-Allow-Methods", "POST");
     response.headers.set(
