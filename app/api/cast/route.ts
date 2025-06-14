@@ -456,6 +456,12 @@ export const POST = withApiKeyAndJwtAuth(async function (
 
       console.log("amountInUnits", amountInUnits);
 
+      // Get the current nonce to avoid conflicts with concurrent transactions
+      const nonce = await publicClient.getTransactionCount({
+        address: account.address,
+        blockTag: "pending",
+      });
+
       transactionHash = await walletClient.writeContract({
         address: USDC_ADDRESS,
         abi: erc20Abi,
@@ -465,6 +471,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
           SPENDER_ADDRESS,
           amountInUnits,
         ],
+        nonce,
       });
 
       console.log("transactionHash", transactionHash);
