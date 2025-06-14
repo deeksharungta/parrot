@@ -11,6 +11,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import { parseTweetToFarcasterCast } from "@/lib/cast-utils";
 import { base } from "viem/chains";
 import { USDC_ADDRESS, SPENDER_ADDRESS } from "@/lib/constants";
+import { TwitterApiTweet } from "@/lib/tweets-service";
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY;
 const NEYNAR_BASE_URL = "https://api.neynar.com/v2";
@@ -19,6 +20,94 @@ const API_SECRET_KEY = process.env.API_SECRET_KEY;
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(",") || [
   "http://localhost:3000",
 ];
+
+const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
+const RAPIDAPI_HOST = "twitter154.p.rapidapi.com";
+
+// Rate limiter for RapidAPI (5 requests per second)
+class RateLimiter {
+  private requests: number[] = [];
+  private readonly maxRequests: number;
+  private readonly timeWindow: number; // in milliseconds
+
+  constructor(maxRequests: number = 5, timeWindowMs: number = 1000) {
+    this.maxRequests = maxRequests;
+    this.timeWindow = timeWindowMs;
+  }
+
+  async waitForSlot(): Promise<void> {
+    const now = Date.now();
+
+    // Remove requests older than the time window
+    this.requests = this.requests.filter(
+      (time) => now - time < this.timeWindow,
+    );
+
+    // If we're at the limit, wait until we can make another request
+    if (this.requests.length >= this.maxRequests) {
+      const oldestRequest = this.requests[0];
+      const waitTime = this.timeWindow - (now - oldestRequest) + 10; // Add 10ms buffer
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
+      return this.waitForSlot(); // Recursively check again
+    }
+
+    // Record this request
+    this.requests.push(now);
+  }
+}
+
+// Global rate limiter instance for RapidAPI
+const rapidApiRateLimiter = new RateLimiter(5, 1000);
+
+// Helper function to check if tweet content is truncated
+function isTweetTruncated(content: string): boolean {
+  // Remove https://t.co URLs from content to get actual text length
+  const contentWithoutUrls = content.replace(/https:\/\/t\.co\/\w+/g, "");
+  return contentWithoutUrls.length >= 278;
+}
+
+// Helper function to fetch full tweet details for truncated tweets
+async function fetchTweetDetails(
+  tweetId: string,
+): Promise<TwitterApiTweet | null> {
+  try {
+    if (!RAPIDAPI_KEY) {
+      console.error("RapidAPI key not configured");
+      return null;
+    }
+
+    // Wait for rate limit slot before making the API call
+    await rapidApiRateLimiter.waitForSlot();
+
+    // Direct RapidAPI call
+    const response = await fetch(
+      `https://${RAPIDAPI_HOST}/tweet/details?tweet_id=${tweetId}`,
+      {
+        method: "GET",
+        headers: {
+          "X-RapidAPI-Key": RAPIDAPI_KEY,
+          "X-RapidAPI-Host": RAPIDAPI_HOST,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(
+        "Error fetching tweet details:",
+        response.status,
+        errorText,
+      );
+      return null;
+    }
+
+    const tweetDetails = await response.json();
+    return tweetDetails;
+  } catch (error) {
+    console.error("Error in fetchTweetDetails:", error);
+    return null;
+  }
+}
 
 export async function OPTIONS(request: NextRequest) {
   // Handle CORS preflight requests
@@ -198,8 +287,69 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Tweet not found" }, { status: 404 });
     }
 
+    // Check if tweet content is truncated and fetch full details if needed
+    let finalTweetContent = tweet.content;
+    let updatedMediaUrls = tweet.media_urls;
+
+    if (isTweetTruncated(tweet.content)) {
+      console.log(
+        `Tweet ${tweet.tweet_id} appears to be truncated, fetching full details...`,
+      );
+      const fullTweetDetails = await fetchTweetDetails(tweet.tweet_id);
+
+      if (fullTweetDetails && fullTweetDetails.text) {
+        finalTweetContent = fullTweetDetails.text;
+        console.log(
+          `Updated content for tweet ${tweet.tweet_id} with full text`,
+        );
+
+        // Also update media URLs from full details if available
+        const newMediaUrls: Record<string, any> = {};
+        if (
+          fullTweetDetails.media_url &&
+          fullTweetDetails.media_url.length > 0
+        ) {
+          newMediaUrls.images = fullTweetDetails.media_url;
+        }
+        if (
+          fullTweetDetails.video_url &&
+          fullTweetDetails.video_url.length > 0
+        ) {
+          newMediaUrls.videos = fullTweetDetails.video_url;
+        }
+
+        if (Object.keys(newMediaUrls).length > 0) {
+          updatedMediaUrls = newMediaUrls;
+        }
+
+        // Update the tweet in the database with the full content
+        const { error: updateError } = await supabase
+          .from("tweets")
+          .update({
+            content: finalTweetContent,
+            media_urls: updatedMediaUrls,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("tweet_id", tweetId);
+
+        if (updateError) {
+          console.error(
+            "Failed to update tweet with full content:",
+            updateError,
+          );
+        }
+      }
+    }
+
+    // Create updated tweet object for parsing
+    const updatedTweet = {
+      ...tweet,
+      content: finalTweetContent,
+      media_urls: updatedMediaUrls,
+    };
+
     // Parse tweet content with potential overrides for edited values
-    let parsedCast = await parseTweetToFarcasterCast(tweet);
+    let parsedCast = await parseTweetToFarcasterCast(updatedTweet);
 
     // Override with edited values if provided
     if (

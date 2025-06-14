@@ -9,6 +9,41 @@ const NEYNAR_BASE_URL = "https://api.neynar.com/v2";
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = "twitter154.p.rapidapi.com";
 
+// Rate limiter for RapidAPI (5 requests per second)
+class RateLimiter {
+  private requests: number[] = [];
+  private readonly maxRequests: number;
+  private readonly timeWindow: number; // in milliseconds
+
+  constructor(maxRequests: number = 5, timeWindowMs: number = 1000) {
+    this.maxRequests = maxRequests;
+    this.timeWindow = timeWindowMs;
+  }
+
+  async waitForSlot(): Promise<void> {
+    const now = Date.now();
+
+    // Remove requests older than the time window
+    this.requests = this.requests.filter(
+      (time) => now - time < this.timeWindow,
+    );
+
+    // If we're at the limit, wait until we can make another request
+    if (this.requests.length >= this.maxRequests) {
+      const oldestRequest = this.requests[0];
+      const waitTime = this.timeWindow - (now - oldestRequest) + 10; // Add 10ms buffer
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
+      return this.waitForSlot(); // Recursively check again
+    }
+
+    // Record this request
+    this.requests.push(now);
+  }
+}
+
+// Global rate limiter instance for RapidAPI
+const rapidApiRateLimiter = new RateLimiter(5, 1000);
+
 interface NeynarUser {
   fid: number;
   username: string;
@@ -128,7 +163,8 @@ async function fetchTweetsFromTwitterAPI(fid: number): Promise<{
 
   const twitterUsername = twitterAccount.username;
 
-  // Step 3: Fetch tweets from RapidAPI
+  // Step 3: Fetch tweets from RapidAPI (with rate limiting)
+  await rapidApiRateLimiter.waitForSlot();
   const tweetsResponse = await fetch(
     `https://${RAPIDAPI_HOST}/user/tweets?username=${twitterUsername}&limit=10`,
     {
@@ -243,80 +279,47 @@ export async function saveTweetsToDatabase(
   tweets: TwitterApiTweet[],
 ): Promise<void> {
   try {
-    const tweetsToInsert: TweetInsert[] = await Promise.all(
-      tweets.map(async (tweet) => {
-        // For retweets, we want to store the retweeter's information (not the original tweet author)
-        // But we also want to handle cases where we want the original author's info
-        const userInfo = tweet.user;
-        let finalContent = tweet.text;
-        let finalMediaUrls: Record<string, any> = {};
+    console.log("Saving tweets to database", tweets.length);
 
-        // Check if tweet content is truncated and fetch full details if needed
-        if (isTweetTruncated(tweet.text)) {
-          console.log(
-            `Tweet ${tweet.tweet_id} appears to be truncated, fetching full details...`,
-          );
-          const fullTweetDetails = await fetchTweetDetails(tweet.tweet_id);
+    const tweetsToInsert: TweetInsert[] = tweets.map((tweet) => {
+      // For retweets, we want to store the retweeter's information (not the original tweet author)
+      // But we also want to handle cases where we want the original author's info
+      const userInfo = tweet.user;
+      let finalMediaUrls: Record<string, any> = {};
 
-          if (fullTweetDetails && fullTweetDetails.text) {
-            finalContent = fullTweetDetails.text;
-            console.log(
-              `Updated content for tweet ${tweet.tweet_id} with full text`,
-            );
+      // Process media URLs from original tweet data
+      if (tweet.media_url && tweet.media_url.length > 0) {
+        finalMediaUrls.images = tweet.media_url;
+      }
+      if (tweet.video_url && tweet.video_url.length > 0) {
+        finalMediaUrls.videos = tweet.video_url;
+      }
 
-            // Also update media URLs from full details if available
-            if (
-              fullTweetDetails.media_url &&
-              fullTweetDetails.media_url.length > 0
-            ) {
-              finalMediaUrls.images = fullTweetDetails.media_url;
-            }
-            if (
-              fullTweetDetails.video_url &&
-              fullTweetDetails.video_url.length > 0
-            ) {
-              finalMediaUrls.videos = fullTweetDetails.video_url;
-            }
-          }
-        }
-
-        // If we didn't get media from full details, use original media
-        if (Object.keys(finalMediaUrls).length === 0) {
-          if (tweet.media_url && tweet.media_url.length > 0) {
-            finalMediaUrls.images = tweet.media_url;
-          }
-          if (tweet.video_url && tweet.video_url.length > 0) {
-            finalMediaUrls.videos = tweet.video_url;
-          }
-        }
-
-        return {
-          user_id: userId,
-          tweet_id: tweet.tweet_id,
-          content: finalContent,
-          original_content: tweet.text, // Keep original for reference
-          twitter_url: `https://twitter.com/i/status/${tweet.tweet_id}`,
-          twitter_created_at: tweet.creation_date || new Date().toISOString(),
-          cast_status: "pending",
-          is_edited: false,
-          edit_count: 0,
-          auto_cast: false,
-          media_urls:
-            Object.keys(finalMediaUrls).length > 0 ? finalMediaUrls : null,
-          quoted_tweet_url: tweet.quoted_status_id
-            ? `https://twitter.com/i/status/${tweet.quoted_status_id}`
-            : null,
-          is_retweet: tweet.retweet || false,
-          retweet_tweet_id: tweet.retweet_tweet_id || null,
-          // For retweets, store the retweeter's information (the person who retweeted)
-          profile_image_url: userInfo?.profile_pic_url || null,
-          twitter_username: userInfo?.username || null,
-          twitter_display_name: userInfo?.name || null,
-          is_blue_tick_verified:
-            userInfo?.is_blue_verified || userInfo?.is_verified || false,
-        };
-      }),
-    );
+      return {
+        user_id: userId,
+        tweet_id: tweet.tweet_id,
+        content: tweet.text, // Store original content, full details will be fetched when casting
+        twitter_url: `https://twitter.com/i/status/${tweet.tweet_id}`,
+        twitter_created_at: tweet.creation_date || new Date().toISOString(),
+        cast_status: "pending",
+        is_edited: false,
+        edit_count: 0,
+        auto_cast: false,
+        media_urls:
+          Object.keys(finalMediaUrls).length > 0 ? finalMediaUrls : null,
+        quoted_tweet_url: tweet.quoted_status_id
+          ? `https://twitter.com/i/status/${tweet.quoted_status_id}`
+          : null,
+        is_retweet: tweet.retweet || false,
+        retweet_tweet_id: tweet.retweet_tweet_id || null,
+        // For retweets, store the retweeter's information (the person who retweeted)
+        profile_image_url: userInfo?.profile_pic_url || null,
+        twitter_username: userInfo?.username || null,
+        twitter_display_name: userInfo?.name || null,
+        is_blue_tick_verified:
+          userInfo?.is_blue_verified || userInfo?.is_verified || false,
+      };
+    });
 
     // Check for existing tweets first to avoid duplicates
     const existingTweetIds = new Set();
@@ -470,41 +473,4 @@ export async function updateTweetStatus(
     console.error("Error in updateTweetStatus:", error);
     throw error;
   }
-}
-
-// Helper function to fetch full tweet details for truncated tweets
-async function fetchTweetDetails(
-  tweetId: string,
-): Promise<TwitterApiTweet | null> {
-  try {
-    const response = await fetch(`/api/tweets/details?tweet_id=${tweetId}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(
-        "Error fetching tweet details:",
-        response.status,
-        errorText,
-      );
-      return null;
-    }
-
-    const tweetDetails = await response.json();
-    return tweetDetails;
-  } catch (error) {
-    console.error("Error in fetchTweetDetails:", error);
-    return null;
-  }
-}
-
-// Helper function to check if tweet content is truncated
-function isTweetTruncated(content: string): boolean {
-  // Remove https://t.co URLs from content to get actual text length
-  const contentWithoutUrls = content.replace(/https:\/\/t\.co\/\w+/g, "");
-  return contentWithoutUrls.length === 312;
 }
