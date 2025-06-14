@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-export default function Edit() {
+export default function Edit({ className }: { className?: string }) {
   return (
     <motion.svg
       xmlns="http://www.w3.org/2000/svg"
@@ -13,6 +13,7 @@ export default function Edit() {
         rotate: [0, -5, 5, -5, 0],
         transition: { duration: 0.5 },
       }}
+      className={className}
     >
       <motion.path
         d="M12.5 21C16.518 17.7256 16.5891 24.3574 21.5 19M3.5 20.9955L6.22665 20.9999C6.61608 21.0005 6.81079 21.0008 6.99406 20.9568C7.15654 20.9178 7.31188 20.8534 7.45435 20.7658C7.61505 20.6669 7.75274 20.5287 8.02811 20.2521L21.0014 7.22177C21.5315 6.68941 21.6632 5.86631 21.2594 5.21582C20.7713 4.42948 20.1037 3.75331 19.3267 3.25131C18.704 2.84896 17.8862 2.93708 17.3626 3.46297L4.3099 16.573C4.04444 16.8396 3.91171 16.973 3.81544 17.1282C3.73007 17.2658 3.66608 17.4156 3.62568 17.5726C3.58011 17.7497 3.57546 17.9381 3.56616 18.3151L3.5 20.9955Z"
