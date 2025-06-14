@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useAuthenticatedApi } from "./useAuthenticatedFetch";
 
 interface EditTweetData {
   tweetId: string;
@@ -22,16 +23,11 @@ interface ApiError {
 
 // Hook to edit tweet content
 export const useEditTweet = () => {
+  const { post } = useAuthenticatedApi();
+
   return useMutation({
     mutationFn: async (editData: EditTweetData): Promise<EditTweetResponse> => {
-      const response = await fetch("/api/tweets/edit", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
-        },
-        body: JSON.stringify(editData),
-      });
+      const response = await post("/api/tweets/edit", editData);
 
       if (!response.ok) {
         const errorData: ApiError = await response
@@ -54,25 +50,19 @@ export const useEditTweet = () => {
 // Hook to cast tweet to Farcaster
 export const useCastTweet = () => {
   const queryClient = useQueryClient();
+  const { post } = useAuthenticatedApi();
 
   return useMutation({
     mutationFn: async (castData: {
       tweetId: string;
-      fid: number;
+      fid?: number; // Make fid optional since it will be determined by JWT
       content: string;
       mediaUrls?: string[];
       quotedTweetUrl?: string | null;
       isRetweetRemoved?: boolean;
       videoUrls?: Array<{ url: string; bitrate: number; content_type: string }>;
     }): Promise<any> => {
-      const response = await fetch("/api/cast", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
-        },
-        body: JSON.stringify(castData),
-      });
+      const response = await post("/api/cast", castData);
 
       if (!response.ok) {
         const errorData: ApiError = await response

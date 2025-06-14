@@ -16,6 +16,7 @@ import {
 import { useSignIn } from "@/hooks/useSignIn";
 import sdk from "@farcaster/frame-sdk";
 import { useDeviceDetection } from "@/hooks/useDeviceDetection";
+import { toast } from "sonner";
 
 const SkeletonLoader = ({ width = "w-16" }: { width?: string }) => (
   <motion.div
@@ -44,7 +45,10 @@ export default function UserProfiles() {
     } else if (!signInAttempted.current && !isSignInLoading && !isSignedIn) {
       // Only attempt sign-in if we're not loading and not already signed in
       signInAttempted.current = true;
-      signIn();
+      signIn().catch((error) => {
+        console.error("Sign-in failed:", error);
+        toast.error("Authentication failed. Please try again.");
+      });
     }
   }, [isSignedIn, refetchUser, signIn, isSignInLoading]);
 

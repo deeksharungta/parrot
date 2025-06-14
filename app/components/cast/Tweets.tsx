@@ -287,7 +287,6 @@ export default function Tweets({ fid }: TweetsProps) {
         castThreadMutation.mutate(
           {
             conversationId: currentTweet.conversation_id,
-            fid: fid,
           },
           {
             onSuccess: async () => {
@@ -305,7 +304,6 @@ export default function Tweets({ fid }: TweetsProps) {
         castTweetMutation.mutate(
           {
             tweetId: currentTweet.tweet_id,
-            fid: fid,
             content: currentTweet.content || "",
           },
           {
@@ -439,7 +437,6 @@ export default function Tweets({ fid }: TweetsProps) {
           // Cast entire thread (note: for threads, we cast the whole thread, not just the edited tweet)
           await castThreadMutation.mutateAsync({
             conversationId: currentTweet.conversation_id,
-            fid: fid,
           });
 
           console.log("Edited thread cast successfully");
@@ -447,7 +444,6 @@ export default function Tweets({ fid }: TweetsProps) {
           // Cast single edited tweet
           await castTweetMutation.mutateAsync({
             tweetId: currentTweet.tweet_id,
-            fid: fid,
             content: editedContent,
             mediaUrls: mediaUrls,
             quotedTweetUrl: quotedTweetUrl,

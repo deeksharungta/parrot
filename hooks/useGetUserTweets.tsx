@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useAuthenticatedApi } from "./useAuthenticatedFetch";
 
 interface Tweet {
   id: string;
@@ -29,6 +30,8 @@ interface UseGetUserTweetsResult {
 export const useGetUserTweets = (
   fid: number | undefined,
 ): UseGetUserTweetsResult => {
+  const { get } = useAuthenticatedApi();
+
   const {
     data: tweetsResponse,
     isLoading,
@@ -42,13 +45,7 @@ export const useGetUserTweets = (
         throw new Error("Unable to get user FID");
       }
 
-      const response = await fetch(`/api/tweets?fid=${fid}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
-        },
-      });
+      const response = await get(`/api/tweets?fid=${fid}`);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));

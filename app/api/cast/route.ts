@@ -13,6 +13,7 @@ import { base } from "viem/chains";
 import { USDC_ADDRESS, SPENDER_ADDRESS } from "@/lib/constants";
 import { TwitterApiTweet } from "@/lib/tweets-service";
 import { withAuth, createOptionsHandler } from "@/lib/auth-middleware";
+import { withApiKeyAndJwtAuth } from "@/lib/jwt-auth-middleware";
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY;
 const NEYNAR_BASE_URL = "https://api.neynar.com/v2";
@@ -108,7 +109,10 @@ async function fetchTweetDetails(
 
 export const OPTIONS = createOptionsHandler();
 
-export const POST = withAuth(async function (request: NextRequest) {
+export const POST = withApiKeyAndJwtAuth(async function (
+  request: NextRequest,
+  authenticatedFid: number,
+) {
   try {
     const body = await request.json();
     const {
@@ -121,10 +125,21 @@ export const POST = withAuth(async function (request: NextRequest) {
       videoUrls,
     } = body;
 
-    if (!tweetId || !fid) {
+    if (!tweetId) {
       return NextResponse.json(
-        { error: "tweetId and fid are required" },
+        { error: "tweetId is required" },
         { status: 400 },
+      );
+    }
+
+    // Use the authenticated user's FID instead of the one from the request body
+    const userFid = fid || authenticatedFid;
+
+    // Authorization check: ensure the FID in the request matches the authenticated user
+    if (fid && fid !== authenticatedFid) {
+      return NextResponse.json(
+        { error: "Unauthorized: You can only cast for your own account" },
+        { status: 403 },
       );
     }
 
@@ -139,7 +154,7 @@ export const POST = withAuth(async function (request: NextRequest) {
     const { data: user, error: userError } = await supabase
       .from("users")
       .select("*")
-      .eq("farcaster_fid", fid)
+      .eq("farcaster_fid", userFid)
       .single();
 
     if (userError || !user) {

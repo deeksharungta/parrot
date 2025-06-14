@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { Database } from "@/lib/types/database";
 import { withAuth, createOptionsHandler } from "@/lib/auth-middleware";
+import { withApiKeyAndJwtAuth } from "@/lib/jwt-auth-middleware";
 
 type User = Database["public"]["Tables"]["users"]["Row"];
 type UserInsert = Database["public"]["Tables"]["users"]["Insert"];
@@ -9,12 +10,22 @@ type UserUpdate = Database["public"]["Tables"]["users"]["Update"];
 
 export const OPTIONS = createOptionsHandler();
 
-export const GET = withAuth(async function (request: NextRequest) {
+export const GET = withApiKeyAndJwtAuth(async function (
+  request: NextRequest,
+  authenticatedFid: number,
+) {
   const { searchParams } = new URL(request.url);
-  const fid = searchParams.get("fid");
+  const requestedFid = searchParams.get("fid");
 
-  if (!fid) {
-    return NextResponse.json({ error: "FID is required" }, { status: 400 });
+  // If no FID is provided in query, use the authenticated user's FID
+  const fid = requestedFid || authenticatedFid.toString();
+
+  // Authorization check: users can only access their own data
+  if (requestedFid && parseInt(requestedFid) !== authenticatedFid) {
+    return NextResponse.json(
+      { error: "Unauthorized: You can only access your own user data" },
+      { status: 403 },
+    );
   }
 
   try {
@@ -46,15 +57,22 @@ export const GET = withAuth(async function (request: NextRequest) {
   }
 });
 
-export const POST = withAuth(async function (request: NextRequest) {
+export const POST = withApiKeyAndJwtAuth(async function (
+  request: NextRequest,
+  authenticatedFid: number,
+) {
   try {
     const body = await request.json();
     const { farcaster_fid, ...userData } = body;
 
-    if (!farcaster_fid) {
+    // Use authenticated FID for user creation
+    const userFid = farcaster_fid || authenticatedFid;
+
+    // Authorization check: users can only create their own user record
+    if (farcaster_fid && farcaster_fid !== authenticatedFid) {
       return NextResponse.json(
-        { error: "Farcaster FID is required" },
-        { status: 400 },
+        { error: "Unauthorized: You can only create your own user record" },
+        { status: 403 },
       );
     }
 
@@ -62,7 +80,7 @@ export const POST = withAuth(async function (request: NextRequest) {
     const { data: existingUser } = await supabase
       .from("users")
       .select("id")
-      .eq("farcaster_fid", farcaster_fid)
+      .eq("farcaster_fid", userFid)
       .single();
 
     if (existingUser) {
@@ -77,7 +95,7 @@ export const POST = withAuth(async function (request: NextRequest) {
 
     // Create new user
     const newUser: UserInsert = {
-      farcaster_fid,
+      farcaster_fid: userFid,
       ...userData,
     };
 
@@ -105,15 +123,22 @@ export const POST = withAuth(async function (request: NextRequest) {
   }
 });
 
-export const PUT = withAuth(async function (request: NextRequest) {
+export const PUT = withApiKeyAndJwtAuth(async function (
+  request: NextRequest,
+  authenticatedFid: number,
+) {
   try {
     const body = await request.json();
     const { farcaster_fid, ...userData } = body;
 
-    if (!farcaster_fid) {
+    // Use authenticated FID for user update
+    const userFid = farcaster_fid || authenticatedFid;
+
+    // Authorization check: users can only update their own user record
+    if (farcaster_fid && farcaster_fid !== authenticatedFid) {
       return NextResponse.json(
-        { error: "Farcaster FID is required" },
-        { status: 400 },
+        { error: "Unauthorized: You can only update your own user record" },
+        { status: 403 },
       );
     }
 
@@ -121,7 +146,7 @@ export const PUT = withAuth(async function (request: NextRequest) {
     const { data: existingUser } = await supabase
       .from("users")
       .select("id")
-      .eq("farcaster_fid", farcaster_fid)
+      .eq("farcaster_fid", userFid)
       .single();
 
     if (!existingUser) {
@@ -137,7 +162,7 @@ export const PUT = withAuth(async function (request: NextRequest) {
     const { data: user, error } = await supabase
       .from("users")
       .update(updateData)
-      .eq("farcaster_fid", farcaster_fid)
+      .eq("farcaster_fid", userFid)
       .select()
       .single();
 
@@ -160,15 +185,25 @@ export const PUT = withAuth(async function (request: NextRequest) {
 });
 
 // Combined endpoint to create or update user
-export const PATCH = withAuth(async function (request: NextRequest) {
+export const PATCH = withApiKeyAndJwtAuth(async function (
+  request: NextRequest,
+  authenticatedFid: number,
+) {
   try {
     const body = await request.json();
     const { farcaster_fid, ...userData } = body;
 
-    if (!farcaster_fid) {
+    // Use authenticated FID for user upsert
+    const userFid = farcaster_fid || authenticatedFid;
+
+    // Authorization check: users can only upsert their own user record
+    if (farcaster_fid && farcaster_fid !== authenticatedFid) {
       return NextResponse.json(
-        { error: "Farcaster FID is required" },
-        { status: 400 },
+        {
+          error:
+            "Unauthorized: You can only create/update your own user record",
+        },
+        { status: 403 },
       );
     }
 
@@ -176,7 +211,7 @@ export const PATCH = withAuth(async function (request: NextRequest) {
     const { data: existingUser } = await supabase
       .from("users")
       .select("id")
-      .eq("farcaster_fid", farcaster_fid)
+      .eq("farcaster_fid", userFid)
       .single();
 
     if (existingUser) {
@@ -189,7 +224,7 @@ export const PATCH = withAuth(async function (request: NextRequest) {
       const { data: user, error } = await supabase
         .from("users")
         .update(updateData)
-        .eq("farcaster_fid", farcaster_fid)
+        .eq("farcaster_fid", userFid)
         .select()
         .single();
 
@@ -205,7 +240,7 @@ export const PATCH = withAuth(async function (request: NextRequest) {
     } else {
       // Create new user
       const newUser: UserInsert = {
-        farcaster_fid,
+        farcaster_fid: userFid,
         ...userData,
       };
 

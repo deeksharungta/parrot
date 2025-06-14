@@ -54,7 +54,7 @@ export function useCastThread() {
       fid,
     }: {
       conversationId: string;
-      fid: number;
+      fid?: number; // Make fid optional since it will be determined by JWT
     }) => {
       return await castThread(conversationId, fid);
     },
@@ -64,11 +64,12 @@ export function useCastThread() {
       queryClient.invalidateQueries({
         queryKey: ["threadPreview", variables.conversationId],
       });
+      // Invalidate user tweets - use wildcard since we might not have the fid
       queryClient.invalidateQueries({
-        queryKey: ["userTweets", variables.fid],
+        queryKey: ["userTweets"],
       });
       queryClient.invalidateQueries({
-        queryKey: ["cachedTweets", variables.fid],
+        queryKey: ["cachedTweets"],
       });
     },
   });

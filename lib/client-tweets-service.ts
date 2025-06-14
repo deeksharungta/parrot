@@ -239,7 +239,7 @@ export async function updateTweetStatus(
 // Cast an entire thread to Farcaster
 export async function castThread(
   conversationId: string,
-  fid: number,
+  fid?: number, // Make fid optional since it will be determined by JWT
 ): Promise<{
   success: boolean;
   totalCost: number;
@@ -255,21 +255,30 @@ export async function castThread(
   error?: string;
 }> {
   try {
+    // Get JWT token from localStorage
+    const token = localStorage.getItem("token");
+
     const response = await fetch("/api/cast-thread", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify({
         conversationId,
-        fid,
+        ...(fid ? { fid } : {}), // Only include fid if provided
       }),
     });
 
     const data = await response.json();
 
     if (!response.ok) {
+      // Handle authentication errors
+      if (response.status === 401) {
+        console.log("JWT token invalid, removing from localStorage");
+        localStorage.removeItem("token");
+      }
       throw new Error(data.error || "Failed to cast thread");
     }
 

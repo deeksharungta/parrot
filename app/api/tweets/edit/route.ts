@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { withAuth, createOptionsHandler } from "@/lib/auth-middleware";
+import { withApiKeyAndJwtAuth } from "@/lib/jwt-auth-middleware";
 
 export const OPTIONS = createOptionsHandler();
 
-export const POST = withAuth(async function (request: NextRequest) {
+export const POST = withApiKeyAndJwtAuth(async function (
+  request: NextRequest,
+  authenticatedFid: number,
+) {
   try {
     const body = await request.json();
     const {
@@ -23,16 +27,24 @@ export const POST = withAuth(async function (request: NextRequest) {
       );
     }
 
-    // Get the current tweet to increment edit count
+    // Get the current tweet and verify ownership
     const { data: currentTweet, error: fetchError } = await supabase
       .from("tweets")
-      .select("edit_count")
+      .select("edit_count, farcaster_fid")
       .eq("tweet_id", tweetId)
       .single();
 
     if (fetchError || !currentTweet) {
       console.error("Error fetching tweet:", fetchError);
       return NextResponse.json({ error: "Tweet not found" }, { status: 404 });
+    }
+
+    // Authorization check: ensure user owns this tweet
+    if (currentTweet.farcaster_fid !== authenticatedFid) {
+      return NextResponse.json(
+        { error: "Unauthorized: You can only edit your own tweets" },
+        { status: 403 },
+      );
     }
 
     // Prepare update data

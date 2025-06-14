@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { useUpdateUser, useCurrentUser } from "./useUsers";
+import { useAuthenticatedApi } from "./useAuthenticatedFetch";
 import sdk from "@farcaster/frame-sdk";
 
 // Type definitions
@@ -26,16 +27,11 @@ export const useCreateSigner = () => {
   const { context } = useMiniKit();
   const { mutate: updateUser } = useUpdateUser();
   const queryClient = useQueryClient();
+  const { post } = useAuthenticatedApi();
 
   return useMutation({
     mutationFn: async (): Promise<string | null> => {
-      const response = await fetch("/api/signer", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
-        },
-      });
+      const response = await post("/api/signer", {});
 
       if (!response.ok) {
         throw new Error("Failed to create signer");
@@ -137,11 +133,14 @@ export const usePollingSignerApproval = (
 
       console.log("Polling signer approval for:", signer_uuid);
 
+      // Use authenticated fetch for polling
+      const token = localStorage.getItem("token");
       const response = await fetch(`/api/signer?signer_uuid=${signer_uuid}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
           "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
 
@@ -197,11 +196,14 @@ export const useApproveSigner = () => {
 
   return useMutation({
     mutationFn: async (signer_uuid: string): Promise<FarcasterUser> => {
+      // Use authenticated fetch for approval check
+      const token = localStorage.getItem("token");
       const response = await fetch(`/api/signer?signer_uuid=${signer_uuid}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
           "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
 

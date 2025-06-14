@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth, createOptionsHandler } from "@/lib/auth-middleware";
+import { withApiKeyAndJwtAuth } from "@/lib/jwt-auth-middleware";
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY;
 const NEYNAR_BASE_URL = "https://api.neynar.com/v2";
@@ -40,13 +41,23 @@ interface TwitterResponse {
 
 export const OPTIONS = createOptionsHandler();
 
-export const GET = withAuth(async function (request: NextRequest) {
+export const GET = withApiKeyAndJwtAuth(async function (
+  request: NextRequest,
+  authenticatedFid: number,
+) {
   try {
     const { searchParams } = new URL(request.url);
-    const fid = searchParams.get("fid");
+    const requestedFid = searchParams.get("fid");
 
-    if (!fid) {
-      return NextResponse.json({ error: "FID is required" }, { status: 400 });
+    // If no FID is provided in query, use the authenticated user's FID
+    const fid = requestedFid || authenticatedFid.toString();
+
+    // Authorization check: users can only fetch their own tweets unless it's a public request
+    if (requestedFid && parseInt(requestedFid) !== authenticatedFid) {
+      return NextResponse.json(
+        { error: "Unauthorized: You can only fetch your own tweets" },
+        { status: 403 },
+      );
     }
 
     if (!NEYNAR_API_KEY) {

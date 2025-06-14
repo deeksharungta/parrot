@@ -2,10 +2,14 @@ import neynarClient from "@/lib/neynarClient";
 import { getSignedKey } from "@/lib/utils/getSignedKey";
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth, createOptionsHandler } from "@/lib/auth-middleware";
+import { withApiKeyAndJwtAuth } from "@/lib/jwt-auth-middleware";
 
 export const OPTIONS = createOptionsHandler();
 
-export const POST = withAuth(async function () {
+export const POST = withApiKeyAndJwtAuth(async function (
+  request: NextRequest,
+  authenticatedFid: number,
+) {
   try {
     const signedKey = await getSignedKey(true);
 
@@ -17,7 +21,10 @@ export const POST = withAuth(async function () {
   }
 });
 
-export const GET = withAuth(async function (req: NextRequest) {
+export const GET = withApiKeyAndJwtAuth(async function (
+  req: NextRequest,
+  authenticatedFid: number,
+) {
   const { searchParams } = new URL(req.url);
   const signer_uuid = searchParams.get("signer_uuid");
 

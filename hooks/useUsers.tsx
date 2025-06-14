@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { Database } from "@/lib/types/database";
+import { useAuthenticatedApi } from "./useAuthenticatedFetch";
 
 // Type definitions
 export type User = Database["public"]["Tables"]["users"]["Row"];
@@ -43,6 +44,8 @@ export const userKeys = {
 
 // GET - Fetch user by Farcaster FID
 export const useGetUser = (fid: number | undefined) => {
+  const { get } = useAuthenticatedApi();
+
   return useQuery({
     queryKey: userKeys.byFid(fid!),
     queryFn: async (): Promise<GetUserResponse> => {
@@ -50,13 +53,7 @@ export const useGetUser = (fid: number | undefined) => {
         throw new Error("FID is required");
       }
 
-      const response = await fetch(`/api/users?fid=${fid}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
-        },
-      });
+      const response = await get(`/api/users?fid=${fid}`);
 
       if (!response.ok) {
         const errorData: ApiError = await response
@@ -76,6 +73,7 @@ export const useGetUser = (fid: number | undefined) => {
 // POST - Create new user
 export const useCreateUser = () => {
   const queryClient = useQueryClient();
+  const { post } = useAuthenticatedApi();
 
   return useMutation({
     mutationFn: async (userData: UserInsert): Promise<CreateUserResponse> => {
@@ -83,14 +81,7 @@ export const useCreateUser = () => {
         throw new Error("Farcaster FID is required");
       }
 
-      const response = await fetch("/api/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
-        },
-        body: JSON.stringify(userData),
-      });
+      const response = await post("/api/users", userData);
 
       if (!response.ok) {
         const errorData: ApiError = await response
@@ -119,6 +110,7 @@ export const useCreateUser = () => {
 // PUT - Update existing user
 export const useUpdateUser = () => {
   const queryClient = useQueryClient();
+  const { put } = useAuthenticatedApi();
 
   return useMutation({
     mutationFn: async (
@@ -128,14 +120,7 @@ export const useUpdateUser = () => {
         throw new Error("Farcaster FID is required");
       }
 
-      const response = await fetch("/api/users", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
-        },
-        body: JSON.stringify(userData),
-      });
+      const response = await put("/api/users", userData);
 
       if (!response.ok) {
         const errorData: ApiError = await response
@@ -169,6 +154,7 @@ export const useUpdateUser = () => {
 // PATCH - Upsert user (create or update)
 export const useUpsertUser = () => {
   const queryClient = useQueryClient();
+  const { patch } = useAuthenticatedApi();
 
   return useMutation({
     mutationFn: async (
@@ -178,14 +164,7 @@ export const useUpsertUser = () => {
         throw new Error("Farcaster FID is required");
       }
 
-      const response = await fetch("/api/users", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
-        },
-        body: JSON.stringify(userData),
-      });
+      const response = await patch("/api/users", userData);
 
       if (!response.ok) {
         const errorData: ApiError = await response
