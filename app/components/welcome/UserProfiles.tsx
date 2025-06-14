@@ -152,36 +152,55 @@ export default function UserProfiles() {
         transition={{ duration: 0.4, delay: 1.2 }}
       >
         {twitterAccount?.username ? (
-          <Link href="/cast" className="w-full">
+          !isSignedIn ? (
             <Button
-              disabled={
-                isLoading || !twitterAccount?.username || isSignInLoading
-              }
+              disabled={isLoading || isSignInLoading}
+              onClick={() => signIn()}
             >
               {isSignInLoading
                 ? "Signing you in..."
                 : isLoading
                   ? "Checking authentication..."
-                  : "Continue fetching tweets"}
+                  : "Sign In"}
             </Button>
-          </Link>
+          ) : (
+            <Link href="/cast" className="w-full">
+              <Button
+                disabled={
+                  isLoading || !twitterAccount?.username || isSignInLoading
+                }
+              >
+                {isSignInLoading
+                  ? "Signing you in..."
+                  : isLoading
+                    ? "Checking authentication..."
+                    : "Continue fetching tweets"}
+              </Button>
+            </Link>
+          )
         ) : (
           <>
             <Button
               disabled={isLoading || isSignInLoading}
               onClick={() => {
-                sdk.actions.openUrl(
-                  isMobile
-                    ? "https://farcaster.xyz/~/settings/verifications"
-                    : "https://farcaster.xyz/~/settings",
-                );
+                if (!isSignedIn) {
+                  signIn();
+                } else {
+                  sdk.actions.openUrl(
+                    isMobile
+                      ? "https://farcaster.xyz/~/settings/verifications"
+                      : "https://farcaster.xyz/~/settings",
+                  );
+                }
               }}
             >
               {isSignInLoading
                 ? "Signing you in..."
                 : isLoading
                   ? "Checking authentication..."
-                  : "Connect X to FC"}
+                  : !isSignedIn
+                    ? "Sign In"
+                    : "Connect X to FC"}
             </Button>
             <p className="text-xs text-center font-normal text-[#8C8A94] mt-1">
               To get started, connect your X account to Farcaster. We'll fetch
