@@ -611,29 +611,38 @@ export default function Tweets({ fid }: TweetsProps) {
       </div>
 
       <div className="flex justify-between items-center px-10 mt-6 w-full">
-        <button
-          onClick={handleReject}
-          className="rounded-full bg-[#F8F8F8] p-4 flex items-center justify-center hover:bg-[#ECECED] transition-colors"
-        >
-          <Cross />
-        </button>
-        <button
-          onClick={handleEdit}
-          disabled={isEditLoading || editTweetMutation.isPending}
-          className="rounded-full bg-[#F8F8F8] p-4 flex items-center justify-center hover:bg-[#ECECED] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isEditLoading || editTweetMutation.isPending ? (
-            <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-          ) : (
-            <Edit />
-          )}
-        </button>
-        <button
-          onClick={handleApprove}
-          className="rounded-full bg-[#F8F8F8] p-4 flex items-center justify-center hover:bg-[#ECECED] transition-colors"
-        >
-          <ArrowRight />
-        </button>
+        <div className="flex flex-col items-center gap-1">
+          <button
+            onClick={handleReject}
+            className="rounded-full bg-[#F8F8F8] p-4 flex items-center justify-center hover:bg-[#ECECED] transition-colors"
+          >
+            <Cross />
+          </button>
+          <span className="text-sm font-medium text-[#B3B1B8]">Ignore</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <button
+            onClick={handleEdit}
+            disabled={isEditLoading || editTweetMutation.isPending}
+            className="rounded-full bg-[#F8F8F8] p-4 flex items-center justify-center hover:bg-[#ECECED] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isEditLoading || editTweetMutation.isPending ? (
+              <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <Edit />
+            )}
+          </button>
+          <span className="text-sm font-medium text-[#B3B1B8]">Edit</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <button
+            onClick={handleApprove}
+            className="rounded-full bg-[#F8F8F8] p-4 flex items-center justify-center hover:bg-[#ECECED] transition-colors"
+          >
+            <ArrowRight />
+          </button>
+          <span className="text-sm font-medium text-[#B3B1B8]">Cast</span>
+        </div>
       </div>
 
       <p className="text-center text-base font-medium text-[#B3B1B8] mt-3">
