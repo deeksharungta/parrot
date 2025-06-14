@@ -14,6 +14,7 @@ import { useUserTweets } from "@/hooks/useUserTweets";
 import { useGetUser } from "@/hooks/useUsers";
 import { useUSDCApproval } from "@/hooks/useUSDCApproval";
 import { useEditTweet, useCastTweet } from "@/hooks/useTweetEdit";
+import { useCastThread } from "@/hooks/useThreads";
 
 interface RetweetInfo {
   retweetedBy: {
@@ -101,6 +102,7 @@ export default function Tweets({ fid }: TweetsProps) {
   // New hooks for editing and casting
   const editTweetMutation = useEditTweet();
   const castTweetMutation = useCastTweet();
+  const castThreadMutation = useCastThread();
 
   const SWIPE_THRESHOLD = 100;
   const MAX_ROTATION = 15;
@@ -265,25 +267,47 @@ export default function Tweets({ fid }: TweetsProps) {
       }, 50);
     }, 100);
 
-    // Cast the tweet in the background
+    // Cast the tweet or thread in the background
     if (currentTweet?.tweet_id && userData?.user?.neynar_signer_uuid) {
-      castTweetMutation.mutate(
-        {
-          tweetId: currentTweet.tweet_id,
-          fid: fid,
-          content: currentTweet.content || "",
-        },
-        {
-          onSuccess: async () => {
-            await sdk.haptics.notificationOccurred("success");
-            console.log("Tweet cast successfully");
+      // Check if this is a thread tweet
+      if (currentTweet.is_thread_tweet && currentTweet.conversation_id) {
+        // Cast entire thread
+        castThreadMutation.mutate(
+          {
+            conversationId: currentTweet.conversation_id,
+            fid: fid,
           },
-          onError: async (error) => {
-            console.error("Error casting tweet:", error);
-            await sdk.haptics.notificationOccurred("error");
+          {
+            onSuccess: async () => {
+              await sdk.haptics.notificationOccurred("success");
+              console.log("Thread cast successfully");
+            },
+            onError: async (error) => {
+              console.error("Error casting thread:", error);
+              await sdk.haptics.notificationOccurred("error");
+            },
           },
-        },
-      );
+        );
+      } else {
+        // Cast single tweet
+        castTweetMutation.mutate(
+          {
+            tweetId: currentTweet.tweet_id,
+            fid: fid,
+            content: currentTweet.content || "",
+          },
+          {
+            onSuccess: async () => {
+              await sdk.haptics.notificationOccurred("success");
+              console.log("Tweet cast successfully");
+            },
+            onError: async (error) => {
+              console.error("Error casting tweet:", error);
+              await sdk.haptics.notificationOccurred("error");
+            },
+          },
+        );
+      }
     }
   };
 
@@ -396,19 +420,31 @@ export default function Tweets({ fid }: TweetsProps) {
 
       console.log("Edited content saved successfully");
 
-      // Step 2: Cast the edited tweet to Farcaster
+      // Step 2: Cast the edited tweet or thread to Farcaster
       if (userData?.user?.neynar_signer_uuid) {
-        await castTweetMutation.mutateAsync({
-          tweetId: currentTweet.tweet_id,
-          fid: fid,
-          content: editedContent,
-          mediaUrls: mediaUrls,
-          quotedTweetUrl: quotedTweetUrl,
-          isRetweetRemoved: isRetweetRemoved,
-          videoUrls: videoUrls,
-        });
+        // Check if this is a thread tweet
+        if (currentTweet.is_thread_tweet && currentTweet.conversation_id) {
+          // Cast entire thread (note: for threads, we cast the whole thread, not just the edited tweet)
+          await castThreadMutation.mutateAsync({
+            conversationId: currentTweet.conversation_id,
+            fid: fid,
+          });
 
-        console.log("Edited tweet cast successfully");
+          console.log("Edited thread cast successfully");
+        } else {
+          // Cast single edited tweet
+          await castTweetMutation.mutateAsync({
+            tweetId: currentTweet.tweet_id,
+            fid: fid,
+            content: editedContent,
+            mediaUrls: mediaUrls,
+            quotedTweetUrl: quotedTweetUrl,
+            isRetweetRemoved: isRetweetRemoved,
+            videoUrls: videoUrls,
+          });
+
+          console.log("Edited tweet cast successfully");
+        }
 
         setShowEditModal(false);
       } else {
