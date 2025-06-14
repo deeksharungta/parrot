@@ -35,6 +35,12 @@ export const useThreadTweets = (
 
       const response = await fetch(
         `/api/tweets/thread-preview?conversation_id=${conversationId}&user_id=${fid || "temp"}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
+          },
+        },
       );
 
       if (!response.ok) {

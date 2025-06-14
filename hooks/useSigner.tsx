@@ -33,6 +33,7 @@ export const useCreateSigner = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
         },
       });
 
@@ -140,6 +141,7 @@ export const usePollingSignerApproval = (
         method: "GET",
         headers: {
           "Content-Type": "application/json",
+          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
         },
       });
 
@@ -199,6 +201,7 @@ export const useApproveSigner = () => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
+          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
         },
       });
 

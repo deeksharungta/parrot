@@ -132,6 +132,7 @@ export async function getCachedTweets(
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
       },
     });
 
@@ -166,6 +167,7 @@ export async function fetchAndSaveFreshTweets(fid: number): Promise<{
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
       },
     });
 
@@ -211,6 +213,7 @@ export async function updateTweetStatus(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
       },
       body: JSON.stringify({
         tweetId,
@@ -301,6 +304,7 @@ export async function getThreadCastPreview(
         method: "GET",
         headers: {
           "Content-Type": "application/json",
+          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
         },
       },
     );

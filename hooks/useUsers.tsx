@@ -54,6 +54,7 @@ export const useGetUser = (fid: number | undefined) => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
+          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
         },
       });
 
@@ -86,6 +87,7 @@ export const useCreateUser = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
         },
         body: JSON.stringify(userData),
       });
@@ -130,6 +132,7 @@ export const useUpdateUser = () => {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
         },
         body: JSON.stringify(userData),
       });
@@ -179,6 +182,7 @@ export const useUpsertUser = () => {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
         },
         body: JSON.stringify(userData),
       });
