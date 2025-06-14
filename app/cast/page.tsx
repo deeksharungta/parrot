@@ -13,15 +13,19 @@ export default function CastPage() {
   const { isFrameReady, setFrameReady, context } = useMiniKit();
   const { data: userData } = useCurrentUser();
   const [showConnectNeynar, setShowConnectNeynar] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(
-    !localStorage.getItem("onboardingCompleted"),
-  );
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     if (!isFrameReady) {
       setFrameReady();
     }
   }, [isFrameReady, setFrameReady]);
+
+  // Check localStorage for onboarding status after component mounts
+  useEffect(() => {
+    const onboardingCompleted = localStorage.getItem("onboardingCompleted");
+    setShowOnboarding(!onboardingCompleted);
+  }, []);
 
   // Check for neynar signer uuid and show modal if not present
   useEffect(() => {
