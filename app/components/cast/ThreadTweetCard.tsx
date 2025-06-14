@@ -166,7 +166,7 @@ export default function ThreadTweetCard({
 
         {/* Thread replies */}
         {threadTweets && threadTweets.length > 1 && (
-          <div className="border-l-2 border-gray-200 ml-5 pl-4">
+          <div className="border-l-2 border-[#ECECED] ml-5 pl-4">
             {threadTweets
               .filter(
                 (tweet) => tweet.thread_position && tweet.thread_position > 1,
@@ -217,7 +217,7 @@ function ThreadReplyTweet({
   return (
     <div className={`relative ${!isLast ? "mb-4" : ""}`}>
       {/* Connection line */}
-      <div className="absolute -left-4 top-0 w-2 h-6 border-l-2 border-b-2 border-gray-200 rounded-bl-lg" />
+      <div className="absolute -left-4 top-0 w-2 h-6 border-b-2 border-[#ECECED]" />
 
       <div className="bg-gray-50 rounded-lg p-3">
         <div className="flex items-start gap-2 mb-2">
