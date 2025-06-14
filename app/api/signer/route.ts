@@ -1,8 +1,11 @@
 import neynarClient from "@/lib/neynarClient";
 import { getSignedKey } from "@/lib/utils/getSignedKey";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { withAuth, createOptionsHandler } from "@/lib/auth-middleware";
 
-export async function POST() {
+export const OPTIONS = createOptionsHandler();
+
+export const POST = withAuth(async function () {
   try {
     const signedKey = await getSignedKey(true);
 
@@ -12,9 +15,9 @@ export async function POST() {
   } catch (error) {
     return NextResponse.json({ error: "An error occurred" }, { status: 500 });
   }
-}
+});
 
-export async function GET(req: Request) {
+export const GET = withAuth(async function (req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const signer_uuid = searchParams.get("signer_uuid");
 
@@ -32,4 +35,4 @@ export async function GET(req: Request) {
   } catch (error) {
     return NextResponse.json({ error: "An error occurred" }, { status: 500 });
   }
-}
+});

@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCachedTweets, fetchAndSaveFreshTweets } from "@/lib/tweets-service";
+import { withAuth, createOptionsHandler } from "@/lib/auth-middleware";
 
-export async function GET(request: NextRequest) {
+export const OPTIONS = createOptionsHandler();
+
+export const GET = withAuth(async function (request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const fid = searchParams.get("fid");
@@ -39,4 +42,4 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

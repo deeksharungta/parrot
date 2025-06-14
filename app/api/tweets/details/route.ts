@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getUserThreads, getThreadInfo } from "@/lib/tweets-service";
+import { withAuth, createOptionsHandler } from "@/lib/auth-middleware";
 
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = "twitter154.p.rapidapi.com";
@@ -112,7 +114,9 @@ export interface TwitterApiTweet {
   [key: string]: any;
 }
 
-export async function GET(request: NextRequest) {
+export const OPTIONS = createOptionsHandler();
+
+export const GET = withAuth(async function (request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const tweetId = searchParams.get("tweet_id");
@@ -164,4 +168,4 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

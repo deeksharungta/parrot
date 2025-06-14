@@ -13,14 +13,11 @@ import { base } from "viem/chains";
 import { USDC_ADDRESS, SPENDER_ADDRESS } from "@/lib/constants";
 import { getThreadTweets } from "@/lib/tweets-service";
 import { TwitterApiTweet } from "@/lib/tweets-service";
+import { withAuth, createOptionsHandler } from "@/lib/auth-middleware";
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY;
 const NEYNAR_BASE_URL = "https://api.neynar.com/v2";
 const CAST_COST = 0.1; // USDC per thread
-const API_SECRET_KEY = process.env.API_SECRET_KEY;
-const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(",") || [
-  "http://localhost:3000",
-];
 
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = "twitter154.p.rapidapi.com";
@@ -125,51 +122,10 @@ interface ThreadCastResult {
   error?: string;
 }
 
-export async function OPTIONS(request: NextRequest) {
-  // Handle CORS preflight requests
-  const origin = request.headers.get("origin");
-  if (
-    !origin ||
-    !ALLOWED_ORIGINS.some((allowedOrigin) => origin.startsWith(allowedOrigin))
-  ) {
-    return new NextResponse(null, { status: 403 });
-  }
+export const OPTIONS = createOptionsHandler();
 
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      "Access-Control-Allow-Origin": origin,
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, x-api-key",
-      "Access-Control-Max-Age": "86400", // 24 hours
-    },
-  });
-}
-
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async function (request: NextRequest) {
   try {
-    // Security Check 1: Origin validation
-    const origin =
-      request.headers.get("origin") || request.headers.get("referer");
-    if (
-      !origin ||
-      !ALLOWED_ORIGINS.some((allowedOrigin) => origin.startsWith(allowedOrigin))
-    ) {
-      return NextResponse.json(
-        { error: "Unauthorized origin" },
-        { status: 403 },
-      );
-    }
-
-    // Security Check 2: API Key validation
-    const apiKey = request.headers.get("x-api-key");
-    if (!apiKey || apiKey !== API_SECRET_KEY) {
-      return NextResponse.json(
-        { error: "Invalid or missing API key" },
-        { status: 401 },
-      );
-    }
-
     const body = await request.json();
     const { conversationId, fid } = body;
 
@@ -614,4 +570,4 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

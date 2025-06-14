@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { Database } from "@/lib/types/database";
+import { withAuth, createOptionsHandler } from "@/lib/auth-middleware";
 
 type User = Database["public"]["Tables"]["users"]["Row"];
 type UserInsert = Database["public"]["Tables"]["users"]["Insert"];
 type UserUpdate = Database["public"]["Tables"]["users"]["Update"];
 
-export async function GET(request: NextRequest) {
+export const OPTIONS = createOptionsHandler();
+
+export const GET = withAuth(async function (request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const fid = searchParams.get("fid");
 
@@ -41,9 +44,9 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async function (request: NextRequest) {
   try {
     const body = await request.json();
     const { farcaster_fid, ...userData } = body;
@@ -100,9 +103,9 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});
 
-export async function PUT(request: NextRequest) {
+export const PUT = withAuth(async function (request: NextRequest) {
   try {
     const body = await request.json();
     const { farcaster_fid, ...userData } = body;
@@ -154,10 +157,10 @@ export async function PUT(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});
 
 // Combined endpoint to create or update user
-export async function PATCH(request: NextRequest) {
+export const PATCH = withAuth(async function (request: NextRequest) {
   try {
     const body = await request.json();
     const { farcaster_fid, ...userData } = body;
@@ -198,10 +201,7 @@ export async function PATCH(request: NextRequest) {
         );
       }
 
-      return NextResponse.json(
-        { user, updated: true, created: false },
-        { status: 200 },
-      );
+      return NextResponse.json({ user, updated: true }, { status: 200 });
     } else {
       // Create new user
       const newUser: UserInsert = {
@@ -223,16 +223,13 @@ export async function PATCH(request: NextRequest) {
         );
       }
 
-      return NextResponse.json(
-        { user, updated: false, created: true },
-        { status: 201 },
-      );
+      return NextResponse.json({ user, created: true }, { status: 201 });
     }
   } catch (error) {
-    console.error("Error in upsert operation:", error);
+    console.error("Error creating/updating user:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
     );
   }
-}
+});

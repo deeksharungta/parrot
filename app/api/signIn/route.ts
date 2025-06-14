@@ -96,6 +96,14 @@ export const POST = async (req: NextRequest) => {
     .setExpirationTime("30 days")
     .sign(new TextEncoder().encode(process.env.JWT_SECRET));
 
+  // Update user in database
+  await supabase
+    .from("users")
+    .update({
+      jwt_token: jwtToken,
+    })
+    .eq("farcaster_fid", fid);
+
   const response = NextResponse.json({
     success: true,
     token: jwtToken,

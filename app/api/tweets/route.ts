@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { withAuth, createOptionsHandler } from "@/lib/auth-middleware";
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY;
 const NEYNAR_BASE_URL = "https://api.neynar.com/v2";
@@ -37,7 +38,9 @@ interface TwitterResponse {
 // Note: We no longer filter out retweets - all tweets (including retweets) are returned
 // The frontend can identify retweets using the retweet field in the tweet data
 
-export async function GET(request: NextRequest) {
+export const OPTIONS = createOptionsHandler();
+
+export const GET = withAuth(async function (request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const fid = searchParams.get("fid");
@@ -149,4 +152,4 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

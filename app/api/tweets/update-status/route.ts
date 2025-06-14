@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateTweetStatus } from "@/lib/tweets-service";
+import { supabase } from "@/lib/supabase";
+import { withAuth, createOptionsHandler } from "@/lib/auth-middleware";
 
-export async function POST(request: NextRequest) {
+export const OPTIONS = createOptionsHandler();
+
+export const POST = withAuth(async function (request: NextRequest) {
   try {
     const body = await request.json();
     const { tweetId, status, additionalData } = body;
@@ -34,4 +38,4 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

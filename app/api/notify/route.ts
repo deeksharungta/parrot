@@ -1,7 +1,10 @@
 import { sendFrameNotification } from "@/lib/notification-client";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { withAuth, createOptionsHandler } from "@/lib/auth-middleware";
 
-export async function POST(request: Request) {
+export const OPTIONS = createOptionsHandler();
+
+export const POST = withAuth(async function (request: NextRequest) {
   try {
     const body = await request.json();
     const { fid, notification } = body;
@@ -14,10 +17,7 @@ export async function POST(request: Request) {
     });
 
     if (result.state === "error") {
-      return NextResponse.json(
-        { error: result.error },
-        { status: 500 },
-      );
+      return NextResponse.json({ error: result.error }, { status: 500 });
     }
 
     return NextResponse.json({ success: true }, { status: 200 });
@@ -29,4 +29,4 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-}
+});

@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { getThreadTweets } from "@/lib/tweets-service";
+import { parseTweetToFarcasterCast } from "@/lib/cast-utils";
+import { withAuth, createOptionsHandler } from "@/lib/auth-middleware";
 
 const CAST_COST = 0.1; // USDC per thread
 
-export async function GET(request: NextRequest) {
+export const OPTIONS = createOptionsHandler();
+
+export const GET = withAuth(async function (request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const conversationId = searchParams.get("conversation_id");
@@ -71,4 +75,4 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

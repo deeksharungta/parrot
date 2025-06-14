@@ -7,7 +7,13 @@ import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { useGetTwitterAccount } from "@/hooks/useGetTwitterAccount";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useCreateUser, useGetUser, UserInsert } from "@/hooks/useUsers";
+import {
+  useCreateUser,
+  useGetUser,
+  UserInsert,
+  useCurrentUser,
+} from "@/hooks/useUsers";
+import { useSignIn } from "@/hooks/useSignIn";
 import sdk from "@farcaster/frame-sdk";
 import { useDeviceDetection } from "@/hooks/useDeviceDetection";
 
@@ -22,14 +28,22 @@ const SkeletonLoader = ({ width = "w-16" }: { width?: string }) => (
 export default function UserProfiles() {
   const { context } = useMiniKit();
   const { isMobile } = useDeviceDetection();
+  const { signIn, isSignedIn, isLoading: isSignInLoading } = useSignIn();
+  const { refetch: refetchUser } = useCurrentUser();
   const { twitterAccount, isLoading, isError } = useGetTwitterAccount(
     context?.user?.fid,
   );
-
-  const { data: userData, isLoading: isLoadingUser } = useGetUser(
-    context?.user?.fid,
-  );
+  const { data: userData } = useGetUser(context?.user?.fid);
   const createUserMutation = useCreateUser();
+
+  // Handle sign-in flow
+  useEffect(() => {
+    if (isSignedIn) {
+      refetchUser();
+    } else {
+      signIn();
+    }
+  }, [isSignedIn, refetchUser, signIn]);
 
   // Create user in database when context is available and user doesn't exist
   useEffect(() => {
@@ -56,7 +70,7 @@ export default function UserProfiles() {
         },
       });
     }
-  }, [context?.user, userData, createUserMutation]);
+  }, [context?.user, userData, createUserMutation, twitterAccount?.username]);
 
   return (
     <motion.div
@@ -132,14 +146,22 @@ export default function UserProfiles() {
       >
         {twitterAccount?.username ? (
           <Link href="/cast" className="w-full">
-            <Button disabled={isLoading || !twitterAccount?.username}>
-              {isLoading ? "Loading..." : "Continue fetching tweets"}
+            <Button
+              disabled={
+                isLoading || !twitterAccount?.username || isSignInLoading
+              }
+            >
+              {isSignInLoading
+                ? "Signing you in..."
+                : isLoading
+                  ? "Loading..."
+                  : "Continue fetching tweets"}
             </Button>
           </Link>
         ) : (
           <>
             <Button
-              disabled={isLoading}
+              disabled={isLoading || isSignInLoading}
               onClick={() => {
                 sdk.actions.openUrl(
                   isMobile
@@ -148,7 +170,7 @@ export default function UserProfiles() {
                 );
               }}
             >
-              Connect X to FC
+              {isSignInLoading ? "Signing you in..." : "Connect X to FC"}
             </Button>
             <p className="text-xs text-center font-normal text-[#8C8A94] mt-1">
               To get started, connect your X account to Farcaster. We'll fetch

@@ -8,8 +8,12 @@ import {
   parseWebhookEvent,
   verifyAppKeyWithNeynar,
 } from "@farcaster/frame-node";
+import { NextRequest, NextResponse } from "next/server";
+import { createOptionsHandler } from "@/lib/auth-middleware";
 
-export async function POST(request: Request) {
+export const OPTIONS = createOptionsHandler();
+
+export async function POST(request: NextRequest) {
   try {
     const requestJson = await request.json();
     console.log({ requestJson });
