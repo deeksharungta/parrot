@@ -572,6 +572,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
     const response = NextResponse.json(result);
 
     // Add CORS headers
+    const origin = request.headers.get("origin") || "*";
     response.headers.set("Access-Control-Allow-Origin", origin);
     response.headers.set("Access-Control-Allow-Methods", "POST");
     response.headers.set(
