@@ -210,20 +210,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check spending limit
-    if (
-      user.spending_limit &&
-      (user.total_spent || 0) + CAST_COST > user.spending_limit
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "Spending limit exceeded. Please increase your spending limit.",
-        },
-        { status: 403 },
-      );
-    }
-
     // Check onchain allowance using viem
     if (!user.wallet_address) {
       return NextResponse.json(
