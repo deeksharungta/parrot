@@ -23,14 +23,13 @@ export default function Onboarding({ onContinue }: { onContinue: () => void }) {
             <Image
               src="/onboarding-screen.svg"
               alt="Onboarding"
-              width={240}
-              height={210}
-              className="mt-4"
+              width={200}
+              height={180}
             />
             <p className="text-[#494656] text-center text-sm">
               swipe right to cast, left to ignore, or swipe up to edit
             </p>
-            <div className="flex items-center gap-2 mt-4">
+            <div className="flex items-center gap-2">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="118"
@@ -57,7 +56,7 @@ export default function Onboarding({ onContinue }: { onContinue: () => void }) {
                 />
               </svg>
             </div>
-            <div className="flex justify-between items-center px-6 py-3 mt-6 gap-6 w-fit bg-[#F8F8F8] rounded-3xl">
+            <div className="flex justify-between items-center px-6 py-3 gap-6 w-fit bg-[#F8F8F8] rounded-3xl">
               <div className="flex flex-col items-center gap-1">
                 <div className="rounded-full bg-[#ECECED] p-2.5 flex items-center justify-center hover:bg-[#ECECED] transition-colors">
                   <Cross className="w-4 h-4" />
@@ -80,7 +79,7 @@ export default function Onboarding({ onContinue }: { onContinue: () => void }) {
             <p className="text-[#494656] text-center text-sm">
               click on any of the buttons to do the particular action
             </p>
-            <Button className="w-full mt-6" onClick={handleContinue}>
+            <Button className="w-full" onClick={handleContinue}>
               Continue
             </Button>
           </div>
