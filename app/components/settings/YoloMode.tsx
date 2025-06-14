@@ -5,8 +5,8 @@ import { useCurrentUser, useUpdateUser } from "@/hooks/useUsers";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { Loader2 } from "lucide-react";
 import YoloModeModal from "../modals/YoloModeModal";
-import Settings from "../icons/Settings";
 import { toast } from "sonner";
+import Edit from "../icons/Edit";
 
 export default function YoloMode() {
   const { context } = useMiniKit();
@@ -94,10 +94,11 @@ export default function YoloMode() {
           isYoloModeEnabled ? (
             <button
               onClick={handleReconfigureSettings}
-              className="p-1 -m-1 touch-manipulation"
+              className="p-1 -m-1 touch-manipulation flex items-center gap-1"
               disabled={updateUser.isPending}
             >
-              <Settings isActive={false} />
+              <Edit className="w-3.5 h-3.5" />{" "}
+              <span className="text-sm font-medium text-[#100C20]">Edit</span>
             </button>
           ) : undefined
         }
