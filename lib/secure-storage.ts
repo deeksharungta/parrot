@@ -85,6 +85,15 @@ class SecureStorage {
             return null;
           }
 
+          // If sessionStorage is empty but localStorage has token, sync it back
+          if (tokenData.token && !sessionToken) {
+            try {
+              sessionStorage.setItem("session_token", tokenData.token);
+            } catch (e) {
+              console.warn("Could not sync token to sessionStorage:", e);
+            }
+          }
+
           return tokenData.token;
         }
       }
@@ -92,6 +101,18 @@ class SecureStorage {
       return null;
     } catch (error) {
       console.error("Error retrieving token:", error);
+
+      // Try a direct approach as fallback
+      try {
+        const directToken = localStorage.getItem("auth_token");
+        if (directToken) {
+          const parsed = JSON.parse(directToken);
+          return parsed.token || null;
+        }
+      } catch (e) {
+        console.error("Fallback token retrieval failed:", e);
+      }
+
       return null;
     }
   }

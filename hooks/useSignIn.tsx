@@ -146,8 +146,19 @@ export const useSignIn = () => {
         // Verify it was saved
         const savedToken = secureStorage.getToken();
         console.log("Verification - token saved:", !!savedToken);
+
+        // Add a small delay and retry if token wasn't saved properly
+        if (!savedToken) {
+          console.log("Token not found immediately, retrying...");
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          const retryToken = secureStorage.getToken();
+          if (!retryToken) {
+            throw new Error("Failed to save token to storage");
+          }
+        }
       } catch (error) {
         console.error("Failed to save token to secure storage:", error);
+        throw new Error("Failed to save authentication token");
       }
 
       setIsSignedIn(true);

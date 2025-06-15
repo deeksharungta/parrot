@@ -10,8 +10,23 @@ export const useAuthenticatedFetch = () => {
     async (url: string, options: AuthenticatedFetchOptions = {}) => {
       const { skipAuth = false, headers = {}, ...restOptions } = options;
 
-      // Get token from secure storage
-      const token = secureStorage.getToken();
+      // Get token from secure storage with retry logic
+      let token = secureStorage.getToken();
+
+      // If no token found, try again after a short delay (handles race conditions)
+      if (!token && !skipAuth) {
+        console.log("Token not found on first attempt, retrying...");
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        token = secureStorage.getToken();
+
+        if (!token) {
+          console.log("No token available after retry");
+          // Don't proceed with unauthenticated request for protected endpoints
+          if (url.includes("/api/users") || url.includes("/api/cast")) {
+            throw new Error("Authentication required but no token available");
+          }
+        }
+      }
 
       // Prepare headers (removed client-side API secret)
       const requestHeaders: Record<string, string> = {

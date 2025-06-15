@@ -18,6 +18,11 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const isPublicRoute = publicRoutes.includes(pathname);
 
   useEffect(() => {
+    console.log("isAuthenticated", isAuthenticated);
+    console.log("hasTwitterAccount", hasTwitterAccount);
+    console.log("isLoading", isLoading);
+    console.log("isPublicRoute", isPublicRoute);
+
     // Skip auth check for public routes
     if (isPublicRoute || isLoading) return;
 
