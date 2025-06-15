@@ -39,7 +39,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
         )
       `,
       )
-      .eq("id", tweetId)
+      .eq("tweet_id", tweetId)
       .single();
 
     if (fetchError || !currentTweet) {
@@ -50,7 +50,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
     console.log("currentTweet", currentTweet);
     console.log("authenticatedFid", authenticatedFid);
     // Authorization check: ensure user owns this tweet
-    if (currentTweet.farcaster_fid !== authenticatedFid) {
+    if (currentTweet.users.farcaster_fid !== authenticatedFid) {
       return NextResponse.json(
         { error: "Unauthorized: You can only edit your own tweets" },
         { status: 403 },
