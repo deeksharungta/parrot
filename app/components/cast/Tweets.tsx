@@ -312,18 +312,14 @@ export default function Tweets({ fid }: TweetsProps) {
 
     // Check if user has sufficient allowance
     if (!hasSufficientAllowance()) {
-      toast.error("Insufficient allowance", {
-        description: `You need at least $${MIN_ALLOWANCE} USDC allowance to cast. Current: $${formattedAllowance}`,
-      });
+      toast("Insufficient allowance");
       setShowApproveSpending(true);
       return;
     }
 
     // Check if user has sufficient balance
     if (!hasSufficientBalance()) {
-      toast.error("Insufficient balance", {
-        description: `You need at least $${CAST_COST} USDC to cast. Current balance: $${formattedBalance}`,
-      });
+      toast("Insufficient balance");
       setShowApproveSpending(true);
       return;
     }
