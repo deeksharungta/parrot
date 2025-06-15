@@ -6,6 +6,7 @@ import Cross from "../icons/Cross";
 import Edit from "../icons/Edit";
 import ArrowRight from "../icons/ArrowRight";
 import { EditModal } from "./EditModal";
+import { ConfirmModal, shouldShowCastConfirmation } from "./ConfirmModal";
 import { ConnectNeynar } from "./ConnectNeynar";
 import { ApproveSpending } from "./ApproveSpending";
 import NoTweetsFound from "./NoTweetsFound";
@@ -214,9 +215,11 @@ export default function Tweets({ fid }: TweetsProps) {
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [isAnimating, setIsAnimating] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showConnectNeynar, setShowConnectNeynar] = useState(false);
   const [showApproveSpending, setShowApproveSpending] = useState(false);
   const [isEditLoading, setIsEditLoading] = useState(false);
+  const [isCastLoading, setIsCastLoading] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   // New hooks for editing and casting
@@ -380,6 +383,19 @@ export default function Tweets({ fid }: TweetsProps) {
     await sdk.haptics.impactOccurred("medium");
     const currentTweet = showTweets[currentIndex];
     console.log("Tweet approved, starting cast flow:", currentTweet?.tweet_id);
+
+    // Check if confirmation should be shown
+    if (shouldShowCastConfirmation()) {
+      setShowConfirmModal(true);
+      return;
+    }
+
+    // If no confirmation needed, proceed directly with casting
+    handleDirectCast();
+  };
+
+  const handleDirectCast = async () => {
+    const currentTweet = showTweets[currentIndex];
 
     // Track this tweet as processed
     if (currentTweet?.tweet_id) {
@@ -615,6 +631,100 @@ export default function Tweets({ fid }: TweetsProps) {
     setShowApproveSpending(false);
   };
 
+  const handleConfirmSave = async (
+    content: string,
+    mediaUrls: string[],
+    quotedTweetUrl: string | null,
+    isRetweetRemoved: boolean,
+    videoUrls?: Array<{ url: string; bitrate: number; content_type: string }>,
+  ) => {
+    setIsCastLoading(true);
+    const currentTweet = showTweets[currentIndex];
+
+    try {
+      console.log("Starting confirm + cast flow");
+      console.log("Content:", content);
+      console.log("Media URLs:", mediaUrls);
+      console.log("Quoted tweet URL:", quotedTweetUrl);
+
+      if (!currentTweet?.tweet_id) {
+        throw new Error("No tweet ID available");
+      }
+
+      // If content was edited, save the changes first
+      const isContentEdited =
+        content !==
+        (currentTweet.content || currentTweet.original_content || "");
+      if (isContentEdited) {
+        await editTweetMutation.mutateAsync({
+          tweetId: currentTweet.tweet_id,
+          content: content,
+          mediaUrls: mediaUrls,
+          quotedTweetUrl: quotedTweetUrl,
+          isRetweetRemoved: isRetweetRemoved,
+          videoUrls: videoUrls,
+        });
+        console.log("Edited content saved successfully");
+      }
+
+      // Cast the tweet or thread to Farcaster
+      if (userData?.user?.neynar_signer_uuid) {
+        // Check if this is a thread tweet
+        if (currentTweet.is_thread_tweet && currentTweet.conversation_id) {
+          // Cast entire thread
+          await castThreadMutation.mutateAsync({
+            conversationId: currentTweet.conversation_id,
+          });
+          console.log("Thread cast successfully");
+        } else {
+          // Cast single tweet
+          await castTweetMutation.mutateAsync({
+            tweetId: currentTweet.tweet_id,
+            content: content,
+            mediaUrls: mediaUrls,
+            quotedTweetUrl: quotedTweetUrl,
+            isRetweetRemoved: isRetweetRemoved,
+            videoUrls: videoUrls,
+          });
+          console.log("Tweet cast successfully");
+        }
+
+        await sdk.haptics.notificationOccurred("success");
+      } else {
+        throw new Error("Signer UUID not available");
+      }
+
+      // Track this tweet as processed
+      if (currentTweet?.tweet_id) {
+        setProcessedTweetIds((prev) =>
+          new Set(prev).add(currentTweet.tweet_id),
+        );
+      }
+
+      // Close modal and proceed to next tweet after successful cast
+      setShowConfirmModal(false);
+      setSwipeDirection("right");
+      setTimeout(() => {
+        setIsAnimating(true);
+        setTimeout(() => {
+          setCurrentIndex(currentIndex + 1);
+          setSwipeDirection(null);
+          setIsAnimating(false);
+        }, 50);
+      }, 100);
+    } catch (error) {
+      console.error("Error in confirm + cast flow:", error);
+      await sdk.haptics.notificationOccurred("error");
+      // Keep modal open on error so user can retry
+    } finally {
+      setIsCastLoading(false);
+    }
+  };
+
+  const handleConfirmClose = () => {
+    setShowConfirmModal(false);
+  };
+
   const currentTweet = showTweets[currentIndex];
 
   // Check if all tweets are finished
@@ -766,6 +876,16 @@ export default function Tweets({ fid }: TweetsProps) {
         onClose={handleEditClose}
         isLoading={isEditLoading}
         isOpen={showEditModal}
+        isRetweet={currentTweet?.is_retweet || false}
+        databaseTweet={currentTweet}
+      />
+
+      <ConfirmModal
+        tweetId={currentTweet?.tweet_id || ""}
+        onSave={handleConfirmSave}
+        onClose={handleConfirmClose}
+        isLoading={isCastLoading}
+        isOpen={showConfirmModal}
         isRetweet={currentTweet?.is_retweet || false}
         databaseTweet={currentTweet}
       />
