@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { Viewport } from "next";
 import { Toaster } from "sonner";
+import AuthGuard from "@/components/AuthGuard";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -53,7 +54,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={outfit.variable}>
       <body className="font-sans antialiased bg-white text-gray-900">
-        <Providers>{children}</Providers>
+        <Providers>
+          <AuthGuard>{children}</AuthGuard>
+        </Providers>
         <Toaster
           position="top-center"
           toastOptions={{
