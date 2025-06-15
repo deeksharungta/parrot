@@ -16,6 +16,10 @@ import { useUSDCApproval } from "@/hooks/useUSDCApproval";
 import { useEditTweet, useCastTweet } from "@/hooks/useTweetEdit";
 import { useCastThread } from "@/hooks/useThreads";
 import ThreadTweetCard from "./ThreadTweetCard";
+import { useReadContract } from "wagmi";
+import { erc20Abi, formatUnits, parseUnits } from "viem";
+import { USDC_ADDRESS } from "@/lib/constants";
+import { toast } from "sonner";
 
 interface RetweetInfo {
   retweetedBy: {
@@ -30,6 +34,10 @@ interface RetweetInfo {
 interface TweetsProps {
   fid: number;
 }
+
+// Add constants for casting costs
+const CAST_COST = 0.1; // USDC cost per cast
+const MIN_ALLOWANCE = 0.1; // Minimum allowance required in USDC
 
 export default function Tweets({ fid }: TweetsProps) {
   // Fetch user tweets using the new caching hook
@@ -71,10 +79,57 @@ export default function Tweets({ fid }: TweetsProps) {
 
   const showTweets = stableTweets;
 
-  // Fetch user data to check for signer_uuid and allowance
+  // Fetch user data to check for signer_uuid, allowance, and balance
   const { data: userData } = useGetUser(fid);
   const { hasAllowance, currentAllowance } = useUSDCApproval();
   const hasSignerUuid = userData?.user?.neynar_signer_uuid;
+  const userWalletAddress = userData?.user?.wallet_address;
+
+  // Check USDC balance onchain
+  const { data: onchainBalance } = useReadContract({
+    address: USDC_ADDRESS,
+    abi: erc20Abi,
+    functionName: "balanceOf",
+    args: userWalletAddress ? [userWalletAddress as `0x${string}`] : undefined,
+    query: {
+      enabled: !!userWalletAddress,
+      refetchInterval: 30000, // Refetch every 30 seconds
+    },
+  });
+
+  // Helper function to check if user has sufficient balance (onchain)
+  const hasSufficientBalance = () => {
+    if (!onchainBalance) return false;
+    // Convert bigint to number for comparison (6 decimals for USDC)
+    const balanceInUSDC = Number(formatUnits(onchainBalance, 6));
+    return balanceInUSDC >= CAST_COST;
+  };
+
+  // Helper function to check if user has sufficient allowance (onchain)
+  const hasSufficientAllowance = () => {
+    if (!hasAllowance || !currentAllowance) return false;
+    // Convert bigint to number for comparison (6 decimals for USDC)
+    const allowanceInUSDC = Number(formatUnits(currentAllowance, 6));
+    return allowanceInUSDC >= MIN_ALLOWANCE;
+  };
+
+  // Helper function to check all prerequisites for casting
+  const canCast = () => {
+    return (
+      hasSignerUuid &&
+      userData?.user?.signer_approval_status === "approved" &&
+      hasSufficientAllowance() &&
+      hasSufficientBalance()
+    );
+  };
+
+  // Get formatted balance for debugging/display
+  const formattedBalance = onchainBalance
+    ? formatUnits(onchainBalance, 6)
+    : "0";
+  const formattedAllowance = currentAllowance
+    ? formatUnits(currentAllowance, 6)
+    : "0";
 
   // Helper function to create retweet info from available data
   const createRetweetInfo = (tweet: any): RetweetInfo | undefined => {
@@ -228,11 +283,16 @@ export default function Tweets({ fid }: TweetsProps) {
       return;
     }
 
-    // Check if user has allowance (less than 0.1 USDC)
-    if (
-      !hasAllowance ||
-      (currentAllowance !== undefined && currentAllowance < BigInt(100000))
-    ) {
+    // Check if user has sufficient allowance
+    if (!hasSufficientAllowance()) {
+      toast("Insufficient allowance");
+      setShowApproveSpending(true);
+      return;
+    }
+
+    // Check if user has sufficient balance
+    if (!hasSufficientBalance()) {
+      toast("Insufficient balance");
       setShowApproveSpending(true);
       return;
     }
@@ -250,11 +310,20 @@ export default function Tweets({ fid }: TweetsProps) {
       return;
     }
 
-    // Check if user has allowance
-    if (
-      !hasAllowance ||
-      (currentAllowance !== undefined && currentAllowance < BigInt(100000))
-    ) {
+    // Check if user has sufficient allowance
+    if (!hasSufficientAllowance()) {
+      toast.error("Insufficient allowance", {
+        description: `You need at least $${MIN_ALLOWANCE} USDC allowance to cast. Current: $${formattedAllowance}`,
+      });
+      setShowApproveSpending(true);
+      return;
+    }
+
+    // Check if user has sufficient balance
+    if (!hasSufficientBalance()) {
+      toast.error("Insufficient balance", {
+        description: `You need at least $${CAST_COST} USDC to cast. Current balance: $${formattedBalance}`,
+      });
       setShowApproveSpending(true);
       return;
     }
@@ -503,12 +572,8 @@ export default function Tweets({ fid }: TweetsProps) {
   const allTweetsFinished = currentIndex >= showTweets.length;
 
   // Calculate transform values for drag effect
-  // Prevent right swipe animation if no signer_uuid or no allowance
-  const shouldPreventRightSwipe =
-    (!hasSignerUuid ||
-      !hasAllowance ||
-      (currentAllowance !== undefined && currentAllowance < BigInt(100000))) &&
-    dragOffset.x > 0;
+  // Prevent right swipe animation if prerequisites are not met
+  const shouldPreventRightSwipe = !canCast() && dragOffset.x > 0;
   const effectiveDragX = shouldPreventRightSwipe ? 0 : dragOffset.x;
 
   const rotationX =

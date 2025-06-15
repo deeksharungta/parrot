@@ -16,12 +16,12 @@ export const AuthErrorHandler = () => {
         console.log(
           "Authentication error detected, attempting re-authentication",
         );
-        toast.error("Session expired. Please sign in again.");
+        toast("Session expired. Please sign in again.");
 
         // Attempt automatic re-authentication
         signIn().catch((error) => {
           console.error("Auto re-authentication failed:", error);
-          toast.error("Please refresh the page and try again.");
+          toast("Please refresh the page and try again.");
         });
       }
     };

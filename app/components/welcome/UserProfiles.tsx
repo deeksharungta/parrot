@@ -47,7 +47,7 @@ export default function UserProfiles() {
       signInAttempted.current = true;
       signIn().catch((error) => {
         console.error("Sign-in failed:", error);
-        toast.error("Authentication failed. Please try again.");
+        toast("Authentication failed. Please try again.");
       });
     }
   }, [isSignedIn, refetchUser, signIn, isSignInLoading]);
