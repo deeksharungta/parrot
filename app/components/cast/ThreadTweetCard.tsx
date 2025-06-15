@@ -69,7 +69,7 @@ export default function ThreadTweetCard({
     threadTweets,
     isLoading: threadLoading,
     error: threadError,
-  } = useThreadTweets(conversationId, fid);
+  } = useThreadTweets(conversationId);
 
   if (firstTweetLoading || threadLoading) {
     return (
