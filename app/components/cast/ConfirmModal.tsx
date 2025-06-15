@@ -23,7 +23,6 @@ interface ConfirmModalProps {
   isRetweet?: boolean;
   databaseTweet?: any; // Database tweet data with custom media structure
   title?: string;
-  message?: string;
 }
 
 const STORAGE_KEY = "xcast_hide_cast_confirmation";
@@ -36,8 +35,7 @@ export function ConfirmModal({
   isOpen,
   isRetweet = false,
   databaseTweet,
-  title = "Ready to cast?",
-  message = "Review your cast and publish it to Farcaster. You can always edit or delete it later.",
+  title = "Confirm your cast",
 }: ConfirmModalProps) {
   const { data: tweetData } = useTweet(tweetId);
   const [content, setContent] = useState("");
@@ -281,7 +279,7 @@ export function ConfirmModal({
             stiffness: 300,
             duration: 0.3,
           }}
-          className="fixed bg-white border border-[#ECECED] z-50 max-h-[85vh] overflow-hidden bottom-2 left-2 right-2 rounded-[32px] p-6"
+          className="fixed bg-white border border-[#ECECED] z-50 max-h-[85vh] overflow-y-auto bottom-2 left-2 right-2 rounded-[32px] p-6"
         >
           <div className="flex items-center justify-center h-32">
             <div className="w-6 h-6 border-2 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
@@ -314,7 +312,7 @@ export function ConfirmModal({
               stiffness: 300,
               duration: 0.3,
             }}
-            className="fixed bg-white border border-[#ECECED] z-50 max-h-[85vh] overflow-hidden bottom-2 left-2 right-2 rounded-[32px] p-6"
+            className="fixed bg-white border border-[#ECECED] z-50 max-h-[85vh] overflow-y-auto bottom-2 left-2 right-2 rounded-[32px] p-6"
           >
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold text-[#100c20] text-base">
@@ -344,10 +342,6 @@ export function ConfirmModal({
             </div>
 
             <div>
-              <p className="text-[#100c20] text-sm leading-relaxed mb-4">
-                {message}
-              </p>
-
               <div className="relative">
                 <textarea
                   ref={textareaRef}
@@ -399,7 +393,7 @@ export function ConfirmModal({
                           src={videoObj.url}
                           controls
                           preload="metadata"
-                          className="w-full h-auto max-h-32 object-cover rounded-lg"
+                          className="w-full h-auto max-h-20 object-cover rounded-lg"
                           playsInline
                         >
                           Your browser does not support the video tag.
@@ -485,7 +479,7 @@ export function ConfirmModal({
                                       src={videoObj.url}
                                       controls
                                       preload="metadata"
-                                      className="w-full h-auto max-h-24 object-cover rounded-lg"
+                                      className="w-full h-auto max-h-20 object-cover rounded-lg"
                                       playsInline
                                     >
                                       Your browser does not support the video
@@ -509,7 +503,7 @@ export function ConfirmModal({
 
               {quotedTweetUrl && tweetData?.quoted_tweet && (
                 <div className="mt-2">
-                  <div className="relative group border border-[#ECECED] rounded-xl bg-white max-h-24 overflow-y-auto">
+                  <div className="relative group border border-[#ECECED] rounded-xl bg-white max-h-20 overflow-y-auto">
                     <div className="p-3">
                       <button
                         onClick={removeQuoteTweet}
@@ -562,11 +556,11 @@ export function ConfirmModal({
                   id="dontShowAgain"
                   checked={dontShowAgain}
                   onChange={(e) => setDontShowAgain(e.target.checked)}
-                  className="w-4 h-4 text-[#8C5CF6] bg-gray-100 border-gray-300 rounded focus:ring-[#8C5CF6] focus:ring-2"
+                  className="w-4 h-4 text-black bg-gray-100 border-gray-300 rounded focus:ring-none focus:ring-0"
                 />
                 <label
                   htmlFor="dontShowAgain"
-                  className="text-sm text-[#8C8A94] cursor-pointer select-none"
+                  className="text-sm text-[#494656] cursor-pointer select-none"
                 >
                   Don't show this confirmation again
                 </label>
