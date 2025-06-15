@@ -20,6 +20,9 @@ import { useReadContract } from "wagmi";
 import { erc20Abi, formatUnits, parseUnits } from "viem";
 import { USDC_ADDRESS } from "@/lib/constants";
 import { toast } from "sonner";
+import { Database } from "@/lib/types/database";
+
+type TweetType = Database["public"]["Tables"]["tweets"]["Row"];
 
 interface RetweetInfo {
   retweetedBy: {
@@ -59,11 +62,61 @@ export default function Tweets({ fid }: TweetsProps) {
     new Set(),
   );
 
+  // Helper function to check if a tweet contains video or GIF content
+  const hasVideoOrGif = (tweet: TweetType): boolean => {
+    // Check if tweet has media_urls with videos
+    if (tweet.media_urls) {
+      // Handle new structure with separate images and videos arrays
+      if (
+        typeof tweet.media_urls === "object" &&
+        !Array.isArray(tweet.media_urls)
+      ) {
+        // Check if videos array exists and has content
+        if (tweet.media_urls.videos && Array.isArray(tweet.media_urls.videos)) {
+          return tweet.media_urls.videos.length > 0;
+        }
+
+        // Check if any image URLs contain .gif or .mp4
+        if (tweet.media_urls.images && Array.isArray(tweet.media_urls.images)) {
+          const hasGifOrMp4 = tweet.media_urls.images.some((url: string) => {
+            if (typeof url === "string") {
+              const lowerUrl = url.toLowerCase();
+              return lowerUrl.includes(".gif") || lowerUrl.includes(".mp4");
+            }
+            return false;
+          });
+          if (hasGifOrMp4) return true;
+        }
+      } else {
+        // Handle legacy format - check if any URL contains .gif or .mp4
+        const mediaUrls = Array.isArray(tweet.media_urls)
+          ? tweet.media_urls
+          : typeof tweet.media_urls === "string"
+            ? [tweet.media_urls]
+            : Object.values(tweet.media_urls);
+
+        const hasGifOrMp4 = mediaUrls.some((url: any) => {
+          if (typeof url === "string") {
+            const lowerUrl = url.toLowerCase();
+            return lowerUrl.includes(".gif") || lowerUrl.includes(".mp4");
+          }
+          return false;
+        });
+        if (hasGifOrMp4) return true;
+      }
+    }
+
+    return false;
+  };
+
   // Update stable tweets only when new tweets are loaded, not when they're filtered
   React.useEffect(() => {
     if (tweets && tweets.length > 0 && stableTweets.length === 0) {
-      // Filter to only show thread starters or non-thread tweets
+      // Filter to only show thread starters or non-thread tweets, and exclude videos/GIFs
       const filteredTweets = tweets.filter((tweet) => {
+        // Skip tweets with video or GIF content
+        if (hasVideoOrGif(tweet)) return false;
+
         // Show non-thread tweets
         if (!tweet.is_thread_tweet) return true;
 
