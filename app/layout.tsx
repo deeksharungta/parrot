@@ -54,9 +54,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={outfit.variable}>
       <body className="font-sans antialiased bg-white text-gray-900">
-        <Providers>
-          <AuthGuard>{children}</AuthGuard>
-        </Providers>
+        <Providers>{children}</Providers>
         <Toaster
           position="top-center"
           toastOptions={{
