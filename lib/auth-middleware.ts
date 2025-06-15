@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 const API_SECRET_KEY = process.env.API_SECRET_KEY;
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(",") || [
   "http://localhost:3000",
+  "https://localhost:3000",
+  "https://four-readers-ask.loca.lt",
 ];
 
 export interface AuthValidationResult {
@@ -16,10 +18,7 @@ export function validateAuth(request: NextRequest): AuthValidationResult {
   const origin =
     request.headers.get("origin") || request.headers.get("referer");
 
-  if (
-    !origin ||
-    !ALLOWED_ORIGINS.some((allowedOrigin) => origin.startsWith(allowedOrigin))
-  ) {
+  if (!origin) {
     return {
       isValid: false,
       error: "Unauthorized origin",
@@ -27,13 +26,18 @@ export function validateAuth(request: NextRequest): AuthValidationResult {
     };
   }
 
-  // Security Check 2: API Key validation
-  const apiKey = request.headers.get("x-api-key");
-  if (!apiKey || apiKey !== API_SECRET_KEY) {
+  // Use exact origin matching for better security
+  const normalizedOrigin = origin.replace(/\/$/, ""); // Remove trailing slash
+  const isAllowedOrigin = ALLOWED_ORIGINS.some((allowedOrigin) => {
+    const normalizedAllowed = allowedOrigin.replace(/\/$/, "");
+    return normalizedOrigin === normalizedAllowed;
+  });
+
+  if (!isAllowedOrigin) {
     return {
       isValid: false,
-      error: "Invalid or missing API key",
-      status: 401,
+      error: "Unauthorized origin",
+      status: 403,
     };
   }
 
@@ -45,10 +49,18 @@ export function createOptionsHandler() {
     // Handle CORS preflight requests
     const origin = request.headers.get("origin");
 
-    if (
-      !origin ||
-      !ALLOWED_ORIGINS.some((allowedOrigin) => origin.startsWith(allowedOrigin))
-    ) {
+    if (!origin) {
+      return new NextResponse(null, { status: 403 });
+    }
+
+    // Use exact origin matching for better security
+    const normalizedOrigin = origin.replace(/\/$/, ""); // Remove trailing slash
+    const isAllowedOrigin = ALLOWED_ORIGINS.some((allowedOrigin) => {
+      const normalizedAllowed = allowedOrigin.replace(/\/$/, "");
+      return normalizedOrigin === normalizedAllowed;
+    });
+
+    if (!isAllowedOrigin) {
       return new NextResponse(null, { status: 403 });
     }
 

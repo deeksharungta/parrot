@@ -4,6 +4,7 @@ import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { useUpdateUser, useCurrentUser } from "./useUsers";
 import { useAuthenticatedApi } from "./useAuthenticatedFetch";
 import sdk from "@farcaster/frame-sdk";
+import { secureStorage } from "@/lib/secure-storage";
 
 // Type definitions
 export interface FarcasterUser {
@@ -134,12 +135,11 @@ export const usePollingSignerApproval = (
       console.log("Polling signer approval for:", signer_uuid);
 
       // Use authenticated fetch for polling
-      const token = localStorage.getItem("token");
+      const token = secureStorage.getToken();
       const response = await fetch(`/api/signer?signer_uuid=${signer_uuid}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
@@ -197,12 +197,11 @@ export const useApproveSigner = () => {
   return useMutation({
     mutationFn: async (signer_uuid: string): Promise<FarcasterUser> => {
       // Use authenticated fetch for approval check
-      const token = localStorage.getItem("token");
+      const token = secureStorage.getToken();
       const response = await fetch(`/api/signer?signer_uuid=${signer_uuid}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });

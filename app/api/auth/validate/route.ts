@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as jose from "jose";
 import { supabase } from "@/lib/supabase";
-import { withAuth, createOptionsHandler } from "@/lib/auth-middleware";
+import {
+  withInternalAuth,
+  createInternalOptionsHandler,
+} from "@/lib/internal-auth-middleware";
 
-export const OPTIONS = createOptionsHandler();
+export const OPTIONS = createInternalOptionsHandler();
 
-export const POST = withAuth(async function (req: NextRequest) {
+export const POST = withInternalAuth(async function (req: NextRequest) {
   try {
     const { token } = await req.json();
 

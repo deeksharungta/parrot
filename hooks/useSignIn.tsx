@@ -1,6 +1,7 @@
 import { MESSAGE_EXPIRATION_TIME } from "@/lib/constants";
 import { sdk } from "@farcaster/frame-sdk";
 import { useCallback, useState, useEffect } from "react";
+import { secureStorage } from "@/lib/secure-storage";
 
 export const useSignIn = () => {
   const [isSignedIn, setIsSignedIn] = useState(false);
@@ -14,7 +15,6 @@ export const useSignIn = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
         },
         body: JSON.stringify({ token }),
       });
@@ -35,7 +35,7 @@ export const useSignIn = () => {
   useEffect(() => {
     const checkExistingAuth = async () => {
       try {
-        const storedToken = localStorage.getItem("token");
+        const storedToken = secureStorage.getToken();
 
         if (storedToken) {
           console.log("Found stored token, validating...");
@@ -45,8 +45,8 @@ export const useSignIn = () => {
             console.log("Token is valid, user is signed in");
             setIsSignedIn(true);
           } else {
-            console.log("Token is invalid, removing from localStorage");
-            localStorage.removeItem("token");
+            console.log("Token is invalid, removing from secure storage");
+            secureStorage.removeToken();
             setIsSignedIn(false);
           }
         } else {
@@ -122,7 +122,6 @@ export const useSignIn = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
         },
         body: JSON.stringify({
           signature: result.signature,
@@ -140,19 +139,15 @@ export const useSignIn = () => {
       const data = await res.json();
 
       try {
-        console.log("Attempting to save token to localStorage...");
-        localStorage.setItem("token", data.token);
-        console.log("Successfully saved token to localStorage");
+        console.log("Attempting to save token to secure storage...");
+        secureStorage.setToken(data.token);
+        console.log("Successfully saved token to secure storage");
 
         // Verify it was saved
-        const savedToken = localStorage.getItem("token");
+        const savedToken = secureStorage.getToken();
         console.log("Verification - token saved:", !!savedToken);
       } catch (error) {
-        console.error("Failed to save token to localStorage:", error);
-        console.log(
-          "localStorage available:",
-          typeof Storage !== "undefined" && typeof localStorage !== "undefined",
-        );
+        console.error("Failed to save token to secure storage:", error);
       }
 
       setIsSignedIn(true);
@@ -183,11 +178,11 @@ export const useSignIn = () => {
 
   const logout = useCallback(() => {
     try {
-      console.log("Attempting to remove token from localStorage...");
-      localStorage.removeItem("token");
-      console.log("Successfully removed token from localStorage");
+      console.log("Attempting to remove token from secure storage...");
+      secureStorage.removeToken();
+      console.log("Successfully removed token from secure storage");
     } catch (error) {
-      console.error("Failed to remove token from localStorage:", error);
+      console.error("Failed to remove token from secure storage:", error);
     }
     setIsSignedIn(false);
   }, []);

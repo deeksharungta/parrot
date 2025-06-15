@@ -1,14 +1,19 @@
-// Helper function to create authenticated headers
-const getAuthHeaders = () => ({
+// Import the new secure API client
+export { apiClient, secureApiClient } from "../secure-api-client";
+
+// Deprecated - kept for backwards compatibility
+// Remove client-side API secret usage
+const getSecureHeaders = () => ({
   "Content-Type": "application/json",
-  "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
+  // Removed: "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
 });
 
-export const apiClient = {
+// Legacy functions - these will be gradually migrated to use secureApiClient
+export const legacyApiClient = {
   async createUser(userData: any) {
     const response = await fetch("/api/users", {
       method: "POST",
-      headers: getAuthHeaders(),
+      headers: getSecureHeaders(),
       body: JSON.stringify(userData),
     });
     return response.json();
@@ -16,7 +21,7 @@ export const apiClient = {
 
   async getUser(id: string) {
     const response = await fetch(`/api/users?id=${id}`, {
-      headers: getAuthHeaders(),
+      headers: getSecureHeaders(),
     });
     return response.json();
   },
@@ -24,7 +29,7 @@ export const apiClient = {
   async updateUser(id: string, userData: any) {
     const response = await fetch(`/api/users/${id}`, {
       method: "PUT",
-      headers: getAuthHeaders(),
+      headers: getSecureHeaders(),
       body: JSON.stringify(userData),
     });
     return response.json();
@@ -33,7 +38,7 @@ export const apiClient = {
   async updateSettings(id: string, settings: any) {
     const response = await fetch(`/api/users/${id}/settings`, {
       method: "PUT",
-      headers: getAuthHeaders(),
+      headers: getSecureHeaders(),
       body: JSON.stringify(settings),
     });
     return response.json();
@@ -46,7 +51,7 @@ export const apiClient = {
   ) {
     const response = await fetch(`/api/users/${id}/balance`, {
       method: "PUT",
-      headers: getAuthHeaders(),
+      headers: getSecureHeaders(),
       body: JSON.stringify({ amount, operation }),
     });
     return response.json();

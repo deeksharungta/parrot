@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { secureStorage } from "@/lib/secure-storage";
 
 interface ThreadTweet {
   tweet_id: string;
@@ -18,7 +19,6 @@ interface UseThreadTweetsResult {
 
 export const useThreadTweets = (
   conversationId: string | null,
-  fid?: number,
   enabled: boolean = true,
 ): UseThreadTweetsResult => {
   const {
@@ -33,12 +33,15 @@ export const useThreadTweets = (
         throw new Error("Conversation ID is required");
       }
 
+      // Get JWT token from secure storage for authentication
+      const token = secureStorage.getToken();
+
       const response = await fetch(
-        `/api/tweets/thread-preview?conversation_id=${conversationId}&user_id=${fid || "temp"}`,
+        `/api/tweets/thread-preview?conversation_id=${conversationId}`,
         {
           headers: {
             "Content-Type": "application/json",
-            "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
         },
       );

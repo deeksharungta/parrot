@@ -1,4 +1,5 @@
 import { Database } from "./types/database";
+import { secureStorage } from "./secure-storage";
 
 type Tweet = Database["public"]["Tables"]["tweets"]["Row"];
 
@@ -127,17 +128,27 @@ export async function getCachedTweets(
   fid: number,
 ): Promise<CachedTweetsResponse> {
   try {
+    // Get JWT token from secure storage for authentication
+    const token = secureStorage.getToken();
+
     // Always use server-side API call
     const response = await fetch(`/api/tweets/cached-tweets?fid=${fid}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+
+      // Handle authentication errors
+      if (response.status === 401) {
+        console.log("JWT token invalid, removing from secure storage");
+        secureStorage.removeToken();
+      }
+
       throw new Error(
         errorData.error || "Failed to fetch cached tweets from server",
       );
@@ -162,17 +173,27 @@ export async function fetchAndSaveFreshTweets(fid: number): Promise<{
   error?: string;
 }> {
   try {
+    // Get JWT token from secure storage for authentication
+    const token = secureStorage.getToken();
+
     // Call the server-side API endpoint that handles database operations
     const response = await fetch(`/api/tweets/cached?fid=${fid}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+
+      // Handle authentication errors
+      if (response.status === 401) {
+        console.log("JWT token invalid, removing from secure storage");
+        secureStorage.removeToken();
+      }
+
       throw new Error(
         errorData.error || "Failed to fetch and save fresh tweets",
       );
@@ -208,12 +229,15 @@ export async function updateTweetStatus(
   },
 ): Promise<void> {
   try {
+    // Get JWT token from secure storage for authentication
+    const token = secureStorage.getToken();
+
     // Always use server-side API call
     const response = await fetch(`/api/tweets/update-status`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify({
         tweetId,
@@ -224,6 +248,13 @@ export async function updateTweetStatus(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+
+      // Handle authentication errors
+      if (response.status === 401) {
+        console.log("JWT token invalid, removing from secure storage");
+        secureStorage.removeToken();
+      }
+
       throw new Error(
         errorData.error || "Failed to update tweet status via server",
       );
@@ -255,14 +286,13 @@ export async function castThread(
   error?: string;
 }> {
   try {
-    // Get JWT token from localStorage
-    const token = localStorage.getItem("token");
+    // Get JWT token from secure storage
+    const token = secureStorage.getToken();
 
     const response = await fetch("/api/cast-thread", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify({
@@ -276,8 +306,8 @@ export async function castThread(
     if (!response.ok) {
       // Handle authentication errors
       if (response.status === 401) {
-        console.log("JWT token invalid, removing from localStorage");
-        localStorage.removeItem("token");
+        console.log("JWT token invalid, removing from secure storage");
+        secureStorage.removeToken();
       }
       throw new Error(data.error || "Failed to cast thread");
     }
@@ -292,7 +322,7 @@ export async function castThread(
 // Get thread preview with cost calculation
 export async function getThreadCastPreview(
   conversationId: string,
-  userId: string,
+  userId?: string, // Now optional since we use authenticated user
 ): Promise<{
   threadTweets: Tweet[];
   pendingTweets: Tweet[];
@@ -307,19 +337,29 @@ export async function getThreadCastPreview(
   error?: string;
 }> {
   try {
+    // Get JWT token from secure storage for authentication
+    const token = secureStorage.getToken();
+
     const response = await fetch(
-      `/api/tweets/thread-preview?conversation_id=${conversationId}&user_id=${userId}`,
+      `/api/tweets/thread-preview?conversation_id=${conversationId}`,
       {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       },
     );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+
+      // Handle authentication errors
+      if (response.status === 401) {
+        console.log("JWT token invalid, removing from secure storage");
+        secureStorage.removeToken();
+      }
+
       throw new Error(errorData.error || "Failed to get thread preview");
     }
 

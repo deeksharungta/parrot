@@ -2,17 +2,66 @@ import { NextRequest, NextResponse } from "next/server";
 import * as jose from "jose";
 import { supabase } from "@/lib/supabase";
 
-export interface JwtAuthResult {
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(",") || [
+  "http://localhost:3000",
+  "https://localhost:3000",
+  "https://four-readers-ask.loca.lt",
+];
+
+export interface InternalJwtAuthResult {
   isValid: boolean;
   fid?: number;
   error?: string;
   status?: number;
 }
 
-export async function validateJwtAuth(
+/**
+ * Validate JWT token for internal requests (no API key required)
+ */
+export async function validateInternalJwtAuth(
   request: NextRequest,
-): Promise<JwtAuthResult> {
+): Promise<InternalJwtAuthResult> {
   try {
+    // Origin validation first
+    const originHeader = request.headers.get("origin");
+    const refererHeader = request.headers.get("referer");
+
+    let origin = originHeader;
+
+    // If no origin header, extract origin from referer
+    if (!origin && refererHeader) {
+      try {
+        const refererUrl = new URL(refererHeader);
+        origin = `${refererUrl.protocol}//${refererUrl.host}`;
+      } catch (e) {
+        // Invalid referer URL
+        origin = refererHeader;
+      }
+    }
+
+    if (!origin) {
+      return {
+        isValid: false,
+        error: "Origin required for internal requests",
+        status: 403,
+      };
+    }
+
+    // Use exact origin matching for better security
+    const normalizedOrigin = origin.replace(/\/$/, "");
+    const isAllowedOrigin = ALLOWED_ORIGINS.some((allowedOrigin) => {
+      const normalizedAllowed = allowedOrigin.replace(/\/$/, "");
+      return normalizedOrigin === normalizedAllowed;
+    });
+
+    if (!isAllowedOrigin) {
+      return {
+        isValid: false,
+        error: "Unauthorized origin",
+        status: 403,
+      };
+    }
+
     // Get token from Authorization header (Bearer token) or from request body
     let token = request.headers.get("authorization")?.replace("Bearer ", "");
 
@@ -110,7 +159,10 @@ export async function validateJwtAuth(
   }
 }
 
-export function withJwtAuth<T extends any[]>(
+/**
+ * Middleware for routes that need JWT auth but no API key (internal frontend requests)
+ */
+export function withInternalJwtAuth<T extends any[]>(
   handler: (
     request: NextRequest,
     fid: number,
@@ -121,7 +173,7 @@ export function withJwtAuth<T extends any[]>(
     request: NextRequest,
     ...args: T
   ): Promise<NextResponse> {
-    const jwtResult = await validateJwtAuth(request);
+    const jwtResult = await validateInternalJwtAuth(request);
 
     if (!jwtResult.isValid) {
       return NextResponse.json(
@@ -134,26 +186,12 @@ export function withJwtAuth<T extends any[]>(
   };
 }
 
-// Combined middleware for routes that need both API key and JWT auth
-export function withApiKeyAndJwtAuth<T extends any[]>(
-  handler: (
-    request: NextRequest,
-    fid: number,
-    ...args: T
-  ) => Promise<NextResponse>,
-) {
-  return async function (
-    request: NextRequest,
-    ...args: T
-  ): Promise<NextResponse> {
-    // First validate API key (using existing auth middleware logic)
-    const API_SECRET_KEY = process.env.API_SECRET_KEY;
-    const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(",") || [
-      "http://localhost:3000",
-      "https://localhost:3000",
-    ];
-
-    // Origin validation
+/**
+ * Create OPTIONS handler for internal JWT endpoints
+ */
+export function createInternalJwtOptionsHandler() {
+  return async function OPTIONS(request: NextRequest) {
+    // Handle CORS preflight requests
     const originHeader = request.headers.get("origin");
     const refererHeader = request.headers.get("referer");
 
@@ -164,41 +202,36 @@ export function withApiKeyAndJwtAuth<T extends any[]>(
       try {
         const refererUrl = new URL(refererHeader);
         origin = `${refererUrl.protocol}//${refererUrl.host}`;
-      } catch {
+      } catch (e) {
+        // Invalid referer URL
         origin = refererHeader;
       }
     }
 
     if (!origin) {
-      return NextResponse.json(
-        { error: "Unauthorized origin" },
-        { status: 403 },
-      );
+      return new NextResponse(null, { status: 403 });
     }
 
     // Use exact origin matching for better security
-    const normalizedOrigin = origin.replace(/\/$/, ""); // Remove trailing slash
+    const normalizedOrigin = origin.replace(/\/$/, "");
     const isAllowedOrigin = ALLOWED_ORIGINS.some((allowedOrigin) => {
       const normalizedAllowed = allowedOrigin.replace(/\/$/, "");
       return normalizedOrigin === normalizedAllowed;
     });
 
     if (!isAllowedOrigin) {
-      return NextResponse.json(
-        { error: "Unauthorized origin" },
-        { status: 403 },
-      );
+      return new NextResponse(null, { status: 403 });
     }
 
-    // Then validate JWT
-    const jwtResult = await validateJwtAuth(request);
-    if (!jwtResult.isValid) {
-      return NextResponse.json(
-        { error: jwtResult.error },
-        { status: jwtResult.status },
-      );
-    }
-
-    return handler(request, jwtResult.fid!, ...args);
+    return new NextResponse(null, {
+      status: 200,
+      headers: {
+        "Access-Control-Allow-Origin": origin,
+        "Access-Control-Allow-Methods":
+          "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Max-Age": "86400", // 24 hours
+      },
+    });
   };
 }

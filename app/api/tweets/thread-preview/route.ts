@@ -2,24 +2,46 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { getThreadTweets } from "@/lib/tweets-service";
 import { parseTweetToFarcasterCast } from "@/lib/cast-utils";
-import { withAuth, createOptionsHandler } from "@/lib/auth-middleware";
+import {
+  withInternalJwtAuth,
+  createInternalJwtOptionsHandler,
+} from "@/lib/internal-jwt-middleware";
 
 const CAST_COST = 0.1; // USDC per thread
 
-export const OPTIONS = createOptionsHandler();
+export const OPTIONS = createInternalJwtOptionsHandler();
 
-export const GET = withAuth(async function (request: NextRequest) {
+export const GET = withInternalJwtAuth(async function (
+  request: NextRequest,
+  userFid: number,
+) {
   try {
     const { searchParams } = new URL(request.url);
     const conversationId = searchParams.get("conversation_id");
     const userId = searchParams.get("user_id");
 
-    if (!conversationId || !userId) {
+    if (!conversationId) {
       return NextResponse.json(
-        { error: "conversation_id and user_id are required" },
+        { error: "conversation_id is required" },
         { status: 400 },
       );
     }
+
+    // Security: Get the authenticated user's database ID instead of trusting the user_id parameter
+    const { data: authenticatedUser, error: authUserError } = await supabase
+      .from("users")
+      .select(
+        "id, usdc_balance, spending_approved, spending_limit, total_spent",
+      )
+      .eq("farcaster_fid", userFid)
+      .single();
+
+    if (authUserError || !authenticatedUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Use the authenticated user's ID from the database
+    const authenticatedUserId = authenticatedUser.id;
 
     // Get all thread tweets
     const threadTweets = await getThreadTweets(conversationId);
@@ -38,19 +60,15 @@ export const GET = withAuth(async function (request: NextRequest) {
     const totalCost = CAST_COST;
 
     // Check if user can cast (has sufficient balance and permissions)
-    const { data: user, error: userError } = await supabase
-      .from("users")
-      .select("usdc_balance, spending_approved, spending_limit, total_spent")
-      .eq("id", userId)
-      .single();
-
+    // Use the already fetched authenticatedUser data
     let canCast = false;
-    if (!userError && user) {
-      const hasBalance = (user.usdc_balance || 0) >= totalCost;
-      const hasApproval = user.spending_approved;
+    if (authenticatedUser) {
+      const hasBalance = (authenticatedUser.usdc_balance || 0) >= totalCost;
+      const hasApproval = authenticatedUser.spending_approved;
       const withinLimit =
-        !user.spending_limit ||
-        (user.total_spent || 0) + totalCost <= user.spending_limit;
+        !authenticatedUser.spending_limit ||
+        (authenticatedUser.total_spent || 0) + totalCost <=
+          authenticatedUser.spending_limit;
 
       canCast =
         hasBalance && hasApproval && withinLimit && pendingTweets.length > 0;

@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { secureStorage } from "@/lib/secure-storage";
 
 interface AuthenticatedFetchOptions extends RequestInit {
   skipAuth?: boolean; // Option to skip authentication for specific requests
@@ -9,13 +10,12 @@ export const useAuthenticatedFetch = () => {
     async (url: string, options: AuthenticatedFetchOptions = {}) => {
       const { skipAuth = false, headers = {}, ...restOptions } = options;
 
-      // Get token from localStorage
-      const token = localStorage.getItem("token");
+      // Get token from secure storage
+      const token = secureStorage.getToken();
 
-      // Prepare headers
+      // Prepare headers (removed client-side API secret)
       const requestHeaders: Record<string, string> = {
         "Content-Type": "application/json",
-        "x-api-key": process.env.NEXT_PUBLIC_API_SECRET || "",
         ...(headers as Record<string, string>),
       };
 
@@ -32,8 +32,8 @@ export const useAuthenticatedFetch = () => {
 
       // Handle 401 errors (token expired/invalid)
       if (response.status === 401 && !skipAuth) {
-        console.log("JWT token invalid, removing from localStorage");
-        localStorage.removeItem("token");
+        console.log("JWT token invalid, removing from secure storage");
+        secureStorage.removeToken();
 
         // Dispatch auth error event for global handling
         if (typeof window !== "undefined") {

@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { Database } from "@/lib/types/database";
-import { withAuth, createOptionsHandler } from "@/lib/auth-middleware";
-import { withApiKeyAndJwtAuth } from "@/lib/jwt-auth-middleware";
+import {
+  withInternalJwtAuth,
+  createInternalJwtOptionsHandler,
+} from "@/lib/internal-jwt-middleware";
 
 type User = Database["public"]["Tables"]["users"]["Row"];
 type UserInsert = Database["public"]["Tables"]["users"]["Insert"];
 type UserUpdate = Database["public"]["Tables"]["users"]["Update"];
 
-export const OPTIONS = createOptionsHandler();
+export const OPTIONS = createInternalJwtOptionsHandler();
 
-export const GET = withApiKeyAndJwtAuth(async function (
+export const GET = withInternalJwtAuth(async function (
   request: NextRequest,
   authenticatedFid: number,
 ) {
@@ -57,7 +59,7 @@ export const GET = withApiKeyAndJwtAuth(async function (
   }
 });
 
-export const POST = withApiKeyAndJwtAuth(async function (
+export const POST = withInternalJwtAuth(async function (
   request: NextRequest,
   authenticatedFid: number,
 ) {
@@ -123,7 +125,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
   }
 });
 
-export const PUT = withApiKeyAndJwtAuth(async function (
+export const PUT = withInternalJwtAuth(async function (
   request: NextRequest,
   authenticatedFid: number,
 ) {
@@ -185,7 +187,7 @@ export const PUT = withApiKeyAndJwtAuth(async function (
 });
 
 // Combined endpoint to create or update user
-export const PATCH = withApiKeyAndJwtAuth(async function (
+export const PATCH = withInternalJwtAuth(async function (
   request: NextRequest,
   authenticatedFid: number,
 ) {

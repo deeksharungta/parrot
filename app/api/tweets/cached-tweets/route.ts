@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCachedTweets } from "@/lib/tweets-service";
-import { withAuth, createOptionsHandler } from "@/lib/auth-middleware";
+import {
+  withInternalJwtAuth,
+  createInternalJwtOptionsHandler,
+} from "@/lib/internal-jwt-middleware";
 
-export const OPTIONS = createOptionsHandler();
+export const OPTIONS = createInternalJwtOptionsHandler();
 
-export const GET = withAuth(async function (request: NextRequest) {
+export const GET = withInternalJwtAuth(async function (
+  request: NextRequest,
+  userFid: number,
+) {
   try {
     const { searchParams } = new URL(request.url);
     const fid = searchParams.get("fid");
@@ -16,6 +22,14 @@ export const GET = withAuth(async function (request: NextRequest) {
     const fidNumber = parseInt(fid, 10);
     if (isNaN(fidNumber)) {
       return NextResponse.json({ error: "Invalid FID" }, { status: 400 });
+    }
+
+    // Security: Ensure user can only fetch tweets for their own FID
+    if (fidNumber !== userFid) {
+      return NextResponse.json(
+        { error: "You can only fetch tweets for your own account" },
+        { status: 403 },
+      );
     }
 
     // Get cached tweets from database
