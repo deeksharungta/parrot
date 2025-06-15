@@ -30,7 +30,15 @@ export const POST = withApiKeyAndJwtAuth(async function (
     // Get the current tweet and verify ownership
     const { data: currentTweet, error: fetchError } = await supabase
       .from("tweets")
-      .select("edit_count, farcaster_fid")
+      .select(
+        `
+        *,
+        users!inner(
+          id,
+          farcaster_fid
+        )
+      `,
+      )
       .eq("tweet_id", tweetId)
       .single();
 
