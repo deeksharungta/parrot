@@ -39,7 +39,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
         )
       `,
       )
-      .eq("tweet_id", tweetId)
+      .eq("id", tweetId)
       .single();
 
     if (fetchError || !currentTweet) {
@@ -47,6 +47,8 @@ export const POST = withApiKeyAndJwtAuth(async function (
       return NextResponse.json({ error: "Tweet not found" }, { status: 404 });
     }
 
+    console.log("currentTweet", currentTweet);
+    console.log("authenticatedFid", authenticatedFid);
     // Authorization check: ensure user owns this tweet
     if (currentTweet.farcaster_fid !== authenticatedFid) {
       return NextResponse.json(
