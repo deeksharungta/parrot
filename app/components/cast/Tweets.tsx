@@ -149,9 +149,9 @@ export default function Tweets({ fid }: TweetsProps) {
     return false;
   };
 
-  // Update stable tweets only when new tweets are loaded, not when they're filtered
+  // Update stable tweets when new tweets are loaded
   React.useEffect(() => {
-    if (tweets && tweets.length > 0 && stableTweets.length === 0) {
+    if (tweets && tweets.length > 0) {
       // Filter to only show thread starters or non-thread tweets, and exclude videos/GIFs
       const filteredTweets = tweets.filter((tweet) => {
         // Skip tweets with video or GIF content
@@ -166,9 +166,23 @@ export default function Tweets({ fid }: TweetsProps) {
         return false;
       });
 
-      setStableTweets(filteredTweets);
+      // If this is the first time loading tweets, set them all
+      if (stableTweets.length === 0) {
+        setStableTweets(filteredTweets);
+      } else {
+        // Otherwise, only add new tweets that aren't already in the stable array
+        const existingTweetIds = new Set(stableTweets.map((t) => t.tweet_id));
+        const newTweets = filteredTweets.filter(
+          (tweet) => !existingTweetIds.has(tweet.tweet_id),
+        );
+
+        if (newTweets.length > 0) {
+          // Add new tweets to the end of the existing array
+          setStableTweets((prev) => [...prev, ...newTweets]);
+        }
+      }
     }
-  }, [tweets, stableTweets.length]);
+  }, [tweets]);
 
   const showTweets = stableTweets;
 
