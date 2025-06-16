@@ -587,7 +587,10 @@ export function ConfirmModal({
                 onClick={handleSave}
                 disabled={
                   isLoading ||
-                  (!isRetweet && content.length === 0) ||
+                  (!isRetweet &&
+                    content.length === 0 &&
+                    mediaUrls.length === 0 &&
+                    videoUrls.length === 0) ||
                   (isRetweet && content.length === 0 && !showRetweet)
                 }
               >
