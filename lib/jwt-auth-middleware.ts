@@ -41,7 +41,7 @@ export async function validateJwtAuth(
     if (!token) {
       return {
         isValid: false,
-        error: "JWT token required",
+        error: "Unauthorized",
         status: 401,
       };
     }
@@ -57,7 +57,7 @@ export async function validateJwtAuth(
     } catch (error) {
       return {
         isValid: false,
-        error: "Invalid JWT token",
+        error: "Unauthorized",
         status: 401,
       };
     }
@@ -67,7 +67,7 @@ export async function validateJwtAuth(
     if (!fid) {
       return {
         isValid: false,
-        error: "Invalid token payload",
+        error: "Unauthorized",
         status: 401,
       };
     }
