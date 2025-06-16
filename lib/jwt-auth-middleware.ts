@@ -75,7 +75,7 @@ export async function validateJwtAuth(
     // Check if user exists in database and token matches
     const { data: user, error } = await supabase
       .from("users")
-      .select("jwt_token, farcaster_fid")
+      .select("farcaster_fid")
       .eq("farcaster_fid", fid)
       .single();
 
@@ -84,15 +84,6 @@ export async function validateJwtAuth(
         isValid: false,
         error: "User not found",
         status: 404,
-      };
-    }
-
-    // Check if the token in database matches the provided token
-    if (user.jwt_token !== token) {
-      return {
-        isValid: false,
-        error: "Token mismatch - please sign in again",
-        status: 401,
       };
     }
 

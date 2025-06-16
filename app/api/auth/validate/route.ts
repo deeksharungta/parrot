@@ -36,10 +36,10 @@ export const POST = withInternalAuth(async function (req: NextRequest) {
 
     const fid = payload.fid as number;
 
-    // Check if user exists in database and token matches
+    // Just check if user exists (no token comparison)
     const { data: user, error } = await supabase
       .from("users")
-      .select("jwt_token, farcaster_fid")
+      .select("farcaster_fid")
       .eq("farcaster_fid", fid)
       .single();
 
@@ -47,14 +47,6 @@ export const POST = withInternalAuth(async function (req: NextRequest) {
       return NextResponse.json(
         { isValid: false, error: "User not found" },
         { status: 404 },
-      );
-    }
-
-    // Check if the token in database matches the provided token
-    if (user.jwt_token !== token) {
-      return NextResponse.json(
-        { isValid: false, error: "Token mismatch" },
-        { status: 401 },
       );
     }
 
