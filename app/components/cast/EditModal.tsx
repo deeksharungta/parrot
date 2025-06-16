@@ -7,15 +7,24 @@ import Button from "../ui/Button";
 import Image from "next/image";
 import { useUserSearch, FarcasterUser } from "@/hooks/useUserSearch";
 import UserMentionDropdown from "../ui/UserMentionDropdown";
+import { useThreadTweets } from "@/hooks/useThreadTweets";
 
 interface EditModalProps {
   tweetId: string;
+  conversationId?: string; // Add conversation ID for thread support
   onSave: (
     content: string,
     mediaUrls: string[],
     quotedTweetUrl: string | null,
     isRetweetRemoved: boolean,
     videoUrls?: Array<{ url: string; bitrate: number; content_type: string }>,
+    threadTweets?: Array<{
+      tweetId: string;
+      content: string;
+      mediaUrls: string[];
+      videoUrls: Array<{ url: string; bitrate: number; content_type: string }>;
+      isRetweetRemoved: boolean;
+    }>, // Add thread tweets for saving
   ) => void;
   onClose: () => void;
   isLoading: boolean;
@@ -27,10 +36,21 @@ interface EditModalProps {
   showConfirmation?: boolean; // Whether this is being used as a confirmation modal
 }
 
+// Interface for thread tweet editing state
+interface ThreadTweetEditState {
+  content: string;
+  mediaUrls: string[];
+  videoUrls: Array<{ url: string; bitrate: number; content_type: string }>;
+  quotedTweetUrl: string | null;
+  showRetweet: boolean;
+  isRetweetRemoved: boolean;
+}
+
 const STORAGE_KEY = "xcast_hide_cast_confirmation";
 
 export function EditModal({
   tweetId,
+  conversationId,
   onSave,
   onClose,
   isLoading,
@@ -41,6 +61,14 @@ export function EditModal({
   showConfirmation = false,
 }: EditModalProps) {
   const { data: tweetData } = useTweet(tweetId);
+
+  // Thread data
+  const { threadTweets, isLoading: threadLoading } = useThreadTweets(
+    conversationId || null,
+    !!conversationId && isOpen,
+  );
+
+  // Single tweet state (for non-thread tweets or first tweet)
   const [content, setContent] = useState("");
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   const [videoUrls, setVideoUrls] = useState<
@@ -50,6 +78,16 @@ export function EditModal({
   const [showRetweet, setShowRetweet] = useState(true);
   const [isRetweetRemoved, setIsRetweetRemoved] = useState(false);
   const [dontShowAgain, setDontShowAgain] = useState(false);
+
+  // Thread editing state
+  const [threadEditStates, setThreadEditStates] = useState<
+    Map<string, ThreadTweetEditState>
+  >(new Map());
+
+  // Current editing tweet for threads
+  const [currentEditingTweet, setCurrentEditingTweet] = useState<string | null>(
+    null,
+  );
 
   // @ mention functionality
   const [showUserDropdown, setShowUserDropdown] = useState(false);
@@ -62,6 +100,9 @@ export function EditModal({
     currentMentionQuery,
     currentMentionQuery.length > 0,
   );
+
+  // Check if this is a thread
+  const isThread = !!conversationId && threadTweets && threadTweets.length > 1;
 
   // Check if user has previously chosen to hide confirmation (only for confirmation mode)
   useEffect(() => {
@@ -89,9 +130,60 @@ export function EditModal({
     return cleaned;
   };
 
-  // Update state when tweet data loads
+  // Initialize thread editing states
   useEffect(() => {
-    if ((tweetData || databaseTweet) && isOpen) {
+    if (isThread && threadTweets && isOpen) {
+      const newStates = new Map<string, ThreadTweetEditState>();
+
+      threadTweets.forEach((tweet) => {
+        const tweetContent = tweet.content || "";
+        const cleanedContent = cleanupTweetContent(tweetContent);
+
+        // Handle media URLs (convert if needed)
+        let imageUrls: string[] = [];
+        let videoUrlsArray: Array<{
+          url: string;
+          bitrate: number;
+          content_type: string;
+        }> = [];
+
+        if (tweet.media_urls) {
+          if (
+            typeof tweet.media_urls === "object" &&
+            !Array.isArray(tweet.media_urls)
+          ) {
+            // New structure with images and videos
+            imageUrls = (tweet.media_urls as any).images || [];
+            videoUrlsArray = (tweet.media_urls as any).videos || [];
+          } else if (Array.isArray(tweet.media_urls)) {
+            // Old structure - assume they're all images
+            imageUrls = tweet.media_urls;
+            videoUrlsArray = [];
+          }
+        }
+
+        newStates.set(tweet.tweet_id, {
+          content: cleanedContent,
+          mediaUrls: imageUrls,
+          videoUrls: videoUrlsArray,
+          quotedTweetUrl: null, // TODO: Add quoted tweet support for threads if needed
+          showRetweet: true,
+          isRetweetRemoved: false,
+        });
+      });
+
+      setThreadEditStates(newStates);
+
+      // Set the first tweet as currently editing
+      if (threadTweets.length > 0) {
+        setCurrentEditingTweet(threadTweets[0].tweet_id);
+      }
+    }
+  }, [isThread, threadTweets, isOpen]);
+
+  // Update state when tweet data loads (for single tweets)
+  useEffect(() => {
+    if ((tweetData || databaseTweet) && isOpen && !isThread) {
       // Use database tweet data if available, otherwise fall back to Twitter API data
       const tweet = databaseTweet || tweetData;
 
@@ -136,7 +228,7 @@ export function EditModal({
       );
       setShowRetweet(true);
     }
-  }, [tweetData, databaseTweet, isOpen, isRetweet]);
+  }, [tweetData, databaseTweet, isOpen, isRetweet, isThread]);
 
   // Reset all edits when modal is closed
   useEffect(() => {
@@ -150,31 +242,146 @@ export function EditModal({
       setShowUserDropdown(false);
       setCurrentMentionQuery("");
       setDontShowAgain(false);
+      setThreadEditStates(new Map());
+      setCurrentEditingTweet(null);
     }
   }, [isOpen]);
 
+  // Get current editing state (for threads)
+  const getCurrentEditingState = (): ThreadTweetEditState | null => {
+    if (!currentEditingTweet || !threadEditStates.has(currentEditingTweet)) {
+      return null;
+    }
+    return threadEditStates.get(currentEditingTweet)!;
+  };
+
+  // Update current editing state (for threads)
+  const updateCurrentEditingState = (
+    updates: Partial<ThreadTweetEditState>,
+  ) => {
+    if (!currentEditingTweet) return;
+
+    setThreadEditStates((prev) => {
+      const newStates = new Map(prev);
+      const currentState = newStates.get(currentEditingTweet);
+      if (currentState) {
+        newStates.set(currentEditingTweet, { ...currentState, ...updates });
+      }
+      return newStates;
+    });
+  };
+
+  // Get display content and media based on editing mode
+  const getDisplayContent = () => {
+    if (isThread && currentEditingTweet) {
+      const currentState = getCurrentEditingState();
+      return {
+        content: currentState?.content || "",
+        mediaUrls: currentState?.mediaUrls || [],
+        videoUrls: currentState?.videoUrls || [],
+        quotedTweetUrl: currentState?.quotedTweetUrl || null,
+        showRetweet: currentState?.showRetweet ?? true,
+        isRetweetRemoved: currentState?.isRetweetRemoved ?? false,
+      };
+    }
+    return {
+      content,
+      mediaUrls,
+      videoUrls,
+      quotedTweetUrl,
+      showRetweet,
+      isRetweetRemoved,
+    };
+  };
+
+  const displayState = getDisplayContent();
+
   const removeImage = (indexToRemove: number) => {
-    setMediaUrls((prev) => prev.filter((_, index) => index !== indexToRemove));
+    if (isThread && currentEditingTweet) {
+      updateCurrentEditingState({
+        mediaUrls: displayState.mediaUrls.filter(
+          (_, index) => index !== indexToRemove,
+        ),
+      });
+    } else {
+      setMediaUrls((prev) =>
+        prev.filter((_, index) => index !== indexToRemove),
+      );
+    }
   };
 
   const removeVideo = (indexToRemove: number) => {
-    setVideoUrls((prev) => prev.filter((_, index) => index !== indexToRemove));
+    if (isThread && currentEditingTweet) {
+      updateCurrentEditingState({
+        videoUrls: displayState.videoUrls.filter(
+          (_, index) => index !== indexToRemove,
+        ),
+      });
+    } else {
+      setVideoUrls((prev) =>
+        prev.filter((_, index) => index !== indexToRemove),
+      );
+    }
   };
 
   const removeQuoteTweet = () => {
-    setQuotedTweetUrl(null);
+    if (isThread && currentEditingTweet) {
+      updateCurrentEditingState({ quotedTweetUrl: null });
+    } else {
+      setQuotedTweetUrl(null);
+    }
   };
 
   const removeRetweet = () => {
-    setShowRetweet(false);
-    setIsRetweetRemoved(true);
+    if (isThread && currentEditingTweet) {
+      updateCurrentEditingState({
+        showRetweet: false,
+        isRetweetRemoved: true,
+      });
+    } else {
+      setShowRetweet(false);
+      setIsRetweetRemoved(true);
+    }
   };
 
   const handleSave = () => {
     if (showConfirmation && dontShowAgain) {
       localStorage.setItem(STORAGE_KEY, "true");
     }
-    onSave(content, mediaUrls, quotedTweetUrl, isRetweetRemoved, videoUrls);
+
+    if (isThread && threadTweets) {
+      // For threads, collect all thread tweet edits
+      const threadTweetEdits = threadTweets.map((tweet) => {
+        const editState = threadEditStates.get(tweet.tweet_id);
+        return {
+          tweetId: tweet.tweet_id,
+          content: editState?.content || "",
+          mediaUrls: editState?.mediaUrls || [],
+          videoUrls: editState?.videoUrls || [],
+          isRetweetRemoved: editState?.isRetweetRemoved || false,
+        };
+      });
+
+      // For thread mode, pass the first tweet's data as main params and thread data separately
+      const firstTweetState = threadEditStates.get(threadTweets[0]?.tweet_id);
+      onSave(
+        firstTweetState?.content || "",
+        firstTweetState?.mediaUrls || [],
+        firstTweetState?.quotedTweetUrl || null,
+        firstTweetState?.isRetweetRemoved || false,
+        firstTweetState?.videoUrls || [],
+        threadTweetEdits,
+      );
+    } else {
+      // Single tweet mode
+      onSave(
+        displayState.content,
+        displayState.mediaUrls,
+        displayState.quotedTweetUrl,
+        displayState.isRetweetRemoved,
+        displayState.videoUrls,
+      );
+    }
   };
 
   const handleClose = () => {
@@ -189,7 +396,11 @@ export function EditModal({
     const newContent = e.target.value;
     const cursor = e.target.selectionStart;
 
-    setContent(newContent);
+    if (isThread && currentEditingTweet) {
+      updateCurrentEditingState({ content: newContent });
+    } else {
+      setContent(newContent);
+    }
     setCursorPosition(cursor);
 
     // Check for @ mention
@@ -210,8 +421,10 @@ export function EditModal({
   const handleUserSelect = (user: FarcasterUser) => {
     if (!textareaRef.current) return;
 
-    const textBeforeCursor = content.slice(0, cursorPosition);
-    const textAfterCursor = content.slice(cursorPosition);
+    const currentContent =
+      isThread && currentEditingTweet ? displayState.content : content;
+    const textBeforeCursor = currentContent.slice(0, cursorPosition);
+    const textAfterCursor = currentContent.slice(cursorPosition);
     const mentionMatch = textBeforeCursor.match(/@(\w*)$/);
 
     if (mentionMatch) {
@@ -220,7 +433,11 @@ export function EditModal({
       const newContent = beforeMention + userMention + textAfterCursor;
       const newCursorPosition = beforeMention.length + userMention.length;
 
-      setContent(newContent);
+      if (isThread && currentEditingTweet) {
+        updateCurrentEditingState({ content: newContent });
+      } else {
+        setContent(newContent);
+      }
       setShowUserDropdown(false);
       setCurrentMentionQuery("");
 
@@ -269,7 +486,7 @@ export function EditModal({
   }, [showUserDropdown]);
 
   // Show loading state while tweet data is loading
-  if (!tweetData && !databaseTweet && isOpen) {
+  if (!tweetData && !databaseTweet && isOpen && (!isThread || threadLoading)) {
     return (
       <AnimatePresence>
         <motion.div
@@ -350,11 +567,46 @@ export function EditModal({
                 />
               </svg>
             </div>
+
+            {/* Thread Navigation */}
+            {isThread && threadTweets && threadTweets.length > 1 && (
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-sm font-medium text-[#8C8A94]">
+                    Thread ({threadTweets.length} tweets)
+                  </h4>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {threadTweets.map((tweet, index) => (
+                    <button
+                      key={tweet.tweet_id}
+                      onClick={() => setCurrentEditingTweet(tweet.tweet_id)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                        currentEditingTweet === tweet.tweet_id
+                          ? "bg-[#494656] text-white"
+                          : "bg-[#F8F8F8] text-[#8C8A94] hover:bg-[#ECECED]"
+                      }`}
+                    >
+                      Tweet {tweet.thread_position || index + 1}
+                    </button>
+                  ))}
+                </div>
+                {currentEditingTweet && (
+                  <div className="mt-2 text-xs text-[#8C8A94]">
+                    Editing: Tweet{" "}
+                    {threadTweets.find(
+                      (t) => t.tweet_id === currentEditingTweet,
+                    )?.thread_position || 1}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div>
               <div className="relative">
                 <textarea
                   ref={textareaRef}
-                  value={content}
+                  value={displayState.content}
                   onChange={handleContentChange}
                   className="w-full p-3 rounded-xl resize-none focus:outline-none focus:border-transparent bg-[#f8f8f8] text-sm leading-relaxed touch-manipulation rows-6"
                   rows={4}
@@ -369,10 +621,10 @@ export function EditModal({
                 />
               </div>
 
-              {mediaUrls.length > 0 && !isRetweet && (
+              {displayState.mediaUrls.length > 0 && !isRetweet && (
                 <div className="mt-2">
                   <div className="grid grid-cols-2 gap-2">
-                    {mediaUrls.map((url, index) => (
+                    {displayState.mediaUrls.map((url, index) => (
                       <div key={index} className="relative group">
                         <Image
                           src={url}
@@ -393,10 +645,10 @@ export function EditModal({
                 </div>
               )}
 
-              {videoUrls.length > 0 && !isRetweet && (
+              {displayState.videoUrls.length > 0 && !isRetweet && (
                 <div className="mt-2">
                   <div className="grid grid-cols-1 gap-2">
-                    {videoUrls.map((videoObj, index) => (
+                    {displayState.videoUrls.map((videoObj, index) => (
                       <div key={index} className="relative group">
                         <video
                           src={videoObj.url}
@@ -426,7 +678,7 @@ export function EditModal({
               )}
 
               {/* Display retweet content */}
-              {isRetweet && tweetData && showRetweet && (
+              {isRetweet && tweetData && displayState.showRetweet && (
                 <div className="mt-2">
                   <div className="relative group border border-[#ECECED] rounded-xl bg-white overflow-y-auto">
                     <div className="p-3">
@@ -463,10 +715,10 @@ export function EditModal({
                             {cleanupTweetContent(tweetData.text || "")}
                           </p>
                           {/* Display media inside retweet */}
-                          {mediaUrls.length > 0 && (
+                          {displayState.mediaUrls.length > 0 && (
                             <div className="mt-2">
                               <div className="grid grid-cols-2 gap-2">
-                                {mediaUrls.map((url, index) => (
+                                {displayState.mediaUrls.map((url, index) => (
                                   <div key={index} className="relative">
                                     <Image
                                       src={url}
@@ -481,31 +733,33 @@ export function EditModal({
                             </div>
                           )}
                           {/* Display videos inside retweet */}
-                          {videoUrls.length > 0 && (
+                          {displayState.videoUrls.length > 0 && (
                             <div className="mt-2">
                               <div className="grid grid-cols-1 gap-2">
-                                {videoUrls.map((videoObj, index) => (
-                                  <div key={index} className="relative">
-                                    <video
-                                      src={videoObj.url}
-                                      controls
-                                      preload="metadata"
-                                      className={`w-full h-auto object-cover rounded-lg ${
-                                        showConfirmation
-                                          ? "max-h-20"
-                                          : "max-h-24"
-                                      }`}
-                                      playsInline
-                                    >
-                                      Your browser does not support the video
-                                      tag.
-                                    </video>
-                                    <div className="absolute bottom-1 left-1 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                                      {videoObj.content_type} •{" "}
-                                      {Math.round(videoObj.bitrate / 1000)}k
+                                {displayState.videoUrls.map(
+                                  (videoObj, index) => (
+                                    <div key={index} className="relative">
+                                      <video
+                                        src={videoObj.url}
+                                        controls
+                                        preload="metadata"
+                                        className={`w-full h-auto object-cover rounded-lg ${
+                                          showConfirmation
+                                            ? "max-h-20"
+                                            : "max-h-24"
+                                        }`}
+                                        playsInline
+                                      >
+                                        Your browser does not support the video
+                                        tag.
+                                      </video>
+                                      <div className="absolute bottom-1 left-1 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                                        {videoObj.content_type} •{" "}
+                                        {Math.round(videoObj.bitrate / 1000)}k
+                                      </div>
                                     </div>
-                                  </div>
-                                ))}
+                                  ),
+                                )}
                               </div>
                             </div>
                           )}
@@ -516,7 +770,7 @@ export function EditModal({
                 </div>
               )}
 
-              {quotedTweetUrl && tweetData?.quoted_tweet && (
+              {displayState.quotedTweetUrl && tweetData?.quoted_tweet && (
                 <div className="mt-2">
                   <div
                     className={`relative group border border-[#ECECED] rounded-xl bg-white overflow-y-auto ${
@@ -615,10 +869,14 @@ export function EditModal({
                 disabled={
                   isLoading ||
                   (!isRetweet &&
-                    content.length === 0 &&
-                    mediaUrls.length === 0 &&
-                    videoUrls.length === 0) ||
-                  (isRetweet && content.length === 0 && !showRetweet)
+                    displayState.content.length === 0 &&
+                    displayState.mediaUrls.length === 0 &&
+                    displayState.videoUrls.length === 0) ||
+                  (isRetweet &&
+                    displayState.content.length === 0 &&
+                    !displayState.showRetweet) ||
+                  (isThread && (!threadTweets || threadTweets.length === 0)) ||
+                  false
                 }
               >
                 {isLoading ? (

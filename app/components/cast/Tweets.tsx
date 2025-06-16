@@ -537,6 +537,13 @@ export default function Tweets({ fid }: TweetsProps) {
     quotedTweetUrl: string | null,
     isRetweetRemoved: boolean,
     videoUrls?: Array<{ url: string; bitrate: number; content_type: string }>,
+    threadTweets?: Array<{
+      tweetId: string;
+      content: string;
+      mediaUrls: string[];
+      videoUrls: Array<{ url: string; bitrate: number; content_type: string }>;
+      isRetweetRemoved: boolean;
+    }>,
   ) => {
     setIsEditLoading(true);
     const currentTweet = showTweets[currentIndex];
@@ -546,22 +553,38 @@ export default function Tweets({ fid }: TweetsProps) {
       console.log("Saving edited content:", editedContent);
       console.log("Media URLs:", mediaUrls);
       console.log("Quoted tweet URL:", quotedTweetUrl);
+      console.log("Thread tweets:", threadTweets);
 
       if (!currentTweet?.tweet_id) {
         throw new Error("No tweet ID available");
       }
 
       // Step 1: Save edited content to database
-      await editTweetMutation.mutateAsync({
-        tweetId: currentTweet.tweet_id,
-        content: editedContent,
-        mediaUrls: mediaUrls,
-        quotedTweetUrl: quotedTweetUrl,
-        isRetweetRemoved: isRetweetRemoved,
-        videoUrls: videoUrls,
-      });
-
-      console.log("Edited content saved successfully");
+      if (threadTweets && threadTweets.length > 0) {
+        // Handle thread editing - save all thread tweets
+        for (const threadTweet of threadTweets) {
+          await editTweetMutation.mutateAsync({
+            tweetId: threadTweet.tweetId,
+            content: threadTweet.content,
+            mediaUrls: threadTweet.mediaUrls,
+            quotedTweetUrl: null, // Thread tweets typically don't have quoted tweets
+            isRetweetRemoved: threadTweet.isRetweetRemoved,
+            videoUrls: threadTweet.videoUrls,
+          });
+        }
+        console.log("All thread tweets edited successfully");
+      } else {
+        // Handle single tweet editing
+        await editTweetMutation.mutateAsync({
+          tweetId: currentTweet.tweet_id,
+          content: editedContent,
+          mediaUrls: mediaUrls,
+          quotedTweetUrl: quotedTweetUrl,
+          isRetweetRemoved: isRetweetRemoved,
+          videoUrls: videoUrls,
+        });
+        console.log("Single tweet edited successfully");
+      }
 
       // Step 2: Cast the edited tweet or thread to Farcaster
       if (userData?.user?.neynar_signer_uuid) {
@@ -637,6 +660,13 @@ export default function Tweets({ fid }: TweetsProps) {
     quotedTweetUrl: string | null,
     isRetweetRemoved: boolean,
     videoUrls?: Array<{ url: string; bitrate: number; content_type: string }>,
+    threadTweets?: Array<{
+      tweetId: string;
+      content: string;
+      mediaUrls: string[];
+      videoUrls: Array<{ url: string; bitrate: number; content_type: string }>;
+      isRetweetRemoved: boolean;
+    }>,
   ) => {
     setIsCastLoading(true);
     const currentTweet = showTweets[currentIndex];
@@ -646,25 +676,46 @@ export default function Tweets({ fid }: TweetsProps) {
       console.log("Content:", content);
       console.log("Media URLs:", mediaUrls);
       console.log("Quoted tweet URL:", quotedTweetUrl);
+      console.log("Thread tweets:", threadTweets);
 
       if (!currentTweet?.tweet_id) {
         throw new Error("No tweet ID available");
       }
 
       // If content was edited, save the changes first
-      const isContentEdited =
-        content !==
-        (currentTweet.content || currentTweet.original_content || "");
-      if (isContentEdited) {
-        await editTweetMutation.mutateAsync({
-          tweetId: currentTweet.tweet_id,
-          content: content,
-          mediaUrls: mediaUrls,
-          quotedTweetUrl: quotedTweetUrl,
-          isRetweetRemoved: isRetweetRemoved,
-          videoUrls: videoUrls,
-        });
-        console.log("Edited content saved successfully");
+      if (threadTweets && threadTweets.length > 0) {
+        // Handle thread editing - save all thread tweets that were modified
+        for (const threadTweet of threadTweets) {
+          // Check if content was actually edited by comparing with original
+          // For now, we'll save all tweets in the thread that have content
+          if (threadTweet.content.length > 0) {
+            await editTweetMutation.mutateAsync({
+              tweetId: threadTweet.tweetId,
+              content: threadTweet.content,
+              mediaUrls: threadTweet.mediaUrls,
+              quotedTweetUrl: null, // Thread tweets typically don't have quoted tweets
+              isRetweetRemoved: threadTweet.isRetweetRemoved,
+              videoUrls: threadTweet.videoUrls,
+            });
+          }
+        }
+        console.log("All modified thread tweets saved successfully");
+      } else {
+        // Handle single tweet - check if content was edited
+        const isContentEdited =
+          content !==
+          (currentTweet.content || currentTweet.original_content || "");
+        if (isContentEdited) {
+          await editTweetMutation.mutateAsync({
+            tweetId: currentTweet.tweet_id,
+            content: content,
+            mediaUrls: mediaUrls,
+            quotedTweetUrl: quotedTweetUrl,
+            isRetweetRemoved: isRetweetRemoved,
+            videoUrls: videoUrls,
+          });
+          console.log("Edited content saved successfully");
+        }
       }
 
       // Cast the tweet or thread to Farcaster
@@ -685,7 +736,10 @@ export default function Tweets({ fid }: TweetsProps) {
             quotedTweetUrl: quotedTweetUrl,
             isRetweetRemoved: isRetweetRemoved,
             videoUrls: videoUrls,
-            isEdit: isContentEdited,
+            isEdit: threadTweets
+              ? false
+              : content !==
+                (currentTweet.content || currentTweet.original_content || ""),
           });
           console.log("Tweet cast successfully");
         }
@@ -873,6 +927,7 @@ export default function Tweets({ fid }: TweetsProps) {
 
       <EditModal
         tweetId={currentTweet?.tweet_id || ""}
+        conversationId={currentTweet?.conversation_id || undefined}
         onSave={handleEditSave}
         onClose={handleEditClose}
         isLoading={isEditLoading}
@@ -883,6 +938,7 @@ export default function Tweets({ fid }: TweetsProps) {
 
       <EditModal
         tweetId={currentTweet?.tweet_id || ""}
+        conversationId={currentTweet?.conversation_id || undefined}
         onSave={handleConfirmSave}
         onClose={handleConfirmClose}
         isLoading={isCastLoading}
