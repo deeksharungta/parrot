@@ -551,15 +551,32 @@ export function ConfirmModal({
               )}
 
               <div className="flex items-center space-x-3 mt-4 mb-6">
-                <input
-                  type="checkbox"
-                  id="dontShowAgain"
-                  checked={dontShowAgain}
-                  onChange={(e) => setDontShowAgain(e.target.checked)}
-                  className="w-4 h-4 text-black bg-gray-100 border-gray-300 rounded focus:ring-none focus:ring-0"
-                />
+                <button
+                  type="button"
+                  onClick={() => setDontShowAgain(!dontShowAgain)}
+                  className="flex items-center justify-center w-5 h-5 rounded-md border-2 transition-all duration-200 touch-manipulation focus:outline-none focus:ring-none focus:ring-offset-0"
+                  style={{
+                    borderColor: dontShowAgain ? "#494656" : "#494656",
+                    backgroundColor: dontShowAgain ? "#494656" : "transparent",
+                  }}
+                >
+                  {dontShowAgain && (
+                    <svg
+                      className="w-3 h-3 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  )}
+                </button>
                 <label
-                  htmlFor="dontShowAgain"
+                  onClick={() => setDontShowAgain(!dontShowAgain)}
                   className="text-sm text-[#494656] cursor-pointer select-none"
                 >
                   Don't show this confirmation again
