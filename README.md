@@ -64,7 +64,7 @@ XCast is a powerful Farcaster Mini App that bridges the gap between Twitter and 
 - **Node.js** 18+ and npm/yarn
 - **Farcaster Account** with verified Twitter
 - **Supabase Project** (free tier available)
-- **Neynar API Key** ([Get one here](https://neynar.com/))
+- **Neynar API Key** ([Get one here](https://neynar.com/)).
 
 ### 1. Clone & Install
 
