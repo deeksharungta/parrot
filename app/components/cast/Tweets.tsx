@@ -5,8 +5,7 @@ import TweetCard from "./TweetCard";
 import Cross from "../icons/Cross";
 import Edit from "../icons/Edit";
 import ArrowRight from "../icons/ArrowRight";
-import { EditModal } from "./EditModal";
-import { ConfirmModal, shouldShowCastConfirmation } from "./ConfirmModal";
+import { EditModal, shouldShowCastConfirmation } from "./EditModal";
 import { ConnectNeynar } from "./ConnectNeynar";
 import { ApproveSpending } from "./ApproveSpending";
 import NoTweetsFound from "./NoTweetsFound";
@@ -882,7 +881,7 @@ export default function Tweets({ fid }: TweetsProps) {
         databaseTweet={currentTweet}
       />
 
-      <ConfirmModal
+      <EditModal
         tweetId={currentTweet?.tweet_id || ""}
         onSave={handleConfirmSave}
         onClose={handleConfirmClose}
@@ -890,6 +889,8 @@ export default function Tweets({ fid }: TweetsProps) {
         isOpen={showConfirmModal}
         isRetweet={currentTweet?.is_retweet || false}
         databaseTweet={currentTweet}
+        title="Confirm your cast"
+        showConfirmation={true}
       />
 
       <ConnectNeynar

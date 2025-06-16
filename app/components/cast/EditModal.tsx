@@ -22,7 +22,12 @@ interface EditModalProps {
   isOpen: boolean;
   isRetweet?: boolean;
   databaseTweet?: any; // Database tweet data with custom media structure
+  // New props for confirmation functionality
+  title?: string;
+  showConfirmation?: boolean; // Whether this is being used as a confirmation modal
 }
+
+const STORAGE_KEY = "xcast_hide_cast_confirmation";
 
 export function EditModal({
   tweetId,
@@ -32,6 +37,8 @@ export function EditModal({
   isOpen,
   isRetweet = false,
   databaseTweet,
+  title = "Edit cast",
+  showConfirmation = false,
 }: EditModalProps) {
   const { data: tweetData } = useTweet(tweetId);
   const [content, setContent] = useState("");
@@ -42,6 +49,7 @@ export function EditModal({
   const [quotedTweetUrl, setQuotedTweetUrl] = useState<string | null>(null);
   const [showRetweet, setShowRetweet] = useState(true);
   const [isRetweetRemoved, setIsRetweetRemoved] = useState(false);
+  const [dontShowAgain, setDontShowAgain] = useState(false);
 
   // @ mention functionality
   const [showUserDropdown, setShowUserDropdown] = useState(false);
@@ -54,6 +62,21 @@ export function EditModal({
     currentMentionQuery,
     currentMentionQuery.length > 0,
   );
+
+  // Check if user has previously chosen to hide confirmation (only for confirmation mode)
+  useEffect(() => {
+    if (showConfirmation) {
+      const hideConfirmation = localStorage.getItem(STORAGE_KEY);
+      if (
+        hideConfirmation === "true" &&
+        isOpen &&
+        (tweetData || databaseTweet)
+      ) {
+        // If user has chosen to hide confirmation, auto-save with current content
+        handleSave();
+      }
+    }
+  }, [isOpen, tweetData, databaseTweet, showConfirmation]);
 
   // Cleanup tweet content function
   const cleanupTweetContent = (content: string): string => {
@@ -126,6 +149,7 @@ export function EditModal({
       setIsRetweetRemoved(false);
       setShowUserDropdown(false);
       setCurrentMentionQuery("");
+      setDontShowAgain(false);
     }
   }, [isOpen]);
 
@@ -147,7 +171,17 @@ export function EditModal({
   };
 
   const handleSave = () => {
+    if (showConfirmation && dontShowAgain) {
+      localStorage.setItem(STORAGE_KEY, "true");
+    }
     onSave(content, mediaUrls, quotedTweetUrl, isRetweetRemoved, videoUrls);
+  };
+
+  const handleClose = () => {
+    if (showConfirmation) {
+      setDontShowAgain(false);
+    }
+    onClose();
   };
 
   // Handle @ mention detection
@@ -235,7 +269,7 @@ export function EditModal({
   }, [showUserDropdown]);
 
   // Show loading state while tweet data is loading
-  if (!tweetData && isOpen) {
+  if (!tweetData && !databaseTweet && isOpen) {
     return (
       <AnimatePresence>
         <motion.div
@@ -244,7 +278,7 @@ export function EditModal({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
           className="fixed inset-0 bg-white/20 z-40 backdrop-blur-sm"
-          onClick={onClose}
+          onClick={handleClose}
         />
         <motion.div
           initial={{ y: "100%" }}
@@ -276,7 +310,7 @@ export function EditModal({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="fixed inset-0 bg-white/20 z-40 backdrop-blur-sm"
-            onClick={onClose}
+            onClick={handleClose}
           />
 
           <motion.div
@@ -289,13 +323,16 @@ export function EditModal({
               stiffness: 300,
               duration: 0.3,
             }}
-            className="fixed  bg-white border border-[#ECECED] z-50 max-h-[85vh] overflow-hidden bottom-2 left-2 right-2 rounded-[32px] p-6"
+            className="fixed  bg-white border border-[#ECECED] z-50 max-h-[85vh] overflow-y-auto bottom-2 left-2 right-2 rounded-[32px] p-6"
           >
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold text-[#100c20] text-base">
-                Edit cast
+                {title}
               </h3>
-              <button onClick={onClose} className="p-1 -m-1 touch-manipulation">
+              <button
+                onClick={handleClose}
+                className="p-1 -m-1 touch-manipulation"
+              >
                 <Cross />
               </button>
             </div>
@@ -365,7 +402,9 @@ export function EditModal({
                           src={videoObj.url}
                           controls
                           preload="metadata"
-                          className="w-full h-auto max-h-32 object-cover rounded-lg"
+                          className={`w-full h-auto object-cover rounded-lg ${
+                            showConfirmation ? "max-h-20" : "max-h-32"
+                          }`}
                           playsInline
                         >
                           Your browser does not support the video tag.
@@ -451,7 +490,11 @@ export function EditModal({
                                       src={videoObj.url}
                                       controls
                                       preload="metadata"
-                                      className="w-full h-auto max-h-24 object-cover rounded-lg"
+                                      className={`w-full h-auto object-cover rounded-lg ${
+                                        showConfirmation
+                                          ? "max-h-20"
+                                          : "max-h-24"
+                                      }`}
                                       playsInline
                                     >
                                       Your browser does not support the video
@@ -475,7 +518,11 @@ export function EditModal({
 
               {quotedTweetUrl && tweetData?.quoted_tweet && (
                 <div className="mt-2">
-                  <div className="relative group border border-[#ECECED] rounded-xl bg-white max-h-24 overflow-y-auto">
+                  <div
+                    className={`relative group border border-[#ECECED] rounded-xl bg-white overflow-y-auto ${
+                      showConfirmation ? "max-h-20" : "max-h-24"
+                    }`}
+                  >
                     <div className="p-3">
                       <button
                         onClick={removeQuoteTweet}
@@ -522,8 +569,48 @@ export function EditModal({
                 </div>
               )}
 
+              {/* Don't show again checkbox - only for confirmation mode */}
+              {showConfirmation && (
+                <div className="flex items-center space-x-2 mt-4 mb-6">
+                  <button
+                    type="button"
+                    onClick={() => setDontShowAgain(!dontShowAgain)}
+                    className="flex items-center justify-center w-4 h-4 rounded-md border-2 transition-all duration-200 touch-manipulation focus:outline-none focus:ring-none focus:ring-offset-0"
+                    style={{
+                      borderColor: dontShowAgain ? "#494656" : "#494656",
+                      backgroundColor: dontShowAgain
+                        ? "#494656"
+                        : "transparent",
+                    }}
+                  >
+                    {dontShowAgain && (
+                      <svg
+                        className="w-3 h-3 text-white"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                  <label
+                    onClick={() => setDontShowAgain(!dontShowAgain)}
+                    className="text-sm text-[#494656] cursor-pointer select-none"
+                  >
+                    Don't show this confirmation again
+                  </label>
+                </div>
+              )}
+
               <Button
-                className="mt-6 w-full text-base py-3 touch-manipulation"
+                className={`${showConfirmation ? "flex-1" : "w-full"} text-base py-3 touch-manipulation ${
+                  showConfirmation ? "" : "mt-6"
+                }`}
                 onClick={handleSave}
                 disabled={
                   isLoading ||
@@ -549,4 +636,16 @@ export function EditModal({
       )}
     </AnimatePresence>
   );
+}
+
+// Utility functions for confirmation functionality
+export function shouldShowCastConfirmation(): boolean {
+  if (typeof window === "undefined") return true; // Server-side
+  return localStorage.getItem(STORAGE_KEY) !== "true";
+}
+
+export function resetCastConfirmationPreference(): void {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(STORAGE_KEY);
+  }
 }
