@@ -28,7 +28,7 @@ class RateLimiter {
   private readonly maxRequests: number;
   private readonly timeWindow: number; // in milliseconds
 
-  constructor(maxRequests: number = 5, timeWindowMs: number = 1000) {
+  constructor(maxRequests: number = 10, timeWindowMs: number = 1000) {
     this.maxRequests = maxRequests;
     this.timeWindow = timeWindowMs;
   }
@@ -55,7 +55,7 @@ class RateLimiter {
 }
 
 // Global rate limiter instance for RapidAPI
-const rapidApiRateLimiter = new RateLimiter(5, 1000);
+const rapidApiRateLimiter = new RateLimiter(10, 1000);
 
 // Helper function to check if tweet content is truncated
 function isTweetTruncated(content: string): boolean {
