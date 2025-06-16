@@ -21,10 +21,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const URL = process.env.NEXT_PUBLIC_URL;
   return {
     title: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
-    description: "Cross-post your tweets to Farcaster",
+    description: "Make your post work for you",
     openGraph: {
       title: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
-      description: "Cross-post your tweets to Farcaster",
+      description: "Make your post work for you",
       images: [process.env.NEXT_PUBLIC_APP_HERO_IMAGE || ""],
     },
     other: {
@@ -46,6 +46,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
   };
 }
+
 export default function RootLayout({
   children,
 }: {
