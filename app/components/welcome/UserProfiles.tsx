@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Button from "../ui/Button";
 import Image from "next/image";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
@@ -44,6 +44,7 @@ export default function UserProfiles() {
   const updateUserMutation = useUpdateUser();
   const upsertUserMutation = useUpsertUser();
   const signInAttempted = useRef(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Handle sign-in flow - only attempt once if not already signed in
   useEffect(() => {
@@ -65,6 +66,8 @@ export default function UserProfiles() {
       toast.error("Missing user information");
       return;
     }
+
+    setIsRedirecting(true);
 
     try {
       // Case 1: User doesn't exist - create new user
@@ -110,6 +113,8 @@ export default function UserProfiles() {
     } catch (error) {
       console.error("Failed to save user data:", error);
       toast.error("Failed to save user information. Please try again.");
+    } finally {
+      setIsRedirecting(false);
     }
   };
 
@@ -194,7 +199,7 @@ export default function UserProfiles() {
           !isSignedIn ? (
             <Button
               disabled={isLoading || isSignInLoading}
-              isLoading={isSignInLoading || isLoading}
+              isLoading={isSignInLoading || isLoading || isRedirecting}
               onClick={() => signIn()}
             >
               {isSignInLoading
@@ -211,7 +216,9 @@ export default function UserProfiles() {
                 isSignInLoading ||
                 isSaving
               }
-              isLoading={isSaving || isSignInLoading || isLoading}
+              isLoading={
+                isSaving || isSignInLoading || isLoading || isRedirecting
+              }
               onClick={handleContinueClick}
             >
               {isSaving
@@ -227,7 +234,7 @@ export default function UserProfiles() {
           <>
             <Button
               disabled={isLoading || isSignInLoading}
-              isLoading={isSignInLoading || isLoading}
+              isLoading={isSignInLoading || isLoading || isRedirecting}
               onClick={() => {
                 if (!isSignedIn) {
                   signIn();
