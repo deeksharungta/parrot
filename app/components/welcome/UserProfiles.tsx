@@ -194,6 +194,7 @@ export default function UserProfiles() {
           !isSignedIn ? (
             <Button
               disabled={isLoading || isSignInLoading}
+              isLoading={isSignInLoading || isLoading}
               onClick={() => signIn()}
             >
               {isSignInLoading
@@ -210,6 +211,7 @@ export default function UserProfiles() {
                 isSignInLoading ||
                 isSaving
               }
+              isLoading={isSaving || isSignInLoading || isLoading}
               onClick={handleContinueClick}
             >
               {isSaving
@@ -225,6 +227,7 @@ export default function UserProfiles() {
           <>
             <Button
               disabled={isLoading || isSignInLoading}
+              isLoading={isSignInLoading || isLoading}
               onClick={() => {
                 if (!isSignedIn) {
                   signIn();
