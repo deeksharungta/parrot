@@ -550,11 +550,11 @@ export function ConfirmModal({
                 </div>
               )}
 
-              <div className="flex items-center space-x-3 mt-4 mb-6">
+              <div className="flex items-center space-x-2 mt-4 mb-6">
                 <button
                   type="button"
                   onClick={() => setDontShowAgain(!dontShowAgain)}
-                  className="flex items-center justify-center w-5 h-5 rounded-md border-2 transition-all duration-200 touch-manipulation focus:outline-none focus:ring-none focus:ring-offset-0"
+                  className="flex items-center justify-center w-4 h-4 rounded-lg border-2 transition-all duration-200 touch-manipulation focus:outline-none focus:ring-none focus:ring-offset-0"
                   style={{
                     borderColor: dontShowAgain ? "#494656" : "#494656",
                     backgroundColor: dontShowAgain ? "#494656" : "transparent",

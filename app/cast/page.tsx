@@ -41,6 +41,10 @@ export default function CastPage() {
     setShowConnectNeynar(false);
   };
 
+  if (!context?.user?.fid) {
+    return null;
+  }
+
   return (
     <div>
       <Header title="Pick and Cast" />
@@ -48,7 +52,7 @@ export default function CastPage() {
         {showOnboarding ? (
           <Onboarding onContinue={() => setShowOnboarding(false)} />
         ) : (
-          <Tweets fid={context?.user?.fid ?? 3} />
+          <Tweets fid={context?.user?.fid} />
         )}
       </div>
       <Navbar />
