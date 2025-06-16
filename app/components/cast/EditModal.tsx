@@ -46,7 +46,7 @@ interface ThreadTweetEditState {
   isRetweetRemoved: boolean;
 }
 
-const STORAGE_KEY = "xcast_hide_cast_confirmation";
+const STORAGE_KEY = "hide_cast_confirmation";
 
 export function EditModal({
   tweetId,
