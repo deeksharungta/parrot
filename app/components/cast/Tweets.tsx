@@ -106,6 +106,46 @@ export default function Tweets({ fid }: TweetsProps) {
       }
     }
 
+    // Check media_urls for type information that might indicate animated GIFs
+    if (tweet.media_urls && typeof tweet.media_urls === "object") {
+      // Check if media_urls contains type information for animated GIFs
+      if (Array.isArray(tweet.media_urls)) {
+        // Handle array format - check each media object for type
+        const hasAnimatedContent = tweet.media_urls.some((media: any) => {
+          if (typeof media === "object" && media?.type) {
+            return media.type === "animated_gif" || media.type === "video";
+          }
+          return false;
+        });
+        if (hasAnimatedContent) return true;
+      } else {
+        // Check if there's a types array or similar structure
+        if (tweet.media_urls.types && Array.isArray(tweet.media_urls.types)) {
+          const hasAnimatedContent = tweet.media_urls.types.some(
+            (type: string) => type === "animated_gif" || type === "video",
+          );
+          if (hasAnimatedContent) return true;
+        }
+
+        // Check for any field that might contain "gif" or "video" type info
+        const mediaValues = Object.values(tweet.media_urls);
+        const hasAnimatedContent = mediaValues.some((value: any) => {
+          if (typeof value === "string") {
+            return value.includes("animated_gif") || value.includes("video");
+          }
+          if (Array.isArray(value)) {
+            return value.some(
+              (item: any) =>
+                typeof item === "string" &&
+                (item.includes("animated_gif") || item.includes("video")),
+            );
+          }
+          return false;
+        });
+        if (hasAnimatedContent) return true;
+      }
+    }
+
     return false;
   };
 

@@ -445,6 +445,16 @@ export async function saveTweetsToDatabase(
         finalMediaUrls.videos = tweet.video_url;
       }
 
+      // Store media types for filtering (check for animated GIFs and videos)
+      if (tweet.extended_entities?.media) {
+        const mediaTypes = tweet.extended_entities.media
+          .map((media) => media.type)
+          .filter(Boolean);
+        if (mediaTypes.length > 0) {
+          finalMediaUrls.types = mediaTypes;
+        }
+      }
+
       // Thread analysis
       let threadPosition: number | null = null;
       let threadTotalCount: number | null = null;
