@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 // Utility function to detect mobile devices
 const detectMobileDevice = () => {
   if (typeof window === "undefined") {
-    console.log("🔍 Mobile Detection: Window undefined (SSR)");
     return false;
   }
 
@@ -22,16 +21,6 @@ const detectMobileDevice = () => {
 
   const isMobile = userAgentMatch || (isTouchDevice && isSmallScreen);
 
-  console.log("🔍 Mobile Detection:", {
-    userAgent: userAgent,
-    userAgentMatch,
-    isTouchDevice,
-    isSmallScreen,
-    windowWidth: window.innerWidth,
-    maxTouchPoints: navigator.maxTouchPoints,
-    finalResult: isMobile ? "📱 MOBILE" : "💻 DESKTOP",
-  });
-
   return isMobile;
 };
 
@@ -41,14 +30,10 @@ export const useDeviceDetection = () => {
   useEffect(() => {
     const checkMobile = () => {
       const isMobileResult = detectMobileDevice();
-      console.log(
-        "📱 Setting mobile state:",
-        isMobileResult ? "MOBILE" : "DESKTOP",
-      );
+
       setIsMobile(isMobileResult);
     };
 
-    console.log("🔄 Mobile detection useEffect triggered");
     checkMobile(); // Check on mount
 
     window.addEventListener("resize", checkMobile);

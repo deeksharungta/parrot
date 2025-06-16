@@ -346,7 +346,6 @@ export default function Tweets({ fid }: TweetsProps) {
   const handleReject = async () => {
     await sdk.haptics.impactOccurred("medium");
     const currentTweet = showTweets[currentIndex];
-    console.log("Tweet rejected:", currentTweet?.tweet_id);
 
     // Track this tweet as processed
     if (currentTweet?.tweet_id) {
@@ -381,7 +380,6 @@ export default function Tweets({ fid }: TweetsProps) {
 
   const handleEdit = () => {
     const currentTweet = showTweets[currentIndex];
-    console.log("Edit tweet:", currentTweet?.tweet_id);
 
     // Check if user has signer_uuid before opening edit modal
     if (
@@ -435,7 +433,6 @@ export default function Tweets({ fid }: TweetsProps) {
 
     await sdk.haptics.impactOccurred("medium");
     const currentTweet = showTweets[currentIndex];
-    console.log("Tweet approved, starting cast flow:", currentTweet?.tweet_id);
 
     // Check if confirmation should be shown
     if (shouldShowCastConfirmation()) {
@@ -478,7 +475,6 @@ export default function Tweets({ fid }: TweetsProps) {
           {
             onSuccess: async () => {
               await sdk.haptics.notificationOccurred("success");
-              console.log("Thread cast successfully");
             },
             onError: async (error) => {
               console.error("Error casting thread:", error);
@@ -496,7 +492,6 @@ export default function Tweets({ fid }: TweetsProps) {
           {
             onSuccess: async () => {
               await sdk.haptics.notificationOccurred("success");
-              console.log("Tweet cast successfully");
             },
             onError: async (error) => {
               console.error("Error casting tweet:", error);
@@ -603,12 +598,6 @@ export default function Tweets({ fid }: TweetsProps) {
     const currentTweet = showTweets[currentIndex];
 
     try {
-      console.log("Starting edit + cast flow");
-      console.log("Saving edited content:", editedContent);
-      console.log("Media URLs:", mediaUrls);
-      console.log("Quoted tweet URL:", quotedTweetUrl);
-      console.log("Thread tweets:", threadTweets);
-
       if (!currentTweet?.tweet_id) {
         throw new Error("No tweet ID available");
       }
@@ -626,7 +615,6 @@ export default function Tweets({ fid }: TweetsProps) {
             videoUrls: threadTweet.videoUrls,
           });
         }
-        console.log("All thread tweets edited successfully");
       } else {
         // Handle single tweet editing
         await editTweetMutation.mutateAsync({
@@ -637,7 +625,6 @@ export default function Tweets({ fid }: TweetsProps) {
           isRetweetRemoved: isRetweetRemoved,
           videoUrls: videoUrls,
         });
-        console.log("Single tweet edited successfully");
       }
 
       // Step 2: Cast the edited tweet or thread to Farcaster
@@ -648,8 +635,6 @@ export default function Tweets({ fid }: TweetsProps) {
           await castThreadMutation.mutateAsync({
             conversationId: currentTweet.conversation_id,
           });
-
-          console.log("Edited thread cast successfully");
         } else {
           // Cast single edited tweet
           await castTweetMutation.mutateAsync({
@@ -661,8 +646,6 @@ export default function Tweets({ fid }: TweetsProps) {
             videoUrls: videoUrls,
             isEdit: true,
           });
-
-          console.log("Edited tweet cast successfully");
         }
 
         setShowEditModal(false);
@@ -726,12 +709,6 @@ export default function Tweets({ fid }: TweetsProps) {
     const currentTweet = showTweets[currentIndex];
 
     try {
-      console.log("Starting confirm + cast flow");
-      console.log("Content:", content);
-      console.log("Media URLs:", mediaUrls);
-      console.log("Quoted tweet URL:", quotedTweetUrl);
-      console.log("Thread tweets:", threadTweets);
-
       if (!currentTweet?.tweet_id) {
         throw new Error("No tweet ID available");
       }
@@ -753,7 +730,6 @@ export default function Tweets({ fid }: TweetsProps) {
             });
           }
         }
-        console.log("All modified thread tweets saved successfully");
       } else {
         // Handle single tweet - check if content was edited
         const isContentEdited =
@@ -768,7 +744,6 @@ export default function Tweets({ fid }: TweetsProps) {
             isRetweetRemoved: isRetweetRemoved,
             videoUrls: videoUrls,
           });
-          console.log("Edited content saved successfully");
         }
       }
 
@@ -780,7 +755,6 @@ export default function Tweets({ fid }: TweetsProps) {
           await castThreadMutation.mutateAsync({
             conversationId: currentTweet.conversation_id,
           });
-          console.log("Thread cast successfully");
         } else {
           // Cast single tweet
           await castTweetMutation.mutateAsync({
@@ -795,7 +769,6 @@ export default function Tweets({ fid }: TweetsProps) {
               : content !==
                 (currentTweet.content || currentTweet.original_content || ""),
           });
-          console.log("Tweet cast successfully");
         }
 
         await sdk.haptics.notificationOccurred("success");
@@ -857,7 +830,6 @@ export default function Tweets({ fid }: TweetsProps) {
     return <NoTweetsFound />;
   }
 
-  console.log({ currentTweet });
   return (
     <div className="flex flex-col items-center w-full h-full">
       <div

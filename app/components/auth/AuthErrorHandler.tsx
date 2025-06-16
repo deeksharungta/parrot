@@ -13,9 +13,6 @@ export const AuthErrorHandler = () => {
       event: CustomEvent<{ message: string; status: number }>,
     ) => {
       if (event.detail.status === 401) {
-        console.log(
-          "Authentication error detected, attempting re-authentication",
-        );
         toast("Session expired. Please sign in again.");
 
         // Attempt automatic re-authentication

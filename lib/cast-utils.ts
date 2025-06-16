@@ -37,26 +37,22 @@ export async function convertTwitterMentionsToFarcaster(
   if (isEdit && originalContent) {
     // When editing, only convert mentions that existed in the original content
     const originalMentions = originalContent.match(mentionRegex) || [];
-    console.log("Original mentions to convert:", originalMentions);
 
     // Process only the mentions that were in the original content
     for (const mention of originalMentions) {
       const username = mention.replace("@", "");
-      console.log("Converting original mention:", username);
 
       try {
         // Try to find Farcaster user by Twitter username
         const farcasterUsername = await findFarcasterUserByTwitter(username);
 
         if (farcasterUsername) {
-          console.log("farcasterUsername found:", farcasterUsername);
           // Replace Twitter mention with Farcaster mention in the current content
           convertedContent = convertedContent.replace(
             new RegExp(`@${username}`, "g"),
             `@${farcasterUsername}`,
           );
         } else {
-          console.log("farcasterUsername not found for:", username);
           // If no Farcaster user found, use the fallback format
           convertedContent = convertedContent.replace(
             new RegExp(`@${username}`, "g"),
@@ -71,7 +67,6 @@ export async function convertTwitterMentionsToFarcaster(
   } else {
     // Original behavior for non-edit cases
     const mentions = content.match(mentionRegex) || [];
-    console.log("mentions", mentions);
 
     if (mentions.length === 0) {
       return content;
@@ -80,30 +75,23 @@ export async function convertTwitterMentionsToFarcaster(
     // Process each mention
     for (const mention of mentions) {
       const username = mention.replace("@", "");
-      console.log("Processing username:", username);
 
       try {
         // Try to find Farcaster user by Twitter username
         const farcasterUsername = await findFarcasterUserByTwitter(username);
 
-        console.log("farcasterUsername", farcasterUsername);
-
         if (farcasterUsername) {
-          console.log("farcasterUsername found");
           // Replace Twitter mention with Farcaster mention
           convertedContent = convertedContent.replace(
             new RegExp(`@${username}`, "g"),
             `@${farcasterUsername}`,
           );
         } else {
-          console.log("farcasterUsername not found");
           // If no Farcaster user found, use the fallback format
           convertedContent = convertedContent.replace(
             new RegExp(`@${username}`, "g"),
             `${username}.twitter`,
           );
-
-          console.log("convertedContent", convertedContent);
         }
       } catch (error) {
         console.error(`Error converting mention @${username}:`, error);

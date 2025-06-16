@@ -32,12 +32,6 @@ export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
   // Get signer approval status from database
   const { data: signerStatus } = useSignerApprovalStatus();
 
-  console.log("ConnectNeynar - signerStatus:", signerStatus);
-  console.log(
-    "ConnectNeynar - polling enabled:",
-    signerStatus?.signer_approval_status === "pending",
-  );
-
   // Poll for signer approval when status is pending
   const { isApproved } = usePollingSignerApproval(
     signerStatus?.signer_uuid || null,
@@ -69,10 +63,6 @@ export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
   }, [isApproved]);
 
   const handleConnectNeynar = async () => {
-    console.log(
-      "🚀 Sign-in initiated - Current device type:",
-      isMobile ? "📱 MOBILE" : "💻 DESKTOP",
-    );
     setLoading(true);
     try {
       const approvalUrl = await createSignerMutation.mutateAsync();
@@ -81,11 +71,9 @@ export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
       if (approvalUrl && typeof approvalUrl === "string") {
         setCurrentApprovalUrl(approvalUrl);
         if (isMobile) {
-          console.log("📱 Mobile detected: Redirecting to approval URL");
           // On mobile, redirect directly to the approval URL
           sdk.actions.openUrl(approvalUrl);
         } else {
-          console.log("💻 Desktop detected: Opening QR code modal");
           // On desktop, show the QR code modal
           setShowQRModal(true);
         }

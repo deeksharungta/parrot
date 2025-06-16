@@ -46,8 +46,6 @@ export async function setUserNotificationDetails(
       updated_at: new Date().toISOString(),
     };
 
-    console.log({ updates });
-
     // If it's a frame_added event, also set has_frame to true
     if (eventType === "frame_added") {
       updates.has_frame = true;
@@ -62,10 +60,6 @@ export async function setUserNotificationDetails(
       console.error("Error setting user notification details:", error);
       throw error;
     }
-
-    console.log(
-      `Successfully updated notification details for FID ${fid}, event: ${eventType}`,
-    );
   } catch (error) {
     console.error("Error setting user notification details:", error);
     throw error;
@@ -98,10 +92,6 @@ export async function deleteUserNotificationDetails(
       console.error("Error deleting user notification details:", error);
       throw error;
     }
-
-    console.log(
-      `Successfully removed notification details for FID ${fid}, event: ${eventType}`,
-    );
   } catch (error) {
     console.error("Error deleting user notification details:", error);
     throw error;
@@ -119,12 +109,6 @@ export async function logFrameEvent(
   notificationDetails?: FrameNotificationDetails,
 ): Promise<void> {
   try {
-    // You can implement this if you want to keep an audit trail
-    // For now, just log to console
-    console.log(`Frame event logged: FID ${fid}, Event: ${eventType}`, {
-      hasNotificationDetails: !!notificationDetails,
-      timestamp: new Date().toISOString(),
-    });
   } catch (error) {
     console.error("Error logging frame event:", error);
   }

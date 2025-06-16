@@ -145,7 +145,6 @@ export async function getCachedTweets(
 
       // Handle authentication errors
       if (response.status === 401) {
-        console.log("JWT token invalid, removing from secure storage");
         secureStorage.removeToken();
       }
 
@@ -190,7 +189,6 @@ export async function fetchAndSaveFreshTweets(fid: number): Promise<{
 
       // Handle authentication errors
       if (response.status === 401) {
-        console.log("JWT token invalid, removing from secure storage");
         secureStorage.removeToken();
       }
 
@@ -251,7 +249,6 @@ export async function updateTweetStatus(
 
       // Handle authentication errors
       if (response.status === 401) {
-        console.log("JWT token invalid, removing from secure storage");
         secureStorage.removeToken();
       }
 
@@ -259,8 +256,6 @@ export async function updateTweetStatus(
         errorData.error || "Failed to update tweet status via server",
       );
     }
-
-    console.log(`Successfully updated tweet ${tweetId} status to ${status}`);
   } catch (error) {
     console.error("Error in updateTweetStatus:", error);
     throw error;
@@ -306,7 +301,6 @@ export async function castThread(
     if (!response.ok) {
       // Handle authentication errors
       if (response.status === 401) {
-        console.log("JWT token invalid, removing from secure storage");
         secureStorage.removeToken();
       }
       throw new Error(data.error || "Failed to cast thread");
@@ -356,7 +350,6 @@ export async function getThreadCastPreview(
 
       // Handle authentication errors
       if (response.status === 401) {
-        console.log("JWT token invalid, removing from secure storage");
         secureStorage.removeToken();
       }
 

@@ -67,10 +67,6 @@ export default function DisconnectNeynar() {
   }, [isApproved]);
 
   const handleSignIn = async () => {
-    console.log(
-      "🚀 Sign-in initiated - Current device type:",
-      isMobile ? "📱 MOBILE" : "💻 DESKTOP",
-    );
     setLoading(true);
     try {
       const approvalUrl = await createSignerMutation.mutateAsync();
@@ -79,11 +75,9 @@ export default function DisconnectNeynar() {
       if (approvalUrl && typeof approvalUrl === "string") {
         setCurrentApprovalUrl(approvalUrl);
         if (isMobile) {
-          console.log("📱 Mobile detected: Redirecting to approval URL");
           // On mobile, redirect directly to the approval URL
           sdk.actions.openUrl(approvalUrl);
         } else {
-          console.log("💻 Desktop detected: Opening QR code modal");
           // On desktop, show the QR code modal
           setShowQRModal(true);
         }

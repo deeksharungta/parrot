@@ -20,20 +20,14 @@ export default function HomePage() {
         setIsMiniApp(miniAppStatus);
 
         if (miniAppStatus) {
-          // Mini App-specific code
-          console.log("Running in Mini App mode");
-
           // Wait for the SDK context to be available
           if (sdk.context) {
             await sdk.context;
             // Call ready to indicate the app is fully loaded
             await sdk.actions.ready();
             setSdkReady(true);
-            console.log("Farcaster SDK initialized successfully");
           }
         } else {
-          // Regular web app code
-          console.log("Running in regular web app mode");
           setSdkReady(true);
         }
       } catch (error) {

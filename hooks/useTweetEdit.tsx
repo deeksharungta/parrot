@@ -38,9 +38,7 @@ export const useEditTweet = () => {
 
       return response.json();
     },
-    onSuccess: (data) => {
-      console.log("Tweet edited successfully:", data.message);
-    },
+    onSuccess: (data) => {},
     onError: (error) => {
       console.error("Error editing tweet:", error);
     },
@@ -81,8 +79,6 @@ export const useCastTweet = () => {
 
       // Show success toast
       toast("Tweet Casted Successfully!");
-
-      console.log("Tweet cast successfully:", data.message);
     },
     onError: (error) => {
       toast("Error Casting Tweet");

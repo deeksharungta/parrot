@@ -92,8 +92,6 @@ export const useGetUserTweets = (
         .filter(Boolean);
     }
 
-    // Log the structure for debugging
-    console.log("Unexpected tweets structure:", tweets);
     return null;
   };
 

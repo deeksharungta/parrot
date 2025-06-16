@@ -64,7 +64,6 @@ export const useCreateSigner = () => {
       return signerData.signer_approval_url || null;
     },
     onSuccess: (approvalUrl) => {
-      console.log("Signer created successfully, approval URL:", approvalUrl);
       // Note: Removed automatic redirect - let the component handle device-specific logic
     },
     onError: (error) => {
@@ -91,16 +90,12 @@ export const useSignerApprovalStatus = () => {
     } | null> => {
       if (!context?.user?.fid) return null;
 
-      console.log("userData", userData);
-
       // Return data from current user which should include signer info
       const result = {
         signer_approval_status:
           userData?.user?.signer_approval_status || "pending",
         signer_uuid: userData?.user?.neynar_signer_uuid || null,
       };
-
-      console.log("useSignerApprovalStatus returning:", result);
 
       return result;
     },
@@ -119,20 +114,10 @@ export const usePollingSignerApproval = (
   const queryClient = useQueryClient();
   const [isApproved, setIsApproved] = React.useState(false);
 
-  // Add debugging logs
-  console.log("usePollingSignerApproval debug:", {
-    signer_uuid,
-    enabled,
-    isApproved,
-    finalEnabled: enabled && !!signer_uuid && !isApproved,
-  });
-
   const query = useQuery({
     queryKey: ["pollingSignerApproval", signer_uuid],
     queryFn: async (): Promise<FarcasterUser | null> => {
       if (!signer_uuid) return null;
-
-      console.log("Polling signer approval for:", signer_uuid);
 
       // Use authenticated fetch for polling
       const token = secureStorage.getToken();

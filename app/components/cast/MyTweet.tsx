@@ -65,8 +65,6 @@ export default function MyTweet({
 }: Props) {
   const tweet = enrichTweet(t);
 
-  console.log({ retweetInfo, isRetweet });
-
   // Extract retweet info from tweet data if not provided via props
   const extractedRetweetInfo = (() => {
     if (!isRetweet) return null;

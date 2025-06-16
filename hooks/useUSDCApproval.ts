@@ -92,7 +92,7 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
     try {
       // Convert spending limit to USDC amount (6 decimals)
       const amountBigInt = parseUnits(amount.toString(), 6);
-      console.log(amountBigInt);
+
       const hash = await writeContractAsync({
         address: USDC_ADDRESS,
         abi: erc20Abi,
@@ -112,7 +112,6 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
           spending_limit: amount,
           usdc_balance: amount, // Set initial balance to spending limit
         });
-        console.log("Approval saved to database");
       } catch (dbError) {
         console.error("Failed to save approval to database:", dbError);
         // Don't fail the entire operation if database save fails
@@ -172,7 +171,6 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
           spending_limit: 0,
           usdc_balance: 0, // Reset balance when revoking
         });
-        console.log("Revocation saved to database");
       } catch (dbError) {
         console.error("Failed to save revocation to database:", dbError);
         // Don't fail the entire operation if database save fails

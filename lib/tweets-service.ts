@@ -353,14 +353,9 @@ export async function saveTweetsToDatabase(
   duplicatesSkipped: number;
 }> {
   try {
-    console.log("Saving tweets to database", tweets.length);
-
     // Step 1: Fetch missing parent tweets to complete threads
-    console.log("Checking for missing parent tweets...");
+
     const completeTweets = await fetchMissingParentTweets(tweets);
-    console.log(
-      `Complete tweets after fetching missing: ${completeTweets.length} (added ${completeTweets.length - tweets.length} missing tweets)`,
-    );
 
     // Step 2: Organize tweets by conversation to identify threads
     const conversationMap = new Map<string, TwitterApiTweet[]>();
@@ -542,7 +537,6 @@ export async function saveTweetsToDatabase(
     const duplicatesSkipped = tweetsToInsert.length - newTweets.length;
 
     if (newTweets.length === 0) {
-      console.log("No new tweets to save");
       return {
         totalSaved: 0,
         missingTweetsFetched,
@@ -557,10 +551,6 @@ export async function saveTweetsToDatabase(
       console.error("Error saving tweets to database:", error);
       throw error;
     }
-
-    console.log(
-      `Successfully saved ${newTweets.length} new tweets to database (${duplicatesSkipped} duplicates skipped, ${missingTweetsFetched} missing tweets fetched)`,
-    );
 
     return {
       totalSaved: newTweets.length,
@@ -842,8 +832,6 @@ export async function updateTweetStatus(
       console.error("Error updating tweet status:", error);
       throw error;
     }
-
-    console.log(`Successfully updated tweet ${tweetId} status to ${status}`);
   } catch (error) {
     console.error("Error in updateTweetStatus:", error);
     throw error;

@@ -38,19 +38,15 @@ export const useSignIn = () => {
         const storedToken = secureStorage.getToken();
 
         if (storedToken) {
-          console.log("Found stored token, validating...");
           const isValid = await validateToken(storedToken);
 
           if (isValid) {
-            console.log("Token is valid, user is signed in");
             setIsSignedIn(true);
           } else {
-            console.log("Token is invalid, removing from secure storage");
             secureStorage.removeToken();
             setIsSignedIn(false);
           }
         } else {
-          console.log("No stored token found");
           setIsSignedIn(false);
         }
       } catch (error) {
@@ -71,7 +67,6 @@ export const useSignIn = () => {
 
       // First check if user is already signed in
       if (isSignedIn) {
-        console.log("User is already signed in");
         setIsLoading(false);
         return;
       }
@@ -100,12 +95,6 @@ export const useSignIn = () => {
       const now = new Date();
       const notBefore = new Date(now.getTime() - 60000); // 1 minute before now
       const expirationTime = new Date(now.getTime() + MESSAGE_EXPIRATION_TIME);
-
-      console.log("Attempting sign in with params:", {
-        nonce,
-        notBefore: notBefore.toISOString(),
-        expirationTime: expirationTime.toISOString(),
-      });
 
       const result = await sdk.actions.signIn({
         nonce,
@@ -139,17 +128,13 @@ export const useSignIn = () => {
       const data = await res.json();
 
       try {
-        console.log("Attempting to save token to secure storage...");
         secureStorage.setToken(data.token);
-        console.log("Successfully saved token to secure storage");
 
         // Verify it was saved
         const savedToken = secureStorage.getToken();
-        console.log("Verification - token saved:", !!savedToken);
 
         // Add a small delay and retry if token wasn't saved properly
         if (!savedToken) {
-          console.log("Token not found immediately, retrying...");
           await new Promise((resolve) => setTimeout(resolve, 100));
           const retryToken = secureStorage.getToken();
           if (!retryToken) {
@@ -189,9 +174,7 @@ export const useSignIn = () => {
 
   const logout = useCallback(() => {
     try {
-      console.log("Attempting to remove token from secure storage...");
       secureStorage.removeToken();
-      console.log("Successfully removed token from secure storage");
     } catch (error) {
       console.error("Failed to remove token from secure storage:", error);
     }

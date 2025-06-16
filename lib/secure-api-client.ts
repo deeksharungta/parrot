@@ -59,7 +59,6 @@ class SecureApiClient {
 
       // Handle 401 errors (token expired/invalid)
       if (response.status === 401 && !skipAuth) {
-        console.log("JWT token invalid, removing from storage");
         secureStorage.removeToken();
 
         // Dispatch auth error event for global handling

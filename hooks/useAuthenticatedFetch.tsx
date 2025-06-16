@@ -15,12 +15,10 @@ export const useAuthenticatedFetch = () => {
 
       // If no token found, try again after a short delay (handles race conditions)
       if (!token && !skipAuth) {
-        console.log("Token not found on first attempt, retrying...");
         await new Promise((resolve) => setTimeout(resolve, 100));
         token = secureStorage.getToken();
 
         if (!token) {
-          console.log("No token available after retry");
           // Don't proceed with unauthenticated request for protected endpoints
           if (url.includes("/api/users") || url.includes("/api/cast")) {
             throw new Error("Authentication required but no token available");
@@ -47,7 +45,6 @@ export const useAuthenticatedFetch = () => {
 
       // Handle 401 errors (token expired/invalid)
       if (response.status === 401 && !skipAuth) {
-        console.log("JWT token invalid, removing from secure storage");
         secureStorage.removeToken();
 
         // Dispatch auth error event for global handling
