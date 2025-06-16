@@ -347,14 +347,25 @@ export async function getCachedTweets(
 export async function saveTweetsToDatabase(
   userId: string,
   tweets: TwitterApiTweet[],
-): Promise<void> {
+): Promise<{
+  totalSaved: number;
+  missingTweetsFetched: number;
+  duplicatesSkipped: number;
+}> {
   try {
     console.log("Saving tweets to database", tweets.length);
 
-    // First, let's organize tweets by conversation to identify threads
+    // Step 1: Fetch missing parent tweets to complete threads
+    console.log("Checking for missing parent tweets...");
+    const completeTweets = await fetchMissingParentTweets(tweets);
+    console.log(
+      `Complete tweets after fetching missing: ${completeTweets.length} (added ${completeTweets.length - tweets.length} missing tweets)`,
+    );
+
+    // Step 2: Organize tweets by conversation to identify threads
     const conversationMap = new Map<string, TwitterApiTweet[]>();
 
-    tweets.forEach((tweet) => {
+    completeTweets.forEach((tweet) => {
       if (tweet.conversation_id) {
         if (!conversationMap.has(tweet.conversation_id)) {
           conversationMap.set(tweet.conversation_id, []);
@@ -363,16 +374,64 @@ export async function saveTweetsToDatabase(
       }
     });
 
-    // Sort tweets in each conversation by creation date
-    conversationMap.forEach((conversationTweets) => {
-      conversationTweets.sort((a, b) => {
-        const dateA = new Date(a.creation_date || 0).getTime();
-        const dateB = new Date(b.creation_date || 0).getTime();
-        return dateA - dateB;
+    // Step 3: Build proper thread chains using reply relationships
+    conversationMap.forEach((conversationTweets, conversationId) => {
+      // Create a map of tweet_id -> tweet for quick lookup
+      const tweetMap = new Map<string, TwitterApiTweet>();
+      conversationTweets.forEach((tweet) => {
+        if (tweet.tweet_id) {
+          tweetMap.set(tweet.tweet_id, tweet);
+        }
       });
+
+      // Find the root tweet (no parent or parent not in this conversation)
+      const rootTweet = conversationTweets.find(
+        (tweet) =>
+          !tweet.in_reply_to_status_id ||
+          !tweetMap.has(tweet.in_reply_to_status_id),
+      );
+
+      if (rootTweet) {
+        // Build the thread chain starting from root
+        const orderedTweets: TwitterApiTweet[] = [];
+        const visited = new Set<string>();
+
+        const addTweetAndChildren = (tweet: TwitterApiTweet): void => {
+          if (!tweet.tweet_id || visited.has(tweet.tweet_id)) return;
+
+          visited.add(tweet.tweet_id);
+          orderedTweets.push(tweet);
+
+          // Find all tweets that reply to this tweet
+          const children = conversationTweets.filter(
+            (t) => t.in_reply_to_status_id === tweet.tweet_id,
+          );
+
+          // Sort children by creation date and add them
+          children.sort((a, b) => {
+            const dateA = new Date(a.creation_date || 0).getTime();
+            const dateB = new Date(b.creation_date || 0).getTime();
+            return dateA - dateB;
+          });
+
+          children.forEach((child) => addTweetAndChildren(child));
+        };
+
+        addTweetAndChildren(rootTweet);
+
+        // Update the conversation map with properly ordered tweets
+        conversationMap.set(conversationId, orderedTweets);
+      } else {
+        // Fallback: sort by creation date if we can't find a clear root
+        conversationTweets.sort((a, b) => {
+          const dateA = new Date(a.creation_date || 0).getTime();
+          const dateB = new Date(b.creation_date || 0).getTime();
+          return dateA - dateB;
+        });
+      }
     });
 
-    const tweetsToInsert: TweetInsert[] = tweets.map((tweet) => {
+    const tweetsToInsert: TweetInsert[] = completeTweets.map((tweet) => {
       // For retweets, we want to store the retweeter's information (not the original tweet author)
       // But we also want to handle cases where we want the original author's info
       const userInfo = tweet.user;
@@ -469,9 +528,16 @@ export async function saveTweetsToDatabase(
       (tweet) => tweet.tweet_id && !existingTweetIds.has(tweet.tweet_id),
     );
 
+    const missingTweetsFetched = completeTweets.length - tweets.length;
+    const duplicatesSkipped = tweetsToInsert.length - newTweets.length;
+
     if (newTweets.length === 0) {
       console.log("No new tweets to save");
-      return;
+      return {
+        totalSaved: 0,
+        missingTweetsFetched,
+        duplicatesSkipped,
+      };
     }
 
     // Insert only new tweets
@@ -483,8 +549,14 @@ export async function saveTweetsToDatabase(
     }
 
     console.log(
-      `Successfully saved ${newTweets.length} new tweets to database (${tweetsToInsert.length - newTweets.length} duplicates skipped)`,
+      `Successfully saved ${newTweets.length} new tweets to database (${duplicatesSkipped} duplicates skipped, ${missingTweetsFetched} missing tweets fetched)`,
     );
+
+    return {
+      totalSaved: newTweets.length,
+      missingTweetsFetched,
+      duplicatesSkipped,
+    };
   } catch (error) {
     console.error("Error in saveTweetsToDatabase:", error);
     throw error;
@@ -497,6 +569,8 @@ export async function fetchAndSaveFreshTweets(fid: number): Promise<{
   tweets: TwitterApiTweet[];
   user: any;
   error?: string;
+  totalTweetsProcessed?: number;
+  missingTweetsFetched?: number;
 }> {
   try {
     // Directly call the Twitter API logic instead of making HTTP request
@@ -508,6 +582,8 @@ export async function fetchAndSaveFreshTweets(fid: number): Promise<{
         success: true,
         tweets: [],
         user: data.user,
+        totalTweetsProcessed: 0,
+        missingTweetsFetched: 0,
       };
     }
 
@@ -537,17 +613,29 @@ export async function fetchAndSaveFreshTweets(fid: number): Promise<{
       }
 
       // Extract twitter user ID from the first tweet (all tweets should have the same user)
-      await saveTweetsToDatabase(newUser.id, freshTweets);
+      const saveResult = await saveTweetsToDatabase(newUser.id, freshTweets);
+
+      return {
+        success: true,
+        tweets: freshTweets,
+        user: data.user,
+        totalTweetsProcessed:
+          saveResult.totalSaved + saveResult.duplicatesSkipped,
+        missingTweetsFetched: saveResult.missingTweetsFetched,
+      };
     } else {
       // Extract twitter user ID from the first tweet (all tweets should have the same user)s
-      await saveTweetsToDatabase(userData.id, freshTweets);
-    }
+      const saveResult = await saveTweetsToDatabase(userData.id, freshTweets);
 
-    return {
-      success: true,
-      tweets: freshTweets,
-      user: data.user,
-    };
+      return {
+        success: true,
+        tweets: freshTweets,
+        user: data.user,
+        totalTweetsProcessed:
+          saveResult.totalSaved + saveResult.duplicatesSkipped,
+        missingTweetsFetched: saveResult.missingTweetsFetched,
+      };
+    }
   } catch (error) {
     console.error("Error fetching and saving fresh tweets:", error);
     return {
@@ -750,4 +838,99 @@ export async function updateTweetStatus(
     console.error("Error in updateTweetStatus:", error);
     throw error;
   }
+}
+
+// Fetch a single tweet by ID from Twitter API
+async function fetchSingleTweetFromTwitterAPI(
+  tweetId: string,
+): Promise<TwitterApiTweet | null> {
+  try {
+    if (!RAPIDAPI_KEY) {
+      throw new Error("RapidAPI key not configured");
+    }
+
+    await rapidApiRateLimiter.waitForSlot();
+    const response = await fetch(
+      `https://${RAPIDAPI_HOST}/tweet/details?tweet_id=${tweetId}`,
+      {
+        method: "GET",
+        headers: {
+          "X-RapidAPI-Key": RAPIDAPI_KEY,
+          "X-RapidAPI-Host": RAPIDAPI_HOST,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      console.error(`Failed to fetch tweet ${tweetId}:`, response.status);
+      return null;
+    }
+
+    const tweetData = await response.json();
+    return tweetData;
+  } catch (error) {
+    console.error(`Error fetching single tweet ${tweetId}:`, error);
+    return null;
+  }
+}
+
+// Recursively fetch missing parent tweets to complete a thread
+async function fetchMissingParentTweets(
+  tweets: TwitterApiTweet[],
+): Promise<TwitterApiTweet[]> {
+  const allTweets = [...tweets];
+  const tweetIds = new Set(tweets.map((t) => t.tweet_id).filter(Boolean));
+  const missingTweetIds = new Set<string>();
+
+  // Find missing parent tweets
+  tweets.forEach((tweet) => {
+    if (
+      tweet.in_reply_to_status_id &&
+      !tweetIds.has(tweet.in_reply_to_status_id)
+    ) {
+      missingTweetIds.add(tweet.in_reply_to_status_id);
+    }
+  });
+
+  // Fetch missing tweets
+  const fetchPromises = Array.from(missingTweetIds).map(async (tweetId) => {
+    const tweet = await fetchSingleTweetFromTwitterAPI(tweetId);
+    return tweet;
+  });
+
+  const fetchedTweets = (await Promise.all(fetchPromises)).filter(
+    Boolean,
+  ) as TwitterApiTweet[];
+
+  if (fetchedTweets.length === 0) {
+    return allTweets;
+  }
+
+  // Add fetched tweets to our collection
+  allTweets.push(...fetchedTweets);
+
+  // Update our tweet IDs set
+  fetchedTweets.forEach((tweet) => {
+    if (tweet.tweet_id) {
+      tweetIds.add(tweet.tweet_id);
+    }
+  });
+
+  // Recursively check if we need to fetch more parent tweets
+  const newMissingIds = new Set<string>();
+  fetchedTweets.forEach((tweet) => {
+    if (
+      tweet.in_reply_to_status_id &&
+      !tweetIds.has(tweet.in_reply_to_status_id)
+    ) {
+      newMissingIds.add(tweet.in_reply_to_status_id);
+    }
+  });
+
+  // If we found more missing tweets, recursively fetch them
+  if (newMissingIds.size > 0) {
+    return fetchMissingParentTweets(allTweets);
+  }
+
+  return allTweets;
 }
