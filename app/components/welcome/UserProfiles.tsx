@@ -12,11 +12,15 @@ import {
   useGetUser,
   UserInsert,
   useCurrentUser,
+  useUpdateUser,
+  UserUpdate,
+  useUpsertUser,
 } from "@/hooks/useUsers";
 import { useSignIn } from "@/hooks/useSignIn";
 import sdk from "@farcaster/frame-sdk";
 import { useDeviceDetection } from "@/hooks/useDeviceDetection";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const SkeletonLoader = ({ width = "w-16" }: { width?: string }) => (
   <motion.div
@@ -29,6 +33,7 @@ const SkeletonLoader = ({ width = "w-16" }: { width?: string }) => (
 export default function UserProfiles() {
   const { context } = useMiniKit();
   const { isMobile } = useDeviceDetection();
+  const router = useRouter();
   const { signIn, isSignedIn, isLoading: isSignInLoading } = useSignIn();
   const { refetch: refetchUser } = useCurrentUser();
   const { twitterAccount, isLoading, isError } = useGetTwitterAccount(
@@ -36,6 +41,8 @@ export default function UserProfiles() {
   );
   const { data: userData } = useGetUser(context?.user?.fid);
   const createUserMutation = useCreateUser();
+  const updateUserMutation = useUpdateUser();
+  const upsertUserMutation = useUpsertUser();
   const signInAttempted = useRef(false);
 
   // Handle sign-in flow - only attempt once if not already signed in
@@ -52,32 +59,64 @@ export default function UserProfiles() {
     }
   }, [isSignedIn, refetchUser, signIn, isSignInLoading]);
 
-  // Create user in database when context is available and user doesn't exist
-  useEffect(() => {
-    if (
-      context?.user?.fid &&
-      userData &&
-      !userData.exists &&
-      !createUserMutation.isPending &&
-      twitterAccount?.username
-    ) {
-      const userToCreate: UserInsert = {
-        farcaster_fid: context.user.fid,
-        farcaster_username: context.user.username || null,
-        farcaster_display_name: context.user.displayName || null,
-        twitter_username: twitterAccount?.username || null,
-      };
-
-      createUserMutation.mutate(userToCreate, {
-        onSuccess: (response) => {
-          console.log("User created successfully:", response.user);
-        },
-        onError: (error) => {
-          console.error("Failed to create user:", error.message);
-        },
-      });
+  // Handle saving user data and navigation when "Continue fetching tweets" is clicked
+  const handleContinueClick = async () => {
+    if (!context?.user?.fid || !twitterAccount?.username) {
+      toast.error("Missing user information");
+      return;
     }
-  }, [context?.user, userData, createUserMutation, twitterAccount?.username]);
+
+    try {
+      // Case 1: User doesn't exist - create new user
+      if (userData && !userData.exists) {
+        const userToCreate: UserInsert = {
+          farcaster_fid: context.user.fid,
+          farcaster_username: context.user.username || null,
+          farcaster_display_name: context.user.displayName || null,
+          twitter_username: twitterAccount?.username || null,
+        };
+
+        await createUserMutation.mutateAsync(userToCreate);
+      }
+      // Case 2: User exists but doesn't have Twitter username - update user
+      else if (
+        userData &&
+        userData.exists &&
+        userData.user &&
+        !userData.user.twitter_username
+      ) {
+        const userUpdate: UserUpdate & { farcaster_fid: number } = {
+          farcaster_fid: context.user.fid,
+          twitter_username: twitterAccount?.username || null,
+        };
+
+        await updateUserMutation.mutateAsync(userUpdate);
+      }
+      // Case 3: Fallback upsert to ensure data is saved
+      else if (!userData?.user?.twitter_username) {
+        const userUpsertData: UserInsert & { farcaster_fid: number } = {
+          farcaster_fid: context.user.fid,
+          farcaster_username: context.user.username || null,
+          farcaster_display_name: context.user.displayName || null,
+          twitter_username: twitterAccount?.username || null,
+        };
+
+        await upsertUserMutation.mutateAsync(userUpsertData);
+      }
+
+      // Refetch user data and navigate
+      await refetchUser();
+      router.push("/cast");
+    } catch (error) {
+      console.error("Failed to save user data:", error);
+      toast.error("Failed to save user information. Please try again.");
+    }
+  };
+
+  const isSaving =
+    createUserMutation.isPending ||
+    updateUserMutation.isPending ||
+    upsertUserMutation.isPending;
 
   return (
     <motion.div
@@ -164,19 +203,23 @@ export default function UserProfiles() {
                   : "Sign In"}
             </Button>
           ) : (
-            <Link href="/cast" className="w-full">
-              <Button
-                disabled={
-                  isLoading || !twitterAccount?.username || isSignInLoading
-                }
-              >
-                {isSignInLoading
+            <Button
+              disabled={
+                isLoading ||
+                !twitterAccount?.username ||
+                isSignInLoading ||
+                isSaving
+              }
+              onClick={handleContinueClick}
+            >
+              {isSaving
+                ? "Saving..."
+                : isSignInLoading
                   ? "Signing you in..."
                   : isLoading
                     ? "Checking authentication..."
                     : "Continue fetching tweets"}
-              </Button>
-            </Link>
+            </Button>
           )
         ) : (
           <>
