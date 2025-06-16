@@ -61,6 +61,7 @@ export const useCastTweet = () => {
       quotedTweetUrl?: string | null;
       isRetweetRemoved?: boolean;
       videoUrls?: Array<{ url: string; bitrate: number; content_type: string }>;
+      isEdit?: boolean;
     }): Promise<any> => {
       const response = await post("/api/cast", castData);
 

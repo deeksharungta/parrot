@@ -123,6 +123,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
       quotedTweetUrl,
       isRetweetRemoved,
       videoUrls,
+      isEdit = false,
     } = body;
 
     if (!tweetId) {
@@ -304,7 +305,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
     };
 
     // Parse tweet content with potential overrides for edited values
-    let parsedCast = await parseTweetToFarcasterCast(updatedTweet);
+    let parsedCast = await parseTweetToFarcasterCast(updatedTweet, isEdit);
 
     // Override with edited values if provided
     if (

@@ -583,6 +583,7 @@ export default function Tweets({ fid }: TweetsProps) {
             quotedTweetUrl: quotedTweetUrl,
             isRetweetRemoved: isRetweetRemoved,
             videoUrls: videoUrls,
+            isEdit: true,
           });
 
           console.log("Edited tweet cast successfully");
@@ -685,6 +686,7 @@ export default function Tweets({ fid }: TweetsProps) {
             quotedTweetUrl: quotedTweetUrl,
             isRetweetRemoved: isRetweetRemoved,
             videoUrls: videoUrls,
+            isEdit: isContentEdited,
           });
           console.log("Tweet cast successfully");
         }
