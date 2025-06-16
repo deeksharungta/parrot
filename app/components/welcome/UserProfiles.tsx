@@ -107,8 +107,7 @@ export default function UserProfiles() {
         await upsertUserMutation.mutateAsync(userUpsertData);
       }
 
-      // Refetch user data and navigate
-      await refetchUser();
+      // Navigate immediately after successful save
       router.push("/cast");
     } catch (error) {
       console.error("Failed to save user data:", error);
