@@ -10,22 +10,37 @@ import { sdk } from "@farcaster/frame-sdk";
 export default function HomePage() {
   const { setFrameReady, isFrameReady, context } = useMiniKit();
   const [sdkReady, setSdkReady] = useState(false);
+  const [isMiniApp, setIsMiniApp] = useState<boolean | null>(null);
 
   useEffect(() => {
     const initializeSDK = async () => {
       try {
-        // Wait for the SDK context to be available
-        if (sdk.context) {
-          await sdk.context;
-          // Call ready to indicate the app is fully loaded
-          await sdk.actions.ready();
+        // Check if running in a Mini App
+        const miniAppStatus = await sdk.isInMiniApp();
+        setIsMiniApp(miniAppStatus);
+
+        if (miniAppStatus) {
+          // Mini App-specific code
+          console.log("Running in Mini App mode");
+
+          // Wait for the SDK context to be available
+          if (sdk.context) {
+            await sdk.context;
+            // Call ready to indicate the app is fully loaded
+            await sdk.actions.ready();
+            setSdkReady(true);
+            console.log("Farcaster SDK initialized successfully");
+          }
+        } else {
+          // Regular web app code
+          console.log("Running in regular web app mode");
           setSdkReady(true);
-          console.log("Farcaster SDK initialized successfully");
         }
       } catch (error) {
         console.error("Failed to initialize Farcaster SDK:", error);
         // Even if SDK fails, we should still set it as ready to not block the UI
         setSdkReady(true);
+        setIsMiniApp(false);
       }
     };
 
@@ -33,18 +48,30 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    if (!isFrameReady) {
+    if (!isFrameReady && isMiniApp) {
       setFrameReady();
     }
-  }, [isFrameReady, setFrameReady]);
+  }, [isFrameReady, setFrameReady, isMiniApp]);
 
   useEffect(() => {
-    if (sdkReady && context?.client && !context.client.added) {
+    if (isMiniApp && sdkReady && context?.client && !context.client.added) {
       sdk.actions.addMiniApp().catch((error) => {
         console.error("Failed to add mini app:", error);
       });
     }
-  }, [context?.client.added, sdkReady]);
+  }, [context?.client.added, sdkReady, isMiniApp]);
+
+  // Show loading state while we determine the app type
+  if (isMiniApp === null) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Initializing...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -53,8 +80,34 @@ export default function HomePage() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <WelcomeCard />
-      <UserProfiles />
+      {isMiniApp ? (
+        // Mini App version - show the full app
+        <>
+          <WelcomeCard />
+          <UserProfiles />
+        </>
+      ) : (
+        // Web version - show open mini app prompt
+        <div className="flex flex-col items-center justify-center space-y-6 p-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              Open in Farcaster
+            </h1>
+            <p className="text-gray-600 mb-8">
+              This app works best as a Mini App in Farcaster
+            </p>
+            <button
+              onClick={() => {
+                // You can add logic here to redirect to Farcaster or show instructions
+                window.open("https://warpcast.com/", "_blank");
+              }}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+            >
+              Open Mini App
+            </button>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }
