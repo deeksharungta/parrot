@@ -42,6 +42,7 @@ export default function YoloMode() {
   const handleSaveSettings = (settings: {
     castRetweets: boolean;
     castQuoteTweets: boolean;
+    castNormalTweets: boolean;
   }) => {
     if (!context?.user?.fid || !userData?.user) return;
 
@@ -52,12 +53,14 @@ export default function YoloMode() {
           farcaster_fid: context.user.fid,
           yolo_cast_retweets: settings.castRetweets,
           yolo_cast_quote_tweets: settings.castQuoteTweets,
+          yolo_cast_normal_tweets: settings.castNormalTweets,
         }
       : {
           farcaster_fid: context.user.fid,
           yolo_mode: true,
           yolo_cast_retweets: settings.castRetweets,
           yolo_cast_quote_tweets: settings.castQuoteTweets,
+          yolo_cast_normal_tweets: settings.castNormalTweets,
         };
 
     updateUser.mutate(updateData, {
@@ -83,6 +86,7 @@ export default function YoloMode() {
   const currentSettings = {
     castRetweets: userData?.user?.yolo_cast_retweets ?? true,
     castQuoteTweets: userData?.user?.yolo_cast_quote_tweets ?? true,
+    castNormalTweets: userData?.user?.yolo_cast_normal_tweets ?? true,
   };
 
   return (

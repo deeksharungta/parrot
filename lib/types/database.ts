@@ -15,6 +15,7 @@ export interface Database {
           yolo_mode: boolean | null;
           yolo_cast_retweets: boolean | null;
           yolo_cast_quote_tweets: boolean | null;
+          yolo_cast_normal_tweets: boolean | null;
           notifications_enabled: boolean | null;
           auto_approve: boolean | null;
           usdc_balance: number | null;
@@ -39,6 +40,7 @@ export interface Database {
           yolo_mode?: boolean | null;
           yolo_cast_retweets?: boolean | null;
           yolo_cast_quote_tweets?: boolean | null;
+          yolo_cast_normal_tweets?: boolean | null;
           notifications_enabled?: boolean | null;
           auto_approve?: boolean | null;
           usdc_balance?: number | null;
@@ -63,6 +65,7 @@ export interface Database {
           yolo_mode?: boolean | null;
           yolo_cast_retweets?: boolean | null;
           yolo_cast_quote_tweets?: boolean | null;
+          yolo_cast_normal_tweets?: boolean | null;
           notifications_enabled?: boolean | null;
           auto_approve?: boolean | null;
           usdc_balance?: number | null;

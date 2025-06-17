@@ -10,11 +10,13 @@ interface YoloModeModalProps {
   onSave: (settings: {
     castRetweets: boolean;
     castQuoteTweets: boolean;
+    castNormalTweets: boolean;
   }) => void;
   isLoading: boolean;
   currentSettings: {
     castRetweets: boolean;
     castQuoteTweets: boolean;
+    castNormalTweets: boolean;
   };
   isConfiguring?: boolean; // true when reconfiguring, false when enabling for first time
 }
@@ -33,11 +35,15 @@ export default function YoloModeModal({
   const [castQuoteTweets, setCastQuoteTweets] = useState(
     currentSettings.castQuoteTweets,
   );
+  const [castNormalTweets, setCastNormalTweets] = useState(
+    currentSettings.castNormalTweets,
+  );
 
   // Update local state when currentSettings change
   useEffect(() => {
     setCastRetweets(currentSettings.castRetweets);
     setCastQuoteTweets(currentSettings.castQuoteTweets);
+    setCastNormalTweets(currentSettings.castNormalTweets);
   }, [currentSettings]);
 
   // Reset state when modal is closed
@@ -45,6 +51,7 @@ export default function YoloModeModal({
     if (!isOpen) {
       setCastRetweets(currentSettings.castRetweets);
       setCastQuoteTweets(currentSettings.castQuoteTweets);
+      setCastNormalTweets(currentSettings.castNormalTweets);
     }
   }, [isOpen, currentSettings]);
 
@@ -52,6 +59,7 @@ export default function YoloModeModal({
     onSave({
       castRetweets,
       castQuoteTweets,
+      castNormalTweets,
     });
   };
 
@@ -110,6 +118,13 @@ export default function YoloModeModal({
                   </svg>
                 </div>
                 <div>
+                  <Toggle
+                    label="Cast Normal Tweets"
+                    description="Include normal tweets in automatic casting"
+                    checked={castNormalTweets}
+                    onChange={setCastNormalTweets}
+                    disabled={isLoading}
+                  />
                   <Toggle
                     label="Cast Retweets"
                     description="Include retweets in automatic casting"
