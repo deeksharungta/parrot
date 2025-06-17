@@ -5,6 +5,7 @@ import { Providers } from "./providers";
 import { Viewport } from "next";
 import { Toaster } from "sonner";
 import AuthGuard from "@/components/AuthGuard";
+import { Analytics } from "@vercel/analytics/next";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -76,6 +77,7 @@ export default function RootLayout({
           expand={false}
           offset={16}
         />
+        <Analytics />
       </body>
     </html>
   );
