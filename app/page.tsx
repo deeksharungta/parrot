@@ -93,7 +93,10 @@ export default function HomePage() {
             <button
               onClick={() => {
                 // You can add logic here to redirect to Farcaster or show instructions
-                window.open("https://warpcast.com/", "_blank");
+                window.open(
+                  "https://farcaster.xyz/miniapps/ke9DBKcdqnOq/parrot",
+                  "_blank",
+                );
               }}
               className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
             >
