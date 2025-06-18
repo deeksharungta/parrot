@@ -142,7 +142,7 @@ export default function ThreadTweetCard({
           {/* First tweet content */}
           <div className="ml-12">
             <div className="text-[#100C20] text-base mb-3 whitespace-pre-wrap break-words">
-              {firstTweet.text}
+              {firstTweet.text.replace(/https:\/\/t\.co\/\w+/g, "")}
             </div>
             {firstTweet.mediaDetails?.length ? (
               <div className="mb-3">
@@ -234,7 +234,7 @@ function ThreadReplyTweet({
         </div>
 
         <div className="text-[#100C20] text-sm whitespace-pre-wrap break-words">
-          {tweet.text}
+          {tweet.text.replace(/https:\/\/t\.co\/\w+/g, "")}
         </div>
 
         {tweet.mediaDetails?.length ? (
