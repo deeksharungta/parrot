@@ -182,48 +182,52 @@ export async function parseTweetToFarcasterCast(
     embeds.push(tweet.quoted_tweet_url);
   }
 
-  // Handle media URLs
+  // Handle media URLs - Updated for new simplified format
   if (tweet.media_urls) {
-    // Handle new structure with images and videos
-    if (
-      typeof tweet.media_urls === "object" &&
-      !Array.isArray(tweet.media_urls)
-    ) {
-      // Handle images - limit to first 2
-      if (tweet.media_urls.images && Array.isArray(tweet.media_urls.images)) {
-        tweet.media_urls.images.slice(0, 2).forEach((url: string) => {
-          if (url && url.trim()) {
-            embeds.push(url);
-          }
-        });
-      }
+    let mediaUrls: string[] = [];
 
-      // Handle videos - limit to first 2 (if no images or remaining slots)
-      if (tweet.media_urls.videos && Array.isArray(tweet.media_urls.videos)) {
-        const remainingSlots = 2 - embeds.length;
-        tweet.media_urls.videos
-          .slice(0, remainingSlots)
-          .forEach((video: any) => {
-            if (video && video.url && video.url.trim()) {
-              embeds.push(video.url);
-            }
-          });
-      }
-    } else {
-      // Handle legacy format (for backward compatibility)
-      const mediaUrls = Array.isArray(tweet.media_urls)
-        ? tweet.media_urls
-        : typeof tweet.media_urls === "string"
-          ? [tweet.media_urls]
-          : Object.values(tweet.media_urls);
-
-      // Add media URLs - limit to first 2
-      mediaUrls.slice(0, 2).forEach((url: any) => {
-        if (typeof url === "string" && url.trim()) {
-          embeds.push(url);
+    if (Array.isArray(tweet.media_urls)) {
+      // New simplified format: Array<{ type: string; url: string }>
+      tweet.media_urls.forEach((media: any) => {
+        if (media && typeof media === "object" && media.url) {
+          mediaUrls.push(media.url);
+        } else if (typeof media === "string") {
+          // Backward compatibility for simple string arrays
+          mediaUrls.push(media);
         }
       });
+    } else if (typeof tweet.media_urls === "object") {
+      // Legacy format support: { images: [], videos: [], gifs: [], photos: [] }
+      const urlKeys = ["images", "videos", "gifs", "photos"];
+
+      Object.entries(tweet.media_urls).forEach(([key, urls]) => {
+        // Skip metadata arrays like "types" - only process actual URL arrays
+        if (urlKeys.includes(key) && Array.isArray(urls)) {
+          urls.forEach((url: any) => {
+            if (
+              typeof url === "string" &&
+              url.trim() &&
+              (url.startsWith("http://") || url.startsWith("https://"))
+            ) {
+              mediaUrls.push(url);
+            }
+          });
+        } else if (typeof urls === "string" && urls.startsWith("http")) {
+          mediaUrls.push(urls);
+        }
+      });
+    } else if (typeof tweet.media_urls === "string") {
+      // Single URL as string
+      mediaUrls.push(tweet.media_urls);
     }
+
+    // Farcaster has a strict 2-embed limit per cast
+    const maxEmbeds = Math.min(mediaUrls.length, 2 - embeds.length);
+    mediaUrls.slice(0, maxEmbeds).forEach((url: string) => {
+      if (url && url.trim()) {
+        embeds.push(url);
+      }
+    });
   }
 
   return {

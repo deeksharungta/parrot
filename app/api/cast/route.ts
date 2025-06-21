@@ -259,23 +259,33 @@ export const POST = withApiKeyAndJwtAuth(async function (
           `Updated content for tweet ${tweet.tweet_id} with full text`,
         );
 
-        // Also update media URLs from full details if available
-        const newMediaUrls: Record<string, any> = {};
+        // Also update media URLs from full details if available - using new simplified format
+        let newMediaItems: Array<{ type: string; url: string }> = [];
+
         if (
           fullTweetDetails.media_url &&
           fullTweetDetails.media_url.length > 0
         ) {
-          newMediaUrls.images = fullTweetDetails.media_url;
+          fullTweetDetails.media_url.forEach((url: string) => {
+            newMediaItems.push({ type: "photo", url });
+          });
         }
+
         if (
           fullTweetDetails.video_url &&
           fullTweetDetails.video_url.length > 0
         ) {
-          newMediaUrls.videos = fullTweetDetails.video_url;
+          fullTweetDetails.video_url.forEach((video: any) => {
+            if (typeof video === "string") {
+              newMediaItems.push({ type: "video", url: video });
+            } else if (video.url) {
+              newMediaItems.push({ type: "video", url: video.url });
+            }
+          });
         }
 
-        if (Object.keys(newMediaUrls).length > 0) {
-          updatedMediaUrls = newMediaUrls;
+        if (newMediaItems.length > 0) {
+          updatedMediaUrls = newMediaItems;
         }
 
         // Update the tweet in the database with the full content
