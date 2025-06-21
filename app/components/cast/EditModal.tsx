@@ -66,9 +66,31 @@ const parseMediaUrls = (
       imageUrls = mediaUrls.images || [];
       videoUrls = mediaUrls.videos || [];
     } else if (Array.isArray(mediaUrls)) {
-      // Old structure - assume they're all images
-      imageUrls = mediaUrls;
-      videoUrls = [];
+      // Check if this is the database format: Array<{ type: string; url: string }>
+      if (
+        mediaUrls.length > 0 &&
+        typeof mediaUrls[0] === "object" &&
+        mediaUrls[0].type &&
+        mediaUrls[0].url
+      ) {
+        // Database format: Array<{ type: string; url: string }>
+        mediaUrls.forEach((item: any) => {
+          if (item.type === "photo") {
+            imageUrls.push(item.url);
+          } else if (item.type === "video") {
+            // For videos from database, we don't have bitrate/content_type, so use defaults
+            videoUrls.push({
+              url: item.url,
+              bitrate: 0, // Default bitrate
+              content_type: "video/mp4", // Default content type
+            });
+          }
+        });
+      } else {
+        // Old structure - assume they're all images (array of strings)
+        imageUrls = mediaUrls.filter((url: any) => typeof url === "string");
+        videoUrls = [];
+      }
     }
   } else if (twitterMediaDetails) {
     // Twitter API data
@@ -76,7 +98,6 @@ const parseMediaUrls = (
       twitterMediaDetails.map((media: any) => media.media_url_https) || [];
     videoUrls = [];
   }
-
   return { imageUrls, videoUrls };
 };
 
@@ -215,11 +236,11 @@ export function EditModal({
       // Handle media from database structure or Twitter API using utility function
       const mediaSource = databaseTweet?.media_urls || null;
       const twitterMediaDetails = tweetData?.mediaDetails || undefined;
+
       const { imageUrls, videoUrls: videoUrlsArray } = parseMediaUrls(
         mediaSource,
         twitterMediaDetails,
       );
-
       setMediaUrls(imageUrls);
       setVideoUrls(videoUrlsArray);
 
