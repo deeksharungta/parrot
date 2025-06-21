@@ -53,6 +53,38 @@ function getRelativeTime(dateString: string): string {
   }
 }
 
+// Helper function to check if a tweet has media
+const tweetHasMedia = (tweet: any): boolean => {
+  return tweet.mediaDetails?.length > 0;
+};
+
+// Helper function to clean up tweet text
+const cleanupTweetText = (text: string, hasMediaAttached: boolean): string => {
+  if (!hasMediaAttached) {
+    // If no media, keep all t.co links as they might be actual links
+    return text;
+  }
+
+  // If there's media, only remove the last t.co link
+  const tcoRegex = /https:\/\/t\.co\/\w+/g;
+  const matches = Array.from(text.matchAll(tcoRegex));
+
+  if (matches.length === 0) {
+    return text;
+  }
+
+  // Only remove the last match
+  const lastMatch = matches[matches.length - 1];
+  if (lastMatch.index === undefined) {
+    return text;
+  }
+
+  const beforeLastLink = text.substring(0, lastMatch.index);
+  const afterLastLink = text.substring(lastMatch.index + lastMatch[0].length);
+
+  return (beforeLastLink + afterLastLink).trim();
+};
+
 export default function ThreadTweetCard({
   tweetId,
   conversationId,
@@ -136,7 +168,7 @@ export default function ThreadTweetCard({
           {/* First tweet content */}
           <div className="ml-12">
             <div className="text-[#100C20] text-base mb-3 whitespace-pre-wrap break-words">
-              {firstTweet.text.replace(/https:\/\/t\.co\/\w+/g, "")}
+              {cleanupTweetText(firstTweet.text, tweetHasMedia(firstTweet))}
             </div>
             {firstTweet.mediaDetails?.length ? (
               <div className="mb-3">
@@ -228,7 +260,7 @@ function ThreadReplyTweet({
         </div>
 
         <div className="text-[#100C20] text-sm whitespace-pre-wrap break-words">
-          {tweet.text.replace(/https:\/\/t\.co\/\w+/g, "")}
+          {cleanupTweetText(tweet.text, tweetHasMedia(tweet))}
         </div>
 
         {tweet.mediaDetails?.length ? (

@@ -191,14 +191,63 @@ export function EditModal({
   }, [isOpen, tweetData, databaseTweet, showConfirmation]);
 
   // Cleanup tweet content function
-  const cleanupTweetContent = (content: string): string => {
+  const cleanupTweetContent = (
+    content: string,
+    hasMediaAttached?: boolean,
+  ): string => {
     let cleaned = content;
+
     // Remove t.co URLs (with or without "this@" prefix) but preserve whitespace
     cleaned = cleaned.replace(/this@https:\/\/t\.co\/\S*/g, "");
-    cleaned = cleaned.replace(/https:\/\/t\.co\/\S*/g, "");
+
+    // Only remove the last t.co link if there's media attached
+    if (hasMediaAttached) {
+      const tcoRegex = /https:\/\/t\.co\/\S+/g;
+      const matches = Array.from(cleaned.matchAll(tcoRegex));
+
+      if (matches.length > 0) {
+        // Only remove the last match
+        const lastMatch = matches[matches.length - 1];
+        if (lastMatch.index !== undefined) {
+          const beforeLastLink = cleaned.substring(0, lastMatch.index);
+          const afterLastLink = cleaned.substring(
+            lastMatch.index + lastMatch[0].length,
+          );
+          cleaned = beforeLastLink + afterLastLink;
+        }
+      }
+    }
+
     // Only trim trailing whitespace at the very end, preserve internal formatting
     cleaned = cleaned.replace(/\s+$/, "");
     return cleaned;
+  };
+
+  // Helper function to check if a tweet has media
+  const tweetHasMedia = (tweet: any): boolean => {
+    if (!tweet?.media_urls) {
+      return false;
+    }
+
+    if (Array.isArray(tweet.media_urls)) {
+      return tweet.media_urls.length > 0;
+    }
+
+    if (typeof tweet.media_urls === "object") {
+      const urlKeys = ["images", "videos", "gifs", "photos"];
+      return Object.entries(tweet.media_urls).some(([key, urls]) => {
+        if (urlKeys.includes(key) && Array.isArray(urls)) {
+          return urls.length > 0;
+        }
+        return false;
+      });
+    }
+
+    if (typeof tweet.media_urls === "string") {
+      return tweet.media_urls.trim().length > 0;
+    }
+
+    return false;
   };
 
   // Initialize thread editing states
@@ -208,7 +257,10 @@ export function EditModal({
 
       threadTweets.forEach((tweet) => {
         const tweetContent = tweet.content || "";
-        const cleanedContent = cleanupTweetContent(tweetContent);
+        const cleanedContent = cleanupTweetContent(
+          tweetContent,
+          tweetHasMedia(tweet),
+        );
 
         // Handle media URLs using utility function
         const { imageUrls, videoUrls: videoUrlsArray } = parseMediaUrls(
@@ -248,7 +300,7 @@ export function EditModal({
         const text = databaseTweet
           ? databaseTweet.content || databaseTweet.original_content || ""
           : tweetData?.text || "";
-        setContent(cleanupTweetContent(text));
+        setContent(cleanupTweetContent(text, tweetHasMedia(tweet)));
       }
 
       // Handle media from database structure or Twitter API using utility function
@@ -753,7 +805,10 @@ export function EditModal({
                             </div>
                           </div>
                           <p className="text-sm text-[#100C20] mt-1 leading-relaxed break-words">
-                            {cleanupTweetContent(tweetData.text || "")}
+                            {cleanupTweetContent(
+                              tweetData.text || "",
+                              tweetHasMedia(tweetData),
+                            )}
                           </p>
                           {/* Display media inside retweet */}
                           {displayState.mediaUrls.length > 0 && (
@@ -855,6 +910,7 @@ export function EditModal({
                           <p className="text-sm text-[#100C20] mt-1 leading-relaxed break-words">
                             {cleanupTweetContent(
                               tweetData.quoted_tweet.text || "",
+                              tweetHasMedia(tweetData.quoted_tweet),
                             )}
                           </p>
                         </div>

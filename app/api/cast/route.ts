@@ -59,9 +59,9 @@ const rapidApiRateLimiter = new RateLimiter(10, 1000);
 
 // Helper function to check if tweet content is truncated
 function isTweetTruncated(content: string): boolean {
-  // Remove https://t.co URLs from content to get actual text length
-  const contentWithoutUrls = content.replace(/https:\/\/t\.co\/\w+/g, "");
-  return contentWithoutUrls.length >= 278;
+  // For truncation checking, we'll be more conservative and not remove t.co links
+  // since we don't have media context here, and we want to accurately measure content length
+  return content.length >= 278;
 }
 
 // Helper function to fetch full tweet details for truncated tweets

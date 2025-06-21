@@ -145,6 +145,72 @@ async function findFarcasterUserByTwitter(
 }
 
 /**
+ * Check if a tweet has media attached
+ */
+function hasMedia(
+  tweet: Database["public"]["Tables"]["tweets"]["Row"],
+): boolean {
+  if (!tweet.media_urls) {
+    return false;
+  }
+
+  if (Array.isArray(tweet.media_urls)) {
+    return tweet.media_urls.length > 0;
+  }
+
+  if (typeof tweet.media_urls === "object") {
+    const urlKeys = ["images", "videos", "gifs", "photos"];
+    return Object.entries(tweet.media_urls).some(([key, urls]) => {
+      if (urlKeys.includes(key) && Array.isArray(urls)) {
+        return urls.length > 0;
+      }
+      return false;
+    });
+  }
+
+  if (typeof tweet.media_urls === "string") {
+    return (tweet.media_urls as string).trim().length > 0;
+  }
+
+  return false;
+}
+
+/**
+ * Remove t.co links from content based on media presence
+ * Only removes the last t.co link if there's media attached
+ */
+function removeTwitterLinks(
+  content: string,
+  hasMediaAttached: boolean,
+): string {
+  if (!hasMediaAttached) {
+    // If no media, keep all t.co links as they might be actual links
+    return content;
+  }
+
+  // If there's media, only remove the last t.co link
+  const tcoRegex = /https:\/\/t\.co\/\S+/g;
+  const matches = Array.from(content.matchAll(tcoRegex));
+
+  if (matches.length === 0) {
+    return content;
+  }
+
+  // Only remove the last match
+  const lastMatch = matches[matches.length - 1];
+  if (lastMatch.index === undefined) {
+    return content;
+  }
+
+  const beforeLastLink = content.substring(0, lastMatch.index);
+  const afterLastLink = content.substring(
+    lastMatch.index + lastMatch[0].length,
+  );
+
+  return (beforeLastLink + afterLastLink).trim();
+}
+
+/**
  * Parse tweet content to Farcaster cast format
  * @param tweetData - The tweet data object
  * @param isEdit - Whether this content is from EditModal (to skip mention conversion)
@@ -174,8 +240,9 @@ export async function parseTweetToFarcasterCast(
     tweet.original_content || undefined,
   );
 
-  // Remove Twitter shortened URLs (t.co links)
-  content = content.replace(/https:\/\/t\.co\/\S+/g, "").trim();
+  // Remove Twitter shortened URLs (t.co links) only if there's media
+  const tweetHasMedia = hasMedia(tweet);
+  content = removeTwitterLinks(content, tweetHasMedia);
 
   // Handle quoted tweets
   if (tweet.quoted_tweet_url) {
