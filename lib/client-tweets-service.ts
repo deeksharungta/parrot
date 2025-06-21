@@ -321,6 +321,53 @@ export async function castThread(
   }
 }
 
+// Restore all rejected tweets to pending status
+export async function restoreRejectedTweets(): Promise<{
+  success: boolean;
+  restoredCount: number;
+  message: string;
+  error?: string;
+}> {
+  try {
+    // Get JWT token from secure storage for authentication
+    const token = secureStorage.getToken();
+
+    const response = await fetch("/api/tweets/restore-rejected", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+
+      // Handle authentication errors
+      if (response.status === 401) {
+        secureStorage.removeToken();
+      }
+
+      throw new Error(errorData.error || "Failed to restore rejected tweets");
+    }
+
+    const data = await response.json();
+    return {
+      success: true,
+      restoredCount: data.restoredCount || 0,
+      message: data.message || "Successfully restored rejected tweets",
+    };
+  } catch (error) {
+    console.error("Error restoring rejected tweets:", error);
+    return {
+      success: false,
+      restoredCount: 0,
+      message: "Failed to restore rejected tweets",
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
 // Get thread preview with cost calculation
 export async function getThreadCastPreview(
   conversationId: string,

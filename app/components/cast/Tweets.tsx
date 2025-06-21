@@ -340,7 +340,7 @@ export default function Tweets({ fid }: TweetsProps) {
 
   // Show NoTweetsFound when no tweets are available (but no error occurred)
   if (!isLoading && !isLoadingFresh && showTweets.length === 0) {
-    return <NoTweetsFound />;
+    return <NoTweetsFound onRefresh={refreshTweets} />;
   }
 
   const handleReject = async () => {
@@ -827,7 +827,7 @@ export default function Tweets({ fid }: TweetsProps) {
 
   // If all tweets are finished, show the message
   if (allTweetsFinished) {
-    return <NoTweetsFound />;
+    return <NoTweetsFound onRefresh={refreshTweets} />;
   }
 
   return (
