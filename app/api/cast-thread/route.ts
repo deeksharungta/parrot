@@ -15,6 +15,7 @@ import { getThreadTweets } from "@/lib/tweets-service";
 import { TwitterApiTweet } from "@/lib/tweets-service";
 import { withAuth, createOptionsHandler } from "@/lib/auth-middleware";
 import { withApiKeyAndJwtAuth } from "@/lib/jwt-auth-middleware";
+import { cleanupCastText } from "@/lib/utils/sanitization";
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY;
 const NEYNAR_BASE_URL = "https://api.neynar.com/v2";
@@ -386,7 +387,9 @@ export const POST = withApiKeyAndJwtAuth(async function (
             // Apply edited content and media
             finalTweet = {
               ...updatedTweet,
-              content: editedTweet.content || updatedTweet.content,
+              content: editedTweet.content
+                ? cleanupCastText(editedTweet.content)
+                : cleanupCastText(updatedTweet.content),
               media_urls:
                 editedTweet.mediaUrls && editedTweet.mediaUrls.length > 0
                   ? editedTweet.mediaUrls
