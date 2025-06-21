@@ -17,11 +17,18 @@ export default function NoTweetsFound({ onRefresh }: NoTweetsFoundProps) {
       const result = await restoreRejectedTweets();
 
       if (result.success) {
-        // Refresh the tweets to show the restored ones
-        if (onRefresh) {
-          onRefresh();
+        if (result.restoredCount > 0) {
+          // Add a small delay to ensure database changes are propagated
+          setTimeout(() => {
+            if (onRefresh) {
+              onRefresh();
+            }
+          }, 500);
+        } else {
+          toast.info("No rejected tweets found to restore");
         }
       } else {
+        toast.error(result.message || "Failed to restore rejected tweets");
         console.error(result.error);
       }
     } catch (error) {
