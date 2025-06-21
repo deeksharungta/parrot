@@ -12,6 +12,7 @@ import {
   parseTweetToFarcasterCast,
   getEmbedLimit,
   resolveTcoUrls,
+  convertTwitterMentionsToFarcaster,
 } from "@/lib/cast-utils";
 import { base } from "viem/chains";
 import { USDC_ADDRESS, SPENDER_ADDRESS } from "@/lib/constants";
@@ -471,10 +472,17 @@ export const POST = withApiKeyAndJwtAuth(async function (
     // Resolve any t.co URLs in the content before casting
     const resolvedContent = await resolveTcoUrls(parsedCast.content);
 
+    // Convert Twitter mentions to Farcaster format
+    const convertedContent = await convertTwitterMentionsToFarcaster(
+      resolvedContent,
+      isEdit,
+      tweet.original_content || undefined,
+    );
+
     // Cast to Farcaster using Neynar API (AFTER payment is confirmed)
     const castPayload: any = {
       signer_uuid: user.neynar_signer_uuid,
-      text: resolvedContent,
+      text: convertedContent,
     };
 
     // Add embeds if available (images, quoted tweets, etc.)
