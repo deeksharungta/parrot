@@ -80,11 +80,6 @@ export async function convertTwitterMentionsToFarcaster(
   isEdit: boolean = false,
   originalContent?: string,
 ): Promise<string> {
-  if (!NEYNAR_API_KEY) {
-    console.warn("Neynar API key not configured, skipping mention conversion");
-    return content;
-  }
-
   // Find all @mentions in the content
   const mentionRegex = /@([a-zA-Z0-9_]+)/g;
   let convertedContent = content;
@@ -96,6 +91,15 @@ export async function convertTwitterMentionsToFarcaster(
     // Process only the mentions that were in the original content
     for (const mention of originalMentions) {
       const username = mention.replace("@", "");
+
+      if (!NEYNAR_API_KEY) {
+        // If no API key, use fallback format
+        convertedContent = convertedContent.replace(
+          new RegExp(`@${username}\\b`, "g"),
+          `${username}.twitter`,
+        );
+        continue;
+      }
 
       try {
         // Try to find Farcaster user by Twitter username
@@ -116,7 +120,11 @@ export async function convertTwitterMentionsToFarcaster(
         }
       } catch (error) {
         console.error(`Error converting mention @${username}:`, error);
-        // Keep original mention if conversion fails
+        // Use fallback format if conversion fails
+        convertedContent = convertedContent.replace(
+          new RegExp(`@${username}\\b`, "g"),
+          `${username}.twitter`,
+        );
       }
     }
   } else {
@@ -130,6 +138,15 @@ export async function convertTwitterMentionsToFarcaster(
     // Process each mention
     for (const mention of mentions) {
       const username = mention.replace("@", "");
+
+      if (!NEYNAR_API_KEY) {
+        // If no API key, use fallback format
+        convertedContent = convertedContent.replace(
+          new RegExp(`@${username}\\b`, "g"),
+          `${username}.twitter`,
+        );
+        continue;
+      }
 
       try {
         // Try to find Farcaster user by Twitter username
@@ -150,7 +167,11 @@ export async function convertTwitterMentionsToFarcaster(
         }
       } catch (error) {
         console.error(`Error converting mention @${username}:`, error);
-        // Keep original mention if conversion fails
+        // Use fallback format if conversion fails
+        convertedContent = convertedContent.replace(
+          new RegExp(`@${username}\\b`, "g"),
+          `${username}.twitter`,
+        );
       }
     }
   }
