@@ -62,7 +62,7 @@ const rapidApiRateLimiter = new RateLimiter(10, 1000);
 function isTweetTruncated(content: string): boolean {
   // For truncation checking, we'll be more conservative and not remove t.co links
   // since we don't have media context here, and we want to accurately measure content length
-  return content.length >= 278;
+  return content.length >= 230;
 }
 
 // Helper function to remove the last t.co link if there's media
