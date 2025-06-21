@@ -57,6 +57,8 @@ export default function Tweets({ fid }: TweetsProps) {
     updateTweetStatus: updateTweetStatusHandler,
   } = useUserTweets(fid);
 
+  console.log("tweets", tweets);
+
   // Keep the original tweets array stable during the swiping session
   const [stableTweets, setStableTweets] = useState<any[]>([]);
   const [processedTweetIds, setProcessedTweetIds] = useState<Set<string>>(
@@ -286,6 +288,8 @@ export default function Tweets({ fid }: TweetsProps) {
 
   // Determine if this is a first-time user
   const isFirstTimeUser = showTweets.length === 0 && !isLoading && !isError;
+
+  console.log("showTweets", showTweets);
 
   // Handle loading and error states
   if (isLoading || (isFirstTimeUser && isLoadingFresh)) {
