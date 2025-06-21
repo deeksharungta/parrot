@@ -1,4 +1,5 @@
 import { Database } from "./types/database";
+import { cleanupCastText } from "./utils/sanitization";
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY;
 const NEYNAR_BASE_URL = "https://api.neynar.com/v2";
@@ -297,6 +298,9 @@ export async function parseTweetToFarcasterCast(
   // Remove Twitter shortened URLs (t.co links) only if there's media
   const tweetHasMedia = hasMedia(tweet);
   content = removeTwitterLinks(content, tweetHasMedia);
+
+  // Clean up HTML entities and formatting
+  content = cleanupCastText(content);
 
   // Handle quoted tweets
   if (tweet.quoted_tweet_url) {

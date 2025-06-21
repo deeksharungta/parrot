@@ -223,3 +223,45 @@ export function sanitizeRateLimitKey(key: string): string {
     .replace(/[^a-zA-Z0-9:\-_]/g, "") // Only allow alphanumeric, colon, dash, underscore
     .substring(0, 100); // Limit length
 }
+
+/**
+ * Decode HTML entities back to their original characters
+ */
+export function decodeHtmlEntities(text: string): string {
+  const map: { [key: string]: string } = {
+    "&amp;": "&",
+    "&lt;": "<",
+    "&gt;": ">",
+    "&quot;": '"',
+    "&#39;": "'",
+    "&#x2F;": "/",
+    "&#x60;": "`",
+    "&#x3D;": "=",
+  };
+
+  return text.replace(
+    /&amp;|&lt;|&gt;|&quot;|&#39;|&#x2F;|&#x60;|&#x3D;/g,
+    (entity) => map[entity],
+  );
+}
+
+/**
+ * Clean up cast/tweet text for better formatting
+ */
+export function cleanupCastText(text: string): string {
+  if (typeof text !== "string") {
+    return "";
+  }
+
+  // Decode HTML entities
+  text = decodeHtmlEntities(text);
+
+  // Clean up extra whitespace
+  text = text.replace(/\s+/g, " ").trim();
+
+  // Ensure proper spacing around arrows and special characters
+  text = text.replace(/\s*→\s*/g, " → ");
+  text = text.replace(/\s*&\s*/g, " & ");
+
+  return text;
+}
