@@ -225,43 +225,49 @@ export function sanitizeRateLimitKey(key: string): string {
 }
 
 /**
- * Decode HTML entities back to their original characters
+ * Decode common HTML entities in tweet content
+ * @param content - The raw tweet content with HTML entities
+ * @returns string - The content with HTML entities decoded
  */
-export function decodeHtmlEntities(text: string): string {
-  const map: { [key: string]: string } = {
+export function decodeHtmlEntities(content: string): string {
+  if (!content) return content;
+
+  const htmlEntities: Record<string, string> = {
     "&amp;": "&",
     "&lt;": "<",
     "&gt;": ">",
     "&quot;": '"',
     "&#39;": "'",
+    "&apos;": "'",
+    "&#x27;": "'",
     "&#x2F;": "/",
     "&#x60;": "`",
     "&#x3D;": "=",
+    "&nbsp;": " ",
   };
 
-  return text.replace(
-    /&amp;|&lt;|&gt;|&quot;|&#39;|&#x2F;|&#x60;|&#x3D;/g,
-    (entity) => map[entity],
+  let decodedContent = content;
+
+  // Replace HTML entities
+  Object.entries(htmlEntities).forEach(([entity, replacement]) => {
+    decodedContent = decodedContent.replace(
+      new RegExp(entity, "g"),
+      replacement,
+    );
+  });
+
+  // Handle numeric HTML entities (e.g., &#8211; for en-dash)
+  decodedContent = decodedContent.replace(/&#(\d+);/g, (match, charCode) => {
+    return String.fromCharCode(parseInt(charCode, 10));
+  });
+
+  // Handle hexadecimal HTML entities (e.g., &#x2013; for en-dash)
+  decodedContent = decodedContent.replace(
+    /&#x([0-9A-Fa-f]+);/g,
+    (match, hexCode) => {
+      return String.fromCharCode(parseInt(hexCode, 16));
+    },
   );
-}
 
-/**
- * Clean up cast/tweet text for better formatting
- */
-export function cleanupCastText(text: string): string {
-  if (typeof text !== "string") {
-    return "";
-  }
-
-  // Decode HTML entities
-  text = decodeHtmlEntities(text);
-
-  // Clean up extra whitespace
-  text = text.replace(/\s+/g, " ").trim();
-
-  // Ensure proper spacing around arrows and special characters
-  text = text.replace(/\s*→\s*/g, " → ");
-  text = text.replace(/\s*&\s*/g, " & ");
-
-  return text;
+  return decodedContent;
 }

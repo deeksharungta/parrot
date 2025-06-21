@@ -14,7 +14,7 @@ import { USDC_ADDRESS, SPENDER_ADDRESS } from "@/lib/constants";
 import { TwitterApiTweet } from "@/lib/tweets-service";
 import { withAuth, createOptionsHandler } from "@/lib/auth-middleware";
 import { withApiKeyAndJwtAuth } from "@/lib/jwt-auth-middleware";
-import { cleanupCastText } from "@/lib/utils/sanitization";
+import { decodeHtmlEntities } from "@/lib/utils/sanitization";
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY;
 const NEYNAR_BASE_URL = "https://api.neynar.com/v2";
@@ -360,7 +360,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
 
       if (tweet.is_retweet) {
         if (content && content.trim().length > 0) {
-          parsedCast.content = cleanupCastText(content);
+          parsedCast.content = decodeHtmlEntities(content);
         }
 
         if (!isRetweetRemoved) {
@@ -369,7 +369,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
       } else {
         // Use edited content if provided
         if (content !== undefined) {
-          parsedCast.content = cleanupCastText(content);
+          parsedCast.content = decodeHtmlEntities(content);
         }
 
         // Use provided quoted tweet URL or fall back to database value
