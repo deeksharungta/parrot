@@ -21,6 +21,7 @@ interface UseUserTweetsResult {
   isSuccess: boolean;
   hasNewTweets: boolean;
   refreshTweets: () => void;
+  forceRefreshTweets: () => Promise<void>;
   updateTweetStatus: (
     tweetId: string,
     status: "approved" | "rejected" | "cast" | "failed",
@@ -116,8 +117,16 @@ export const useUserTweets = (fid: number | undefined): UseUserTweetsResult => {
 
   // Manual refresh function
   const refreshTweets = () => {
-    fetchFreshTweets();
+    // Force invalidate and refetch cached data immediately
     queryClient.invalidateQueries({ queryKey: ["cached-tweets", fid] });
+    // Also fetch fresh tweets in the background
+    fetchFreshTweets();
+  };
+
+  // Force refresh function for status updates
+  const forceRefreshTweets = async () => {
+    // Remove from cache and force refetch
+    await queryClient.resetQueries({ queryKey: ["cached-tweets", fid] });
   };
 
   // Update tweet status function
@@ -155,6 +164,7 @@ export const useUserTweets = (fid: number | undefined): UseUserTweetsResult => {
     isSuccess: isCachedSuccess,
     hasNewTweets,
     refreshTweets,
+    forceRefreshTweets,
     updateTweetStatus: updateTweetStatusHandler,
   };
 };

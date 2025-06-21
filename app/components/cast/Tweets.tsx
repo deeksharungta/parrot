@@ -53,6 +53,7 @@ export default function Tweets({ fid }: TweetsProps) {
     isError,
     hasNewTweets,
     refreshTweets,
+    forceRefreshTweets,
     updateTweetStatus: updateTweetStatusHandler,
   } = useUserTweets(fid);
 
@@ -340,7 +341,7 @@ export default function Tweets({ fid }: TweetsProps) {
 
   // Show NoTweetsFound when no tweets are available (but no error occurred)
   if (!isLoading && !isLoadingFresh && showTweets.length === 0) {
-    return <NoTweetsFound onRefresh={refreshTweets} />;
+    return <NoTweetsFound onRefresh={forceRefreshTweets} />;
   }
 
   const handleReject = async () => {
@@ -827,7 +828,7 @@ export default function Tweets({ fid }: TweetsProps) {
 
   // If all tweets are finished, show the message
   if (allTweetsFinished) {
-    return <NoTweetsFound onRefresh={refreshTweets} />;
+    return <NoTweetsFound onRefresh={forceRefreshTweets} />;
   }
 
   return (

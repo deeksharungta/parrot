@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import Button from "../ui/Button";
 
 interface NoTweetsFoundProps {
-  onRefresh?: () => void;
+  onRefresh?: () => void | Promise<void>;
 }
 
 export default function NoTweetsFound({ onRefresh }: NoTweetsFoundProps) {
@@ -19,16 +19,16 @@ export default function NoTweetsFound({ onRefresh }: NoTweetsFoundProps) {
       if (result.success) {
         if (result.restoredCount > 0) {
           // Add a small delay to ensure database changes are propagated
-          setTimeout(() => {
+          setTimeout(async () => {
             if (onRefresh) {
-              onRefresh();
+              await onRefresh();
             }
           }, 500);
         } else {
-          toast.info("No rejected tweets found to restore");
+          console.log("No rejected tweets found to restore");
         }
       } else {
-        toast.error(result.message || "Failed to restore rejected tweets");
+        console.log(result.message || "Failed to restore rejected tweets");
         console.error(result.error);
       }
     } catch (error) {
