@@ -48,6 +48,38 @@ interface ThreadTweetEditState {
 
 const STORAGE_KEY = "hide_cast_confirmation";
 
+// Utility function to handle media URLs consistently
+const parseMediaUrls = (
+  mediaUrls: any,
+  twitterMediaDetails?: any[],
+): {
+  imageUrls: string[];
+  videoUrls: Array<{ url: string; bitrate: number; content_type: string }>;
+} => {
+  let imageUrls: string[] = [];
+  let videoUrls: Array<{ url: string; bitrate: number; content_type: string }> =
+    [];
+
+  if (mediaUrls) {
+    if (typeof mediaUrls === "object" && !Array.isArray(mediaUrls)) {
+      // New structure with images and videos
+      imageUrls = mediaUrls.images || [];
+      videoUrls = mediaUrls.videos || [];
+    } else if (Array.isArray(mediaUrls)) {
+      // Old structure - assume they're all images
+      imageUrls = mediaUrls;
+      videoUrls = [];
+    }
+  } else if (twitterMediaDetails) {
+    // Twitter API data
+    imageUrls =
+      twitterMediaDetails.map((media: any) => media.media_url_https) || [];
+    videoUrls = [];
+  }
+
+  return { imageUrls, videoUrls };
+};
+
 export function EditModal({
   tweetId,
   conversationId,
@@ -139,28 +171,10 @@ export function EditModal({
         const tweetContent = tweet.content || "";
         const cleanedContent = cleanupTweetContent(tweetContent);
 
-        // Handle media URLs (convert if needed)
-        let imageUrls: string[] = [];
-        let videoUrlsArray: Array<{
-          url: string;
-          bitrate: number;
-          content_type: string;
-        }> = [];
-
-        if (tweet.media_urls) {
-          if (
-            typeof tweet.media_urls === "object" &&
-            !Array.isArray(tweet.media_urls)
-          ) {
-            // New structure with images and videos
-            imageUrls = (tweet.media_urls as any).images || [];
-            videoUrlsArray = (tweet.media_urls as any).videos || [];
-          } else if (Array.isArray(tweet.media_urls)) {
-            // Old structure - assume they're all images
-            imageUrls = tweet.media_urls;
-            videoUrlsArray = [];
-          }
-        }
+        // Handle media URLs using utility function
+        const { imageUrls, videoUrls: videoUrlsArray } = parseMediaUrls(
+          tweet.media_urls,
+        );
 
         newStates.set(tweet.tweet_id, {
           content: cleanedContent,
@@ -198,28 +212,16 @@ export function EditModal({
         setContent(cleanupTweetContent(text));
       }
 
-      // Handle media from database structure or Twitter API
-      if (databaseTweet && databaseTweet.media_urls) {
-        if (
-          typeof databaseTweet.media_urls === "object" &&
-          !Array.isArray(databaseTweet.media_urls)
-        ) {
-          // New structure with images and videos
-          setMediaUrls(databaseTweet.media_urls.images || []);
-          setVideoUrls(databaseTweet.media_urls.videos || []);
-        } else if (Array.isArray(databaseTweet.media_urls)) {
-          // Old structure - assume they're all images
-          setMediaUrls(databaseTweet.media_urls);
-          setVideoUrls([]);
-        }
-      } else if (tweetData) {
-        // Twitter API data
-        setMediaUrls(
-          tweetData.mediaDetails?.map((media: any) => media.media_url_https) ||
-            [],
-        );
-        setVideoUrls([]);
-      }
+      // Handle media from database structure or Twitter API using utility function
+      const mediaSource = databaseTweet?.media_urls || null;
+      const twitterMediaDetails = tweetData?.mediaDetails || undefined;
+      const { imageUrls, videoUrls: videoUrlsArray } = parseMediaUrls(
+        mediaSource,
+        twitterMediaDetails,
+      );
+
+      setMediaUrls(imageUrls);
+      setVideoUrls(videoUrlsArray);
 
       setQuotedTweetUrl(
         tweetData?.quoted_tweet
