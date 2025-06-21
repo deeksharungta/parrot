@@ -8,7 +8,7 @@ import {
   parseUnits,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { parseTweetToFarcasterCast } from "@/lib/cast-utils";
+import { parseTweetToFarcasterCast, getEmbedLimit } from "@/lib/cast-utils";
 import { base } from "viem/chains";
 import { USDC_ADDRESS, SPENDER_ADDRESS } from "@/lib/constants";
 import { TwitterApiTweet } from "@/lib/tweets-service";
@@ -440,12 +440,13 @@ export const POST = withApiKeyAndJwtAuth(async function (
         }
       }
 
-      // Enforce Farcaster's 2-embed limit
-      if (embeds.length > 2) {
+      // Check user's embed limit based on pro subscription status
+      const embedLimit = await getEmbedLimit(userFid);
+      if (embeds.length > embedLimit) {
         console.log(
-          `Limiting embeds from ${embeds.length} to 2 due to Farcaster constraints`,
+          `Limiting embeds from ${embeds.length} to ${embedLimit} based on user subscription status (FID: ${userFid})`,
         );
-        embeds.splice(2);
+        embeds.splice(embedLimit);
       }
 
       console.log("embeds", embeds);

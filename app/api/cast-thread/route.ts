@@ -8,7 +8,7 @@ import {
   parseUnits,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { parseTweetToFarcasterCast } from "@/lib/cast-utils";
+import { parseTweetToFarcasterCast, getEmbedLimit } from "@/lib/cast-utils";
 import { base } from "viem/chains";
 import { USDC_ADDRESS, SPENDER_ADDRESS } from "@/lib/constants";
 import { getThreadTweets } from "@/lib/tweets-service";
@@ -406,11 +406,12 @@ export const POST = withApiKeyAndJwtAuth(async function (
 
         // Add embeds if available (images, quoted tweets, etc.)
         if (parsedCast.embeds && parsedCast.embeds.length > 0) {
-          // Enforce Farcaster's 2-embed limit for threads as well
-          const limitedEmbeds = parsedCast.embeds.slice(0, 2);
-          if (parsedCast.embeds.length > 2) {
+          // Check user's embed limit based on pro subscription status
+          const embedLimit = await getEmbedLimit(userFid);
+          const limitedEmbeds = parsedCast.embeds.slice(0, embedLimit);
+          if (parsedCast.embeds.length > embedLimit) {
             console.log(
-              `Thread tweet ${tweet.tweet_id}: Limiting embeds from ${parsedCast.embeds.length} to 2 due to Farcaster constraints`,
+              `Thread tweet ${tweet.tweet_id}: Limiting embeds from ${parsedCast.embeds.length} to ${embedLimit} based on user subscription status (FID: ${userFid})`,
             );
           }
           castPayload.embeds = limitedEmbeds.map((url) => ({ url }));

@@ -14,6 +14,60 @@ interface FarcasterUser {
 }
 
 /**
+ * Check if a user has pro subscription status
+ * @param fid - The user's Farcaster ID
+ * @returns Promise<boolean> - true if user has pro subscription
+ */
+export async function checkUserProStatus(fid: number): Promise<boolean> {
+  try {
+    if (!NEYNAR_API_KEY) {
+      console.error("Neynar API key not configured");
+      return false;
+    }
+
+    // Fetch user data to check pro status
+    const response = await fetch(
+      `${NEYNAR_BASE_URL}/farcaster/user/bulk?fids=${fid}`,
+      {
+        method: "GET",
+        headers: {
+          "x-api-key": NEYNAR_API_KEY,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    if (!response.ok) {
+      console.error("Failed to fetch user data:", response.status);
+      return false;
+    }
+
+    const data = await response.json();
+
+    // Check if user has pro subscription
+    if (data.users && data.users.length > 0) {
+      const user = data.users[0];
+      return user.pro && user.pro.status === "subscribed";
+    }
+
+    return false;
+  } catch (error) {
+    console.error("Error checking pro status:", error);
+    return false;
+  }
+}
+
+/**
+ * Get embed limit based on user's pro status
+ * @param fid - The user's Farcaster ID
+ * @returns Promise<number> - embed limit (2 for regular users, 4 for pro users)
+ */
+export async function getEmbedLimit(fid: number): Promise<number> {
+  const isProUser = await checkUserProStatus(fid);
+  return isProUser ? 4 : 2;
+}
+
+/**
  * Convert Twitter @mentions to Farcaster format
  * @param content - The tweet content
  * @param isEdit - If true, only convert mentions that existed in original content
