@@ -301,7 +301,7 @@ export async function parseTweetToFarcasterCast(
   );
 
   // Resolve t.co URLs to their actual destinations
-  // content = await resolveTcoUrls(content);
+  content = await resolveTcoUrls(content);
 
   // Remove Twitter shortened URLs (t.co links) only if there's media
   const tweetHasMedia = hasMedia(tweet);
