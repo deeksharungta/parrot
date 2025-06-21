@@ -52,11 +52,23 @@ export function useCastThread() {
     mutationFn: async ({
       conversationId,
       fid,
+      threadTweets,
     }: {
       conversationId: string;
       fid?: number; // Make fid optional since it will be determined by JWT
+      threadTweets?: Array<{
+        tweetId: string;
+        content: string;
+        mediaUrls: Array<{ url: string; type: string }>;
+        videoUrls: Array<{
+          url: string;
+          bitrate: number;
+          content_type: string;
+        }>;
+        isRetweetRemoved: boolean;
+      }>;
     }) => {
-      return await castThread(conversationId, fid);
+      return await castThread(conversationId, fid, threadTweets);
     },
     onSuccess: (data, variables) => {
       toast("Tweet Casted Successfully!");

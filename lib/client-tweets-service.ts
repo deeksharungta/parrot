@@ -266,6 +266,13 @@ export async function updateTweetStatus(
 export async function castThread(
   conversationId: string,
   fid?: number, // Make fid optional since it will be determined by JWT
+  threadTweets?: Array<{
+    tweetId: string;
+    content: string;
+    mediaUrls: Array<{ url: string; type: string }>;
+    videoUrls: Array<{ url: string; bitrate: number; content_type: string }>;
+    isRetweetRemoved: boolean;
+  }>,
 ): Promise<{
   success: boolean;
   totalCost: number;
@@ -293,6 +300,7 @@ export async function castThread(
       body: JSON.stringify({
         conversationId,
         ...(fid ? { fid } : {}), // Only include fid if provided
+        ...(threadTweets ? { threadTweets } : {}), // Include thread tweets if provided
       }),
     });
 

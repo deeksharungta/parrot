@@ -5,7 +5,7 @@ import { useAuthenticatedApi } from "./useAuthenticatedFetch";
 interface EditTweetData {
   tweetId: string;
   content: string;
-  mediaUrls?: string[];
+  mediaUrls?: Array<{ url: string; type: string }>;
   quotedTweetUrl?: string | null;
   isRetweetRemoved?: boolean;
   videoUrls?: Array<{ url: string; bitrate: number; content_type: string }>;
@@ -55,7 +55,7 @@ export const useCastTweet = () => {
       tweetId: string;
       fid?: number; // Make fid optional since it will be determined by JWT
       content: string;
-      mediaUrls?: string[];
+      mediaUrls?: Array<{ url: string; type: string }>;
       quotedTweetUrl?: string | null;
       isRetweetRemoved?: boolean;
       videoUrls?: Array<{ url: string; bitrate: number; content_type: string }>;

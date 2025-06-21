@@ -78,13 +78,7 @@ export default function ThreadTweetCard({
   }
 
   if (firstTweetError || threadError || !firstTweet) {
-    return (
-      <div className="w-full h-full bg-white animate-pulse rounded-3xl border border-[#ECECED]">
-        <p className="text-center text-base font-medium text-[#B3B1B8] mt-3">
-          Not found
-        </p>
-      </div>
-    );
+    return null;
   }
 
   return (

@@ -582,14 +582,14 @@ export default function Tweets({ fid }: TweetsProps) {
   // Edit modal handlers
   const handleEditSave = async (
     editedContent: string,
-    mediaUrls: string[],
+    mediaUrls: Array<{ url: string; type: string }>,
     quotedTweetUrl: string | null,
     isRetweetRemoved: boolean,
     videoUrls?: Array<{ url: string; bitrate: number; content_type: string }>,
     threadTweets?: Array<{
       tweetId: string;
       content: string;
-      mediaUrls: string[];
+      mediaUrls: Array<{ url: string; type: string }>;
       videoUrls: Array<{ url: string; bitrate: number; content_type: string }>;
       isRetweetRemoved: boolean;
     }>,
@@ -693,14 +693,14 @@ export default function Tweets({ fid }: TweetsProps) {
 
   const handleConfirmSave = async (
     content: string,
-    mediaUrls: string[],
+    mediaUrls: Array<{ url: string; type: string }>,
     quotedTweetUrl: string | null,
     isRetweetRemoved: boolean,
     videoUrls?: Array<{ url: string; bitrate: number; content_type: string }>,
     threadTweets?: Array<{
       tweetId: string;
       content: string;
-      mediaUrls: string[];
+      mediaUrls: Array<{ url: string; type: string }>;
       videoUrls: Array<{ url: string; bitrate: number; content_type: string }>;
       isRetweetRemoved: boolean;
     }>,
