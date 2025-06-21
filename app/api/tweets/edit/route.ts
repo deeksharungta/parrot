@@ -67,19 +67,36 @@ export const POST = withApiKeyAndJwtAuth(async function (
 
     // Update media URLs if provided - handle both images and videos
     if (mediaUrls !== undefined || videoUrls !== undefined) {
-      const mediaData: Record<string, any> = {};
+      // Handle new format: Array<{url: string, type: string}>
+      const mediaArray: Array<{ url: string; type: string }> = [];
 
+      // Process mediaUrls (can be images, photos, gifs)
       if (mediaUrls && mediaUrls.length > 0) {
-        mediaData.images = mediaUrls;
+        mediaUrls.forEach((item: any) => {
+          if (typeof item === "string") {
+            // Legacy format: array of strings
+            mediaArray.push({ url: item, type: "photo" });
+          } else if (item && typeof item === "object" && item.url) {
+            // New format: array of objects with url and type
+            mediaArray.push({
+              url: item.url,
+              type: item.type || "photo",
+            });
+          }
+        });
       }
 
+      // Process videoUrls
       if (videoUrls && videoUrls.length > 0) {
-        mediaData.videos = videoUrls;
+        videoUrls.forEach((video: any) => {
+          if (video && video.url) {
+            mediaArray.push({ url: video.url, type: "video" });
+          }
+        });
       }
 
-      // Only store media_urls if we have any media
-      updateData.media_urls =
-        Object.keys(mediaData).length > 0 ? mediaData : null;
+      // Store in the new unified format
+      updateData.media_urls = mediaArray.length > 0 ? mediaArray : null;
     }
 
     // Update quoted tweet URL if provided

@@ -131,7 +131,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
 ) {
   try {
     const body = await request.json();
-    const { conversationId, fid } = body;
+    const { conversationId, fid, threadTweets: editedThreadTweets } = body;
 
     if (!conversationId) {
       return NextResponse.json(
@@ -291,7 +291,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
               `Updated content for tweet ${tweet.tweet_id} with full text`,
             );
 
-            // Also update media URLs from full details if available
+            // Also update media URLs from full details if available - using new unified format
             let newMediaItems: Array<{ type: string; url: string }> = [];
 
             if (
@@ -316,6 +316,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
               });
             }
 
+            // Store media in the new unified format (matches edit API)
             if (newMediaItems.length > 0) {
               updatedMediaUrls = newMediaItems;
             }
@@ -346,8 +347,28 @@ export const POST = withApiKeyAndJwtAuth(async function (
           media_urls: updatedMediaUrls,
         };
 
+        // Check if we have edited content for this tweet
+        let finalTweet = updatedTweet;
+        if (editedThreadTweets && Array.isArray(editedThreadTweets)) {
+          const editedTweet = editedThreadTweets.find(
+            (edited: any) => edited.tweetId === tweet.tweet_id,
+          );
+
+          if (editedTweet) {
+            // Apply edited content and media
+            finalTweet = {
+              ...updatedTweet,
+              content: editedTweet.content || updatedTweet.content,
+              media_urls:
+                editedTweet.mediaUrls && editedTweet.mediaUrls.length > 0
+                  ? editedTweet.mediaUrls
+                  : updatedTweet.media_urls,
+            };
+          }
+        }
+
         // Parse tweet content
-        const parsedCast = await parseTweetToFarcasterCast(updatedTweet);
+        const parsedCast = await parseTweetToFarcasterCast(finalTweet, true);
 
         // Prepare cast payload
         const castPayload: any = {
@@ -357,7 +378,14 @@ export const POST = withApiKeyAndJwtAuth(async function (
 
         // Add embeds if available (images, quoted tweets, etc.)
         if (parsedCast.embeds && parsedCast.embeds.length > 0) {
-          castPayload.embeds = parsedCast.embeds.map((url) => ({ url }));
+          // Enforce Farcaster's 2-embed limit for threads as well
+          const limitedEmbeds = parsedCast.embeds.slice(0, 2);
+          if (parsedCast.embeds.length > 2) {
+            console.log(
+              `Thread tweet ${tweet.tweet_id}: Limiting embeds from ${parsedCast.embeds.length} to 2 due to Farcaster constraints`,
+            );
+          }
+          castPayload.embeds = limitedEmbeds.map((url) => ({ url }));
         }
 
         // If this is not the first tweet in the thread, reply to the previous cast

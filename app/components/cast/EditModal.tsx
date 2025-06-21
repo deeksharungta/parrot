@@ -14,14 +14,14 @@ interface EditModalProps {
   conversationId?: string; // Add conversation ID for thread support
   onSave: (
     content: string,
-    mediaUrls: string[],
+    mediaUrls: Array<{ url: string; type: string }>,
     quotedTweetUrl: string | null,
     isRetweetRemoved: boolean,
     videoUrls?: Array<{ url: string; bitrate: number; content_type: string }>,
     threadTweets?: Array<{
       tweetId: string;
       content: string;
-      mediaUrls: string[];
+      mediaUrls: Array<{ url: string; type: string }>;
       videoUrls: Array<{ url: string; bitrate: number; content_type: string }>;
       isRetweetRemoved: boolean;
     }>, // Add thread tweets for saving
@@ -39,7 +39,7 @@ interface EditModalProps {
 // Interface for thread tweet editing state
 interface ThreadTweetEditState {
   content: string;
-  mediaUrls: string[];
+  mediaUrls: Array<{ url: string; type: string }>;
   videoUrls: Array<{ url: string; bitrate: number; content_type: string }>;
   quotedTweetUrl: string | null;
   showRetweet: boolean;
@@ -53,18 +53,25 @@ const parseMediaUrls = (
   mediaUrls: any,
   twitterMediaDetails?: any[],
 ): {
-  imageUrls: string[];
+  imageUrls: Array<{ url: string; type: string }>;
   videoUrls: Array<{ url: string; bitrate: number; content_type: string }>;
 } => {
-  let imageUrls: string[] = [];
+  let imageUrls: Array<{ url: string; type: string }> = [];
   let videoUrls: Array<{ url: string; bitrate: number; content_type: string }> =
     [];
 
   if (mediaUrls) {
     if (typeof mediaUrls === "object" && !Array.isArray(mediaUrls)) {
       // New structure with images and videos
-      imageUrls = mediaUrls.images || [];
-      videoUrls = mediaUrls.videos || [];
+      if (mediaUrls.images && Array.isArray(mediaUrls.images)) {
+        imageUrls = mediaUrls.images.map((url: string) => ({
+          url,
+          type: "photo",
+        }));
+      }
+      if (mediaUrls.videos && Array.isArray(mediaUrls.videos)) {
+        videoUrls = mediaUrls.videos;
+      }
     } else if (Array.isArray(mediaUrls)) {
       // Check if this is the database format: Array<{ type: string; url: string }>
       if (
@@ -75,8 +82,12 @@ const parseMediaUrls = (
       ) {
         // Database format: Array<{ type: string; url: string }>
         mediaUrls.forEach((item: any) => {
-          if (item.type === "photo") {
-            imageUrls.push(item.url);
+          if (
+            item.type === "photo" ||
+            item.type === "image" ||
+            item.type === "gif"
+          ) {
+            imageUrls.push({ url: item.url, type: item.type });
           } else if (item.type === "video") {
             // For videos from database, we don't have bitrate/content_type, so use defaults
             videoUrls.push({
@@ -88,14 +99,19 @@ const parseMediaUrls = (
         });
       } else {
         // Old structure - assume they're all images (array of strings)
-        imageUrls = mediaUrls.filter((url: any) => typeof url === "string");
+        imageUrls = mediaUrls
+          .filter((url: any) => typeof url === "string")
+          .map((url: string) => ({ url, type: "photo" }));
         videoUrls = [];
       }
     }
   } else if (twitterMediaDetails) {
     // Twitter API data
     imageUrls =
-      twitterMediaDetails.map((media: any) => media.media_url_https) || [];
+      twitterMediaDetails.map((media: any) => ({
+        url: media.media_url_https,
+        type: "photo",
+      })) || [];
     videoUrls = [];
   }
   return { imageUrls, videoUrls };
@@ -123,7 +139,9 @@ export function EditModal({
 
   // Single tweet state (for non-thread tweets or first tweet)
   const [content, setContent] = useState("");
-  const [mediaUrls, setMediaUrls] = useState<string[]>([]);
+  const [mediaUrls, setMediaUrls] = useState<
+    Array<{ url: string; type: string }>
+  >([]);
   const [videoUrls, setVideoUrls] = useState<
     Array<{ url: string; bitrate: number; content_type: string }>
   >([]);
@@ -650,7 +668,7 @@ export function EditModal({
                     {displayState.mediaUrls.map((url, index) => (
                       <div key={index} className="relative group">
                         <Image
-                          src={url}
+                          src={url.url}
                           alt={`Media ${index + 1}`}
                           width={100}
                           height={100}
@@ -744,7 +762,7 @@ export function EditModal({
                                 {displayState.mediaUrls.map((url, index) => (
                                   <div key={index} className="relative">
                                     <Image
-                                      src={url}
+                                      src={url.url}
                                       alt={`Media ${index + 1}`}
                                       width={100}
                                       height={100}

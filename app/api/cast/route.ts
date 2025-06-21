@@ -388,13 +388,30 @@ export const POST = withApiKeyAndJwtAuth(async function (
 
           // Handle legacy media format (if not already handled above)
           if (finalMediaUrls && Array.isArray(finalMediaUrls)) {
-            finalMediaUrls.forEach((url: any) => {
-              if (typeof url === "string" && url.trim()) {
-                embeds.push(url);
+            finalMediaUrls.forEach((item: any) => {
+              if (typeof item === "string" && item.trim()) {
+                // Old format: array of strings
+                embeds.push(item);
+              } else if (
+                item &&
+                typeof item === "object" &&
+                item.url &&
+                item.url.trim()
+              ) {
+                // New format: array of objects with url and type
+                embeds.push(item.url);
               }
             });
           }
         }
+      }
+
+      // Enforce Farcaster's 2-embed limit
+      if (embeds.length > 2) {
+        console.log(
+          `Limiting embeds from ${embeds.length} to 2 due to Farcaster constraints`,
+        );
+        embeds.splice(2);
       }
 
       console.log("embeds", embeds);
