@@ -360,3 +360,44 @@ export async function parseTweetToFarcasterCast(
     embeds,
   };
 }
+
+/**
+ * Resolve all t.co URLs in text content to their actual destinations
+ * @param content - Text content containing t.co URLs
+ * @returns Promise<string> - Content with t.co URLs resolved to actual URLs
+ */
+export async function resolveTcoUrls(content: string): Promise<string> {
+  if (!content) return content;
+
+  const tcoRegex = /https:\/\/t\.co\/\S+/g;
+  const matches = Array.from(content.matchAll(tcoRegex));
+
+  if (matches.length === 0) {
+    return content;
+  }
+
+  let updatedContent = content;
+
+  // Resolve all t.co URLs found in the content
+  for (const match of matches) {
+    const tcoUrl = match[0];
+
+    try {
+      const response = await fetch(tcoUrl, {
+        method: "HEAD", // Use HEAD to avoid downloading the full response
+        redirect: "follow", // Follow redirects
+      });
+
+      // Replace the t.co URL with the resolved URL
+      const resolvedUrl = response.url;
+      updatedContent = updatedContent.replace(tcoUrl, resolvedUrl);
+
+      console.log(`Resolved t.co URL: ${tcoUrl} -> ${resolvedUrl}`);
+    } catch (error) {
+      console.error(`Failed to resolve t.co URL ${tcoUrl}:`, error);
+      // Keep the original t.co URL if resolution fails
+    }
+  }
+
+  return updatedContent;
+}

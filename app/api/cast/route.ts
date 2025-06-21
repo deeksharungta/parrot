@@ -8,7 +8,11 @@ import {
   parseUnits,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { parseTweetToFarcasterCast, getEmbedLimit } from "@/lib/cast-utils";
+import {
+  parseTweetToFarcasterCast,
+  getEmbedLimit,
+  resolveTcoUrls,
+} from "@/lib/cast-utils";
 import { base } from "viem/chains";
 import { USDC_ADDRESS, SPENDER_ADDRESS } from "@/lib/constants";
 import { TwitterApiTweet } from "@/lib/tweets-service";
@@ -464,10 +468,13 @@ export const POST = withApiKeyAndJwtAuth(async function (
       };
     }
 
+    // Resolve any t.co URLs in the content before casting
+    const resolvedContent = await resolveTcoUrls(parsedCast.content);
+
     // Cast to Farcaster using Neynar API (AFTER payment is confirmed)
     const castPayload: any = {
       signer_uuid: user.neynar_signer_uuid,
-      text: parsedCast.content,
+      text: resolvedContent,
     };
 
     // Add embeds if available (images, quoted tweets, etc.)

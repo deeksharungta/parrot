@@ -8,7 +8,11 @@ import {
   parseUnits,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { parseTweetToFarcasterCast, getEmbedLimit } from "@/lib/cast-utils";
+import {
+  parseTweetToFarcasterCast,
+  getEmbedLimit,
+  resolveTcoUrls,
+} from "@/lib/cast-utils";
 import { base } from "viem/chains";
 import { USDC_ADDRESS, SPENDER_ADDRESS } from "@/lib/constants";
 import { getThreadTweets } from "@/lib/tweets-service";
@@ -401,10 +405,13 @@ export const POST = withApiKeyAndJwtAuth(async function (
         // Parse tweet content
         const parsedCast = await parseTweetToFarcasterCast(finalTweet, true);
 
+        // Resolve any t.co URLs in the content before casting
+        const resolvedContent = await resolveTcoUrls(parsedCast.content);
+
         // Prepare cast payload
         const castPayload: any = {
           signer_uuid: user.neynar_signer_uuid,
-          text: parsedCast.content,
+          text: resolvedContent,
         };
 
         // Add embeds if available (images, quoted tweets, etc.)
