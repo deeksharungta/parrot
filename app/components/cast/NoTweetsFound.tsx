@@ -45,13 +45,13 @@ export default function NoTweetsFound({ onRefresh }: NoTweetsFoundProps) {
       <p className="text-sm text-[#494656] text-center">
         No new tweets to cast. Go stir things up on the blue bird and come back!
       </p>
-      <Button onClick={handleRestoreRejected} disabled={isRestoring}>
+      {/* <Button onClick={handleRestoreRejected} disabled={isRestoring}>
         {isRestoring ? (
           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
         ) : (
           "Show Again"
         )}
-      </Button>
+      </Button> */}
     </div>
   );
 }
