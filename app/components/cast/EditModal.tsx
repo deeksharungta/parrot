@@ -139,6 +139,8 @@ export function EditModal({
 
   // Single tweet state (for non-thread tweets or first tweet)
   const [content, setContent] = useState("");
+  const [originalContent, setOriginalContent] = useState(""); // Track original content
+  const [contentWasEdited, setContentWasEdited] = useState(false); // Track if content was manually edited
   const [mediaUrls, setMediaUrls] = useState<
     Array<{ url: string; type: string }>
   >([]);
@@ -296,11 +298,13 @@ export function EditModal({
         // For retweets, keep the text area empty
         setContent("");
       } else {
-        // For regular tweets, use the cleaned content
+        // For regular tweets, store both original and cleaned content
         const text = databaseTweet
           ? databaseTweet.content || databaseTweet.original_content || ""
           : tweetData?.text || "";
+        setOriginalContent(text);
         setContent(cleanupTweetContent(text, tweetHasMedia(tweet)));
+        setContentWasEdited(false); // Reset edit flag
       }
 
       // Handle media from database structure or Twitter API using utility function
@@ -327,6 +331,8 @@ export function EditModal({
   useEffect(() => {
     if (!isOpen) {
       setContent("");
+      setOriginalContent("");
+      setContentWasEdited(false);
       setMediaUrls([]);
       setVideoUrls([]);
       setQuotedTweetUrl(null);
@@ -466,9 +472,12 @@ export function EditModal({
         threadTweetEdits,
       );
     } else {
-      // Single tweet mode
+      // Single tweet mode - use original content if nothing was edited
+      const contentToSend = contentWasEdited
+        ? displayState.content
+        : originalContent;
       onSave(
-        displayState.content,
+        contentToSend,
         displayState.mediaUrls,
         displayState.quotedTweetUrl,
         displayState.isRetweetRemoved,
@@ -493,6 +502,7 @@ export function EditModal({
       updateCurrentEditingState({ content: newContent });
     } else {
       setContent(newContent);
+      setContentWasEdited(true); // Mark content as manually edited
     }
     setCursorPosition(cursor);
 

@@ -319,6 +319,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
 
     // Override with edited values if provided
     if (
+      content !== undefined ||
       mediaUrls !== undefined ||
       quotedTweetUrl !== undefined ||
       videoUrls !== undefined
@@ -337,6 +338,11 @@ export const POST = withApiKeyAndJwtAuth(async function (
           embeds.push(tweet.twitter_url || "");
         }
       } else {
+        // Use edited content if provided
+        if (content !== undefined) {
+          parsedCast.content = content;
+        }
+
         // Use provided quoted tweet URL or fall back to database value
         const finalQuotedTweetUrl =
           quotedTweetUrl !== undefined
