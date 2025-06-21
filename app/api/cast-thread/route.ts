@@ -65,6 +65,34 @@ function isTweetTruncated(content: string): boolean {
   return content.length >= 278;
 }
 
+// Helper function to remove the last t.co link if there's media
+function removeLastTcoLinkIfMedia(content: string, hasMedia: boolean): string {
+  if (!hasMedia) {
+    return content;
+  }
+
+  // If there's media, only remove the last t.co link
+  const tcoRegex = /https:\/\/t\.co\/\S+/g;
+  const matches = Array.from(content.matchAll(tcoRegex));
+
+  if (matches.length === 0) {
+    return content;
+  }
+
+  // Only remove the last match
+  const lastMatch = matches[matches.length - 1];
+  if (lastMatch.index === undefined) {
+    return content;
+  }
+
+  const beforeLastLink = content.substring(0, lastMatch.index);
+  const afterLastLink = content.substring(
+    lastMatch.index + lastMatch[0].length,
+  );
+
+  return (beforeLastLink + afterLastLink).trim();
+}
+
 // Helper function to fetch full tweet details for truncated tweets
 async function fetchTweetDetails(
   tweetId: string,
@@ -386,6 +414,9 @@ export const POST = withApiKeyAndJwtAuth(async function (
             );
           }
           castPayload.embeds = limitedEmbeds.map((url) => ({ url }));
+
+          // Remove last t.co link if there are media embeds
+          castPayload.text = removeLastTcoLinkIfMedia(castPayload.text, true);
         }
 
         // If this is not the first tweet in the thread, reply to the previous cast
