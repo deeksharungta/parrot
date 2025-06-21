@@ -86,7 +86,7 @@ export async function convertTwitterMentionsToFarcaster(
   }
 
   // Find all @mentions in the content
-  const mentionRegex = /@(\w+)/g;
+  const mentionRegex = /@([a-zA-Z0-9_]+)/g;
   let convertedContent = content;
 
   if (isEdit && originalContent) {
@@ -104,13 +104,13 @@ export async function convertTwitterMentionsToFarcaster(
         if (farcasterUsername) {
           // Replace Twitter mention with Farcaster mention in the current content
           convertedContent = convertedContent.replace(
-            new RegExp(`@${username}`, "g"),
+            new RegExp(`@${username}\\b`, "g"),
             `@${farcasterUsername}`,
           );
         } else {
           // If no Farcaster user found, use the fallback format
           convertedContent = convertedContent.replace(
-            new RegExp(`@${username}`, "g"),
+            new RegExp(`@${username}\\b`, "g"),
             `${username}.twitter`,
           );
         }
@@ -138,13 +138,13 @@ export async function convertTwitterMentionsToFarcaster(
         if (farcasterUsername) {
           // Replace Twitter mention with Farcaster mention
           convertedContent = convertedContent.replace(
-            new RegExp(`@${username}`, "g"),
+            new RegExp(`@${username}\\b`, "g"),
             `@${farcasterUsername}`,
           );
         } else {
           // If no Farcaster user found, use the fallback format
           convertedContent = convertedContent.replace(
-            new RegExp(`@${username}`, "g"),
+            new RegExp(`@${username}\\b`, "g"),
             `${username}.twitter`,
           );
         }
@@ -262,6 +262,7 @@ function removeTwitterLinks(
     lastMatch.index + lastMatch[0].length,
   );
 
+  // Clean up any double spaces that might result from URL removal
   return (beforeLastLink + afterLastLink).trim();
 }
 
@@ -288,6 +289,10 @@ export async function parseTweetToFarcasterCast(
       embeds,
     };
   }
+
+  // Clean up HTML entities and formatting FIRST
+  content = decodeHtmlEntities(content);
+
   // Convert Twitter mentions to Farcaster format
   content = await convertTwitterMentionsToFarcaster(
     content,
@@ -295,12 +300,12 @@ export async function parseTweetToFarcasterCast(
     tweet.original_content || undefined,
   );
 
+  // Resolve t.co URLs to their actual destinations
+  // content = await resolveTcoUrls(content);
+
   // Remove Twitter shortened URLs (t.co links) only if there's media
   const tweetHasMedia = hasMedia(tweet);
   content = removeTwitterLinks(content, tweetHasMedia);
-
-  // Clean up HTML entities and formatting
-  content = decodeHtmlEntities(content);
 
   // Handle quoted tweets
   if (tweet.quoted_tweet_url) {
