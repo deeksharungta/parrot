@@ -406,12 +406,9 @@ export const POST = withApiKeyAndJwtAuth(async function (
         // Parse tweet content
         const parsedCast = await parseTweetToFarcasterCast(finalTweet, true);
 
-        // Resolve any t.co URLs in the content before casting
-        const resolvedContent = await resolveTcoUrls(parsedCast.content);
-
         // Convert Twitter mentions to Farcaster format
         const convertedContent = await convertTwitterMentionsToFarcaster(
-          resolvedContent,
+          parsedCast.content,
           true, // isEdit is true for thread processing
           finalTweet.original_content || undefined,
         );
@@ -446,6 +443,9 @@ export const POST = withApiKeyAndJwtAuth(async function (
         ) {
           castPayload.parent = lastCastHash;
         }
+
+        // Resolve any t.co URLs in the content before casting
+        castPayload.text = await resolveTcoUrls(castPayload.text);
 
         // Cast to Farcaster using Neynar API
         const castResponse = await fetch(`${NEYNAR_BASE_URL}/farcaster/cast`, {
