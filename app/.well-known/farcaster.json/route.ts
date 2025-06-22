@@ -6,22 +6,20 @@ export async function GET() {
 
   const config = {
     accountAssociation: {
-      header:
-        "eyJmaWQiOjEzNTAsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHgxZjVBN0VFMkExZjY2QzAzOEI3ZEU2ODg0N0ZkYmZjQzZGNkU1M2I5In0",
-      payload: "eyJkb21haW4iOiJwYXJyb3QuY2xpY2sifQ",
-      signature:
-        "MHg2M2JmYThjMzE1YzM5MDE4MjY1NGVkZTljN2JlYjljMjExNjg1YWUxODdhMDVkYjk0OTdlZGYxMjZlNjA4MTg3MmUwMWZkYmZhMzk5NWFjOTZkMzgwYmU1MzVkODkwZTQ4MTE1OWYzNjU3NDE3M2Q2OWY2Y2ZlMGNiYzFiNDI4ZDFj",
+      header: process.env.FARCASTER_HEADER,
+      payload: process.env.FARCASTER_PAYLOAD,
+      signature: process.env.FARCASTER_SIGNATURE,
     },
     frame: {
       version: "1",
-      name: "Parrot",
-      iconUrl: "https://parrot.click/icon.png",
-      homeUrl: "https://parrot.click",
-      imageUrl: "https://parrot.click/image.png",
+      name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
+      iconUrl: `${appUrl}/icon.png`,
+      homeUrl: `${appUrl}`,
+      imageUrl: `${appUrl}/image.png`,
       buttonTitle: "Check this out",
-      splashImageUrl: "https://parrot.click/splash.png",
+      splashImageUrl: `${appUrl}/splash.png`,
       splashBackgroundColor: "#4998D1",
-      webhookUrl: "https://parrot.click/api/webhook",
+      webhookUrl: `${appUrl}/api/webhook`,
     },
   };
 
