@@ -71,6 +71,8 @@ export function useCastThread() {
       return await castThread(conversationId, fid, threadTweets);
     },
     onSuccess: (data, variables) => {
+      // Dismiss any loading toasts and show success toast
+      toast.dismiss();
       toast("Tweet Casted Successfully!");
       // Invalidate relevant queries
       queryClient.invalidateQueries({
@@ -83,6 +85,12 @@ export function useCastThread() {
       queryClient.invalidateQueries({
         queryKey: ["cachedTweets"],
       });
+    },
+    onError: (error) => {
+      // Dismiss any loading toasts and show error toast
+      toast.dismiss();
+      toast("Error Casting Tweet");
+      console.error("Error casting thread:", error);
     },
   });
 }

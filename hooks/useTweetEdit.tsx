@@ -77,10 +77,13 @@ export const useCastTweet = () => {
       queryClient.invalidateQueries({ queryKey: ["tweets"] });
       queryClient.invalidateQueries({ queryKey: ["userTweets"] });
 
-      // Show success toast
+      // Dismiss any loading toasts and show success toast
+      toast.dismiss();
       toast("Tweet Casted Successfully!");
     },
     onError: (error) => {
+      // Dismiss any loading toasts and show error toast
+      toast.dismiss();
       toast("Error Casting Tweet");
       console.error("Error casting tweet:", error);
     },

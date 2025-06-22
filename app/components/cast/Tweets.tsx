@@ -470,6 +470,14 @@ export default function Tweets({ fid }: TweetsProps) {
 
     // Cast the tweet or thread in the background
     if (currentTweet?.tweet_id && userData?.user?.neynar_signer_uuid) {
+      // Show loading toast
+      toast(
+        <div className="flex items-center justify-center w-full h-full">
+          <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+        </div>,
+        { duration: Infinity },
+      );
+
       // Check if this is a thread tweet
       if (currentTweet.is_thread_tweet && currentTweet.conversation_id) {
         // Cast entire thread
@@ -634,6 +642,14 @@ export default function Tweets({ fid }: TweetsProps) {
 
       // Step 2: Cast the edited tweet or thread to Farcaster
       if (userData?.user?.neynar_signer_uuid) {
+        // Show loading toast
+        toast(
+          <div className="flex items-center justify-center">
+            <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+          </div>,
+          { duration: Infinity },
+        );
+
         // Check if this is a thread tweet
         if (currentTweet.is_thread_tweet && currentTweet.conversation_id) {
           // Cast entire thread (note: for threads, we cast the whole thread, not just the edited tweet)
@@ -754,6 +770,14 @@ export default function Tweets({ fid }: TweetsProps) {
 
       // Cast the tweet or thread to Farcaster
       if (userData?.user?.neynar_signer_uuid) {
+        // Show loading toast
+        toast(
+          <div className="flex items-center justify-center">
+            <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+          </div>,
+          { duration: Infinity },
+        );
+
         // Check if this is a thread tweet
         if (currentTweet.is_thread_tweet && currentTweet.conversation_id) {
           // Cast entire thread
