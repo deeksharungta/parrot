@@ -472,8 +472,9 @@ export default function Tweets({ fid }: TweetsProps) {
     if (currentTweet?.tweet_id && userData?.user?.neynar_signer_uuid) {
       // Show loading toast
       toast(
-        <div className="flex items-center justify-center w-full h-full">
+        <div className="flex items-center justify-center gap-2 w-full h-full">
           <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+          <span className="text-sm font-medium">Casting...</span>
         </div>,
         { duration: Infinity },
       );
@@ -644,8 +645,9 @@ export default function Tweets({ fid }: TweetsProps) {
       if (userData?.user?.neynar_signer_uuid) {
         // Show loading toast
         toast(
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center gap-2">
             <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+            <span className="text-sm font-medium">Casting...</span>
           </div>,
           { duration: Infinity },
         );
@@ -772,8 +774,9 @@ export default function Tweets({ fid }: TweetsProps) {
       if (userData?.user?.neynar_signer_uuid) {
         // Show loading toast
         toast(
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center gap-2">
             <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+            <span className="text-sm font-medium">Casting...</span>
           </div>,
           { duration: Infinity },
         );
