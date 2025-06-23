@@ -70,7 +70,7 @@ function addSecurityHeaders(response: NextResponse) {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https: blob:",
-    "connect-src 'self' https://api.neynar.com https://api.twitter.com https://*.supabase.co wss://*.supabase.co https://vercel.live https://*.loca.lt https://mainnet.base.org https://*.base.org https://api.coinbase.com https://*.coinbase.com https://ethereum-mainnet.s.chainbase.online https://*.alchemy.com https://*.infura.io https://*.quicknode.com wss://mainnet.base.org wss://*.base.org https://react-tweet.vercel.app",
+    "connect-src 'self' https://api.neynar.com https://api.twitter.com https://t.co https://*.supabase.co wss://*.supabase.co https://vercel.live https://*.loca.lt https://mainnet.base.org https://*.base.org https://api.coinbase.com https://*.coinbase.com https://ethereum-mainnet.s.chainbase.online https://*.alchemy.com https://*.infura.io https://*.quicknode.com wss://mainnet.base.org wss://*.base.org https://react-tweet.vercel.app",
     "frame-src 'self' https://js.stripe.com",
     "object-src 'none'",
     "base-uri 'self'",
