@@ -79,6 +79,11 @@ export default function Tweets({ fid }: TweetsProps) {
 
   // Helper function to check if a tweet contains video or GIF content
   const hasVideoOrGif = (tweet: TweetType): boolean => {
+    console.log(`🎥 Checking video/GIF for tweet ${tweet.tweet_id}:`, {
+      media_urls: tweet.media_urls,
+      has_media: !!tweet.media_urls,
+    });
+
     // Check if tweet has media_urls with videos
     if (tweet.media_urls) {
       // Handle new structure with separate images and videos arrays
@@ -88,7 +93,12 @@ export default function Tweets({ fid }: TweetsProps) {
       ) {
         // Check if videos array exists and has content
         if (tweet.media_urls.videos && Array.isArray(tweet.media_urls.videos)) {
-          return tweet.media_urls.videos.length > 0;
+          if (tweet.media_urls.videos.length > 0) {
+            console.log(
+              `❌ Tweet ${tweet.tweet_id} has videos array with ${tweet.media_urls.videos.length} items`,
+            );
+            return true;
+          }
         }
 
         // Check if any image URLs contain .gif or .mp4
@@ -100,7 +110,12 @@ export default function Tweets({ fid }: TweetsProps) {
             }
             return false;
           });
-          if (hasGifOrMp4) return true;
+          if (hasGifOrMp4) {
+            console.log(
+              `❌ Tweet ${tweet.tweet_id} has GIF/MP4 in images array`,
+            );
+            return true;
+          }
         }
       } else {
         // Handle legacy format - check if any URL contains .gif or .mp4
@@ -117,7 +132,12 @@ export default function Tweets({ fid }: TweetsProps) {
           }
           return false;
         });
-        if (hasGifOrMp4) return true;
+        if (hasGifOrMp4) {
+          console.log(
+            `❌ Tweet ${tweet.tweet_id} has GIF/MP4 in legacy format`,
+          );
+          return true;
+        }
       }
     }
 
@@ -132,14 +152,24 @@ export default function Tweets({ fid }: TweetsProps) {
           }
           return false;
         });
-        if (hasAnimatedContent) return true;
+        if (hasAnimatedContent) {
+          console.log(
+            `❌ Tweet ${tweet.tweet_id} has animated content in array format`,
+          );
+          return true;
+        }
       } else {
         // Check if there's a types array or similar structure
         if (tweet.media_urls.types && Array.isArray(tweet.media_urls.types)) {
           const hasAnimatedContent = tweet.media_urls.types.some(
             (type: string) => type === "animated_gif" || type === "video",
           );
-          if (hasAnimatedContent) return true;
+          if (hasAnimatedContent) {
+            console.log(
+              `❌ Tweet ${tweet.tweet_id} has animated content in types array`,
+            );
+            return true;
+          }
         }
 
         // Check for any field that might contain "gif" or "video" type info
@@ -157,32 +187,64 @@ export default function Tweets({ fid }: TweetsProps) {
           }
           return false;
         });
-        if (hasAnimatedContent) return true;
+        if (hasAnimatedContent) {
+          console.log(
+            `❌ Tweet ${tweet.tweet_id} has animated content in object values`,
+          );
+          return true;
+        }
       }
     }
 
+    console.log(`✅ Tweet ${tweet.tweet_id} has no video/GIF content`);
     return false;
   };
 
   // Update stable tweets when new tweets are loaded
   React.useEffect(() => {
     if (tweets && tweets.length > 0) {
+      console.log(`🔍 Processing ${tweets.length} tweets for filtering...`);
+
       // Filter to only show thread starters or non-thread tweets, and exclude videos/GIFs
       const filteredTweets = tweets.filter((tweet) => {
         // Skip tweets with video or GIF content
-        if (hasVideoOrGif(tweet)) return false;
+        const hasVideo = hasVideoOrGif(tweet);
+        if (hasVideo) {
+          console.log(
+            `❌ Filtered out tweet ${tweet.tweet_id} - has video/GIF`,
+          );
+          return false;
+        }
 
         // Show non-thread tweets
-        if (!tweet.is_thread_tweet) return true;
+        if (!tweet.is_thread_tweet) {
+          console.log(`✅ Keeping non-thread tweet ${tweet.tweet_id}`);
+          return true;
+        }
 
         // For thread tweets, only show if it's position 1 or thread start
-        if (tweet.is_thread_start || tweet.thread_position === 1) return true;
+        if (tweet.is_thread_start || tweet.thread_position === 1) {
+          console.log(
+            `✅ Keeping thread starter tweet ${tweet.tweet_id} (position: ${tweet.thread_position}, is_start: ${tweet.is_thread_start})`,
+          );
+          return true;
+        }
 
+        console.log(
+          `❌ Filtered out thread tweet ${tweet.tweet_id} - not starter (position: ${tweet.thread_position}, is_start: ${tweet.is_thread_start})`,
+        );
         return false;
       });
 
+      console.log(
+        `📊 Filter results: ${tweets.length} total tweets -> ${filteredTweets.length} filtered tweets`,
+      );
+
       // If this is the first time loading tweets, set them all
       if (stableTweets.length === 0) {
+        console.log(
+          `🔄 Setting initial stable tweets: ${filteredTweets.length}`,
+        );
         setStableTweets(filteredTweets);
       } else {
         // Check if we need to refresh the entire list (when tweets are restored)
@@ -196,7 +258,15 @@ export default function Tweets({ fid }: TweetsProps) {
             (tweet.cast_status === "pending" || !tweet.cast_status),
         );
 
+        console.log(`🔍 Checking for restored tweets: ${hasRestoredTweets}`);
+        console.log(
+          `📊 Current stable tweets: ${stableTweets.length}, Filtered tweets: ${filteredTweets.length}`,
+        );
+
         if (hasRestoredTweets) {
+          console.log(
+            `🔄 Refreshing entire list with ${filteredTweets.length} tweets`,
+          );
           setStableTweets(filteredTweets);
           setCurrentIndex(0);
           setProcessedTweetIds(new Set()); // Reset processed tweets
@@ -207,12 +277,18 @@ export default function Tweets({ fid }: TweetsProps) {
           );
 
           if (newTweets.length > 0) {
+            console.log(
+              `➕ Adding ${newTweets.length} new tweets to existing list`,
+            );
             // Add new tweets to the end of the existing array
             setStableTweets((prev) => [...prev, ...newTweets]);
+          } else {
+            console.log(`ℹ️ No new tweets to add`);
           }
         }
       }
     } else if (tweets && tweets.length === 0) {
+      console.log(`🔄 No tweets found, clearing stable tweets`);
       // If tweets array is empty, clear stable tweets too
       setStableTweets([]);
       setCurrentIndex(0);
