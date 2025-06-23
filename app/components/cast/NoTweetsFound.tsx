@@ -14,13 +14,23 @@ export default function NoTweetsFound({ onRefresh }: NoTweetsFoundProps) {
   const handleRestoreRejected = async () => {
     setIsRestoring(true);
     try {
+      console.log("🔄 Starting restore rejected tweets...");
       const result = await restoreRejectedTweets();
+      console.log("📋 Restore result:", result);
 
       if (result.success) {
         if (result.restoredCount > 0) {
+          console.log(
+            `✅ Successfully restored ${result.restoredCount} tweets, refreshing...`,
+          );
+
           // Force refresh the tweets data
           if (onRefresh) {
+            console.log("🔄 Calling onRefresh...");
             await onRefresh();
+            console.log("✅ onRefresh completed");
+          } else {
+            console.warn("⚠️ onRefresh is not available");
           }
         } else {
           console.log("No rejected tweets found to restore");

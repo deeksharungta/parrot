@@ -65,6 +65,18 @@ export default function Tweets({ fid }: TweetsProps) {
     new Set(),
   );
 
+  // Add debugging
+  React.useEffect(() => {
+    console.log("🔄 Tweets component data:", {
+      tweetsCount: tweets?.length || 0,
+      isLoading,
+      isLoadingFresh,
+      isError,
+      error: error?.message,
+      stableTweetsCount: stableTweets.length,
+    });
+  }, [tweets, isLoading, isLoadingFresh, isError, error, stableTweets.length]);
+
   // Helper function to check if a tweet contains video or GIF content
   const hasVideoOrGif = (tweet: TweetType): boolean => {
     // Check if tweet has media_urls with videos
