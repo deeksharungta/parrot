@@ -173,17 +173,38 @@ export default function Tweets({ fid }: TweetsProps) {
       if (stableTweets.length === 0) {
         setStableTweets(filteredTweets);
       } else {
-        // Otherwise, only add new tweets that aren't already in the stable array
-        const existingTweetIds = new Set(stableTweets.map((t) => t.tweet_id));
-        const newTweets = filteredTweets.filter(
-          (tweet) => !existingTweetIds.has(tweet.tweet_id),
+        // Check if we need to refresh the entire list (when tweets are restored)
+        const currentTweetIds = new Set(stableTweets.map((t) => t.tweet_id));
+        const newTweetIds = new Set(filteredTweets.map((t) => t.tweet_id));
+
+        // If there are restored tweets that weren't in the current list, refresh the entire list
+        const hasRestoredTweets = filteredTweets.some(
+          (tweet) =>
+            !currentTweetIds.has(tweet.tweet_id) &&
+            (tweet.cast_status === "pending" || !tweet.cast_status),
         );
 
-        if (newTweets.length > 0) {
-          // Add new tweets to the end of the existing array
-          setStableTweets((prev) => [...prev, ...newTweets]);
+        if (hasRestoredTweets) {
+          setStableTweets(filteredTweets);
+          setCurrentIndex(0);
+          setProcessedTweetIds(new Set()); // Reset processed tweets
+        } else {
+          // Otherwise, only add new tweets that aren't already in the stable array
+          const newTweets = filteredTweets.filter(
+            (tweet) => !currentTweetIds.has(tweet.tweet_id),
+          );
+
+          if (newTweets.length > 0) {
+            // Add new tweets to the end of the existing array
+            setStableTweets((prev) => [...prev, ...newTweets]);
+          }
         }
       }
+    } else if (tweets && tweets.length === 0) {
+      // If tweets array is empty, clear stable tweets too
+      setStableTweets([]);
+      setCurrentIndex(0);
+      setProcessedTweetIds(new Set());
     }
   }, [tweets]);
 

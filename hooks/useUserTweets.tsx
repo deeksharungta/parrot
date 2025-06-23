@@ -127,6 +127,11 @@ export const useUserTweets = (fid: number | undefined): UseUserTweetsResult => {
   const forceRefreshTweets = async () => {
     // Remove from cache and force refetch
     await queryClient.resetQueries({ queryKey: ["cached-tweets", fid] });
+
+    // Also trigger a fresh fetch from the API to ensure we get the latest data
+    if (fid) {
+      await fetchFreshTweets();
+    }
   };
 
   // Update tweet status function
