@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import YoloModeModal from "../modals/YoloModeModal";
 import { toast } from "sonner";
 import Edit from "../icons/Edit";
+import { analytics } from "@/lib/analytics";
 
 export default function YoloMode() {
   const { context } = useMiniKit();
@@ -16,16 +17,19 @@ export default function YoloMode() {
   const [isConfiguring, setIsConfiguring] = useState(false);
 
   const handleConfigureYoloMode = () => {
+    analytics.trackModalOpen("yolo_mode_config", "settings_enable_button");
     setIsConfiguring(false); // Enabling YOLO mode for first time
     setShowModal(true);
   };
 
   const handleReconfigureSettings = () => {
+    analytics.trackModalOpen("yolo_mode_config", "settings_edit_button");
     setIsConfiguring(true); // Reconfiguring existing settings
     setShowModal(true);
   };
 
   const handleDisableYoloMode = () => {
+    analytics.trackYoloModeToggle(false);
     updateUser.mutate(
       {
         farcaster_fid: context?.user?.fid ?? 0,
@@ -62,6 +66,18 @@ export default function YoloMode() {
           yolo_cast_quote_tweets: settings.castQuoteTweets,
           yolo_cast_normal_tweets: settings.castNormalTweets,
         };
+
+    // Track analytics
+    if (!isConfiguring) {
+      analytics.trackYoloModeToggle(true);
+    }
+
+    analytics.trackEvent("yolo_mode_configured", {
+      cast_retweets: settings.castRetweets,
+      cast_quote_tweets: settings.castQuoteTweets,
+      cast_normal_tweets: settings.castNormalTweets,
+      is_reconfiguring: isConfiguring,
+    });
 
     updateUser.mutate(updateData, {
       onSuccess: () => {

@@ -21,6 +21,7 @@ import { erc20Abi, formatUnits, parseUnits } from "viem";
 import { USDC_ADDRESS } from "@/lib/constants";
 import { toast } from "sonner";
 import { Database } from "@/lib/types/database";
+import { analytics } from "@/lib/analytics";
 
 type TweetType = Database["public"]["Tables"]["tweets"]["Row"];
 
@@ -729,6 +730,7 @@ export default function Tweets({ fid }: TweetsProps) {
   };
 
   const handleEditClose = () => {
+    analytics.trackModalClose("edit_tweet", "cancel");
     setShowEditModal(false);
   };
 

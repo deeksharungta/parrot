@@ -2,6 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { analytics } from "@/lib/analytics";
 
 interface ButtonProps
   extends Omit<
@@ -20,6 +21,10 @@ interface ButtonProps
   children: React.ReactNode;
   variant?: "primary" | "secondary" | "red";
   isLoading?: boolean;
+  // Analytics tracking props
+  trackingName?: string;
+  trackingLocation?: string;
+  trackingProperties?: Record<string, any>;
 }
 
 export default function Button({
@@ -28,6 +33,10 @@ export default function Button({
   variant = "primary",
   isLoading = false,
   disabled,
+  trackingName,
+  trackingLocation,
+  trackingProperties,
+  onClick,
   ...props
 }: ButtonProps) {
   const baseClasses =
@@ -42,6 +51,19 @@ export default function Button({
   };
 
   const buttonClasses = `${baseClasses} ${variantClasses[variant]} ${className}`;
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    // Track analytics if tracking props are provided
+    if (trackingName && trackingLocation) {
+      analytics.trackButtonClick(trackingName, trackingLocation, {
+        variant,
+        ...trackingProperties,
+      });
+    }
+
+    // Call the original onClick handler
+    onClick?.(e);
+  };
 
   return (
     <motion.button
@@ -68,6 +90,7 @@ export default function Button({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
+      onClick={handleClick}
       {...props}
     >
       {isLoading ? (

@@ -6,11 +6,20 @@ import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import UserProfiles from "./components/welcome/UserProfiles";
 import { motion } from "framer-motion";
 import { sdk } from "@farcaster/frame-sdk";
+import { analytics } from "@/lib/analytics";
 
 export default function HomePage() {
   const { setFrameReady, isFrameReady, context } = useMiniKit();
   const [sdkReady, setSdkReady] = useState(false);
   const [isMiniApp, setIsMiniApp] = useState<boolean | null>(null);
+
+  // Track page view
+  useEffect(() => {
+    analytics.trackPageView("home", {
+      is_mini_app: isMiniApp,
+      user_fid: context?.user?.fid,
+    });
+  }, [isMiniApp, context?.user?.fid]);
 
   useEffect(() => {
     const initializeSDK = async () => {

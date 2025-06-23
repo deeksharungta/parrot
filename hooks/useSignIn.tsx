@@ -2,6 +2,7 @@ import { MESSAGE_EXPIRATION_TIME } from "@/lib/constants";
 import { sdk } from "@farcaster/frame-sdk";
 import { useCallback, useState, useEffect } from "react";
 import { secureStorage } from "@/lib/secure-storage";
+import { analytics } from "@/lib/analytics";
 
 export const useSignIn = () => {
   const [isSignedIn, setIsSignedIn] = useState(false);
@@ -146,6 +147,16 @@ export const useSignIn = () => {
         throw new Error("Failed to save authentication token");
       }
 
+      // Track successful sign-in
+      analytics.trackSignIn("farcaster", context.user.fid.toString());
+      analytics.identifyUser(context.user.fid.toString(), {
+        fid: context.user.fid,
+        username: context.user.username,
+        display_name: context.user.displayName,
+        pfp_url: context.user.pfpUrl,
+        signed_in_at: new Date().toISOString(),
+      });
+
       setIsSignedIn(true);
       return data;
     } catch (err) {
@@ -174,6 +185,8 @@ export const useSignIn = () => {
 
   const logout = useCallback(() => {
     try {
+      // Track sign out
+      analytics.trackSignOut();
       secureStorage.removeToken();
     } catch (error) {
       console.error("Failed to remove token from secure storage:", error);

@@ -11,11 +11,25 @@ import { motion } from "framer-motion";
 import { useAccount } from "wagmi";
 import { useUSDCApproval } from "@/hooks/useUSDCApproval";
 import { Loader2 } from "lucide-react";
+import { analytics } from "@/lib/analytics";
 
 export default function ApprovalPage() {
   const { isFrameReady, setFrameReady } = useMiniKit();
   const { isConnected } = useAccount();
   const { hasAllowance, handleRevoke, isRevoking } = useUSDCApproval();
+
+  // Track page view
+  useEffect(() => {
+    analytics.trackPageView("approval", {
+      is_connected: isConnected,
+      has_allowance: hasAllowance,
+    });
+  }, [isConnected, hasAllowance]);
+
+  const handleRevokeWithTracking = async () => {
+    analytics.trackUSDCApproval(0, "requested");
+    await handleRevoke();
+  };
 
   useEffect(() => {
     if (!isFrameReady) {
@@ -51,8 +65,10 @@ export default function ApprovalPage() {
           >
             <Button
               variant="red"
-              onClick={handleRevoke}
+              onClick={handleRevokeWithTracking}
               disabled={isRevoking || !isConnected || !hasAllowance}
+              trackingName="revoke_allowance"
+              trackingLocation="approval_page"
             >
               {isRevoking ? (
                 <Loader2 className="animate-spin" />

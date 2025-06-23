@@ -1,11 +1,28 @@
+"use client";
+
 import Edit from "../icons/Edit";
 import ArrowRight from "../icons/ArrowRight";
 import Cross from "../icons/Cross";
 import Image from "next/image";
 import Button from "../ui/Button";
+import { useEffect } from "react";
+import { analytics } from "@/lib/analytics";
 
 export default function Onboarding({ onContinue }: { onContinue: () => void }) {
+  useEffect(() => {
+    // Track onboarding page view
+    analytics.trackPageView("onboarding", {
+      step: "welcome_screen",
+    });
+  }, []);
+
   const handleContinue = () => {
+    // Track onboarding completion
+    analytics.trackEvent("onboarding_completed", {
+      completion_time: Date.now(),
+      step: "welcome_screen",
+    });
+
     localStorage.setItem("onboardingCompleted", "true");
     onContinue();
   };
@@ -79,7 +96,13 @@ export default function Onboarding({ onContinue }: { onContinue: () => void }) {
             <p className="text-[#494656] text-center text-sm">
               click on any of the buttons to do the particular action
             </p>
-            <Button className="w-full" onClick={handleContinue}>
+            <Button
+              className="w-full"
+              onClick={handleContinue}
+              trackingName="continue_onboarding"
+              trackingLocation="onboarding_screen"
+              trackingProperties={{ step: "welcome_screen" }}
+            >
               Continue
             </Button>
           </div>

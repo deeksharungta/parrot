@@ -8,10 +8,16 @@ import Navbar from "../components/ui/Navbar";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { motion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
+import { analytics } from "@/lib/analytics";
 
 export default function SettingsPage() {
   const { isFrameReady, setFrameReady } = useMiniKit();
   const queryClient = useQueryClient();
+
+  // Track page view
+  useEffect(() => {
+    analytics.trackPageView("settings");
+  }, []);
 
   useEffect(() => {
     if (!isFrameReady) {
