@@ -31,7 +31,7 @@ export const GET = withInternalJwtAuth(async function (
     const { data: authenticatedUser, error: authUserError } = await supabase
       .from("users")
       .select(
-        "id, usdc_balance, spending_approved, spending_limit, total_spent",
+        "id, usdc_balance, spending_approved, spending_limit, total_spent, free_casts_left",
       )
       .eq("farcaster_fid", userFid)
       .single();
@@ -59,10 +59,13 @@ export const GET = withInternalJwtAuth(async function (
     );
     const totalCost = CAST_COST;
 
-    // Check if user can cast (has sufficient balance and permissions)
+    // Check if user can cast (has free casts OR sufficient balance and permissions)
     // Use the already fetched authenticatedUser data
     let canCast = false;
     if (authenticatedUser) {
+      const hasFreeCasts =
+        authenticatedUser.free_casts_left &&
+        authenticatedUser.free_casts_left > 0;
       const hasBalance = (authenticatedUser.usdc_balance || 0) >= totalCost;
       const hasApproval = authenticatedUser.spending_approved;
       const withinLimit =
@@ -71,7 +74,8 @@ export const GET = withInternalJwtAuth(async function (
           authenticatedUser.spending_limit;
 
       canCast =
-        hasBalance && hasApproval && withinLimit && pendingTweets.length > 0;
+        pendingTweets.length > 0 &&
+        (hasFreeCasts || (hasBalance && hasApproval && withinLimit));
     }
 
     return NextResponse.json({
@@ -84,6 +88,17 @@ export const GET = withInternalJwtAuth(async function (
         pendingCount: pendingTweets.length,
         castCount: threadTweets.length - pendingTweets.length,
         costPerThread: CAST_COST,
+      },
+      userInfo: {
+        hasFreeCasts:
+          authenticatedUser.free_casts_left &&
+          authenticatedUser.free_casts_left > 0,
+        freeCastsRemaining: authenticatedUser.free_casts_left || 0,
+        actualCost:
+          authenticatedUser.free_casts_left &&
+          authenticatedUser.free_casts_left > 0
+            ? 0
+            : CAST_COST,
       },
     });
   } catch (error) {

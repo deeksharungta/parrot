@@ -155,6 +155,8 @@ interface ThreadCastResult {
   }>;
   paymentHash?: string;
   error?: string;
+  usedFreeCast?: boolean;
+  freeCastsRemaining?: number;
 }
 
 export const OPTIONS = createOptionsHandler();
@@ -232,75 +234,87 @@ export const POST = withApiKeyAndJwtAuth(async function (
 
     const totalCost = CAST_COST;
 
-    // Check if user has approved spending and has sufficient balance
-    if (!user.spending_approved) {
-      return NextResponse.json(
-        { error: "USDC spending not approved. Please approve spending first." },
-        { status: 403 },
-      );
-    }
+    // Check if user has free casts first - if they do, skip USDC checks
+    const hasFreeCasts = user.free_casts_left && user.free_casts_left > 0;
 
-    if (!user.usdc_balance || user.usdc_balance < totalCost) {
-      return NextResponse.json(
-        {
-          error: `Insufficient USDC balance. Need ${totalCost} USDC to cast this thread.`,
-          required: totalCost,
-          available: user.usdc_balance || 0,
-        },
-        { status: 402 },
-      );
-    }
-
-    // Check onchain allowance using viem
-    if (!user.wallet_address) {
-      return NextResponse.json(
-        { error: "Wallet address not found for user" },
-        { status: 400 },
-      );
-    }
-
-    const publicClient = createPublicClient({
-      chain: base,
-      transport: http(),
-    });
-
-    try {
-      const allowance = await publicClient.readContract({
-        address: USDC_ADDRESS,
-        abi: erc20Abi,
-        functionName: "allowance",
-        args: [user.wallet_address as `0x${string}`, SPENDER_ADDRESS],
-      });
-
-      const balance = await publicClient.readContract({
-        address: USDC_ADDRESS,
-        abi: erc20Abi,
-        functionName: "balanceOf",
-        args: [user.wallet_address as `0x${string}`],
-      });
-
-      const requiredAmount = parseUnits(totalCost.toString(), 6); // USDC has 6 decimals
-
-      if (allowance < requiredAmount || balance < requiredAmount) {
+    if (!hasFreeCasts) {
+      // Check if user has approved spending and has sufficient balance
+      if (!user.spending_approved) {
         return NextResponse.json(
           {
-            error:
-              "Insufficient USDC allowance or balance. Please approve spending first.",
-            requiredAllowance: totalCost,
-            currentAllowance: Number(allowance) / 1000000, // Convert from wei to USDC
-            currentBalance: Number(balance) / 1000000, // Convert from wei to USDC
+            error: "USDC spending not approved. Please approve spending first.",
           },
           { status: 403 },
         );
       }
 
-      console.log(`Allowance check passed: ${allowance} >= ${requiredAmount}`);
-    } catch (allowanceError) {
-      console.error("Failed to check onchain allowance:", allowanceError);
-      return NextResponse.json(
-        { error: "Failed to verify onchain allowance" },
-        { status: 500 },
-      );
+      if (!user.usdc_balance || user.usdc_balance < totalCost) {
+        return NextResponse.json(
+          {
+            error: `Insufficient USDC balance. Need ${totalCost} USDC to cast this thread.`,
+            required: totalCost,
+            available: user.usdc_balance || 0,
+          },
+          { status: 402 },
+        );
+      }
+    }
+
+    // Create public client for blockchain interactions
+    const publicClient = createPublicClient({
+      chain: base,
+      transport: http(),
+    });
+
+    // Check onchain allowance using viem (skip if user has free casts)
+    if (!hasFreeCasts) {
+      if (!user.wallet_address) {
+        return NextResponse.json(
+          { error: "Wallet address not found for user" },
+          { status: 400 },
+        );
+      }
+
+      try {
+        const allowance = await publicClient.readContract({
+          address: USDC_ADDRESS,
+          abi: erc20Abi,
+          functionName: "allowance",
+          args: [user.wallet_address as `0x${string}`, SPENDER_ADDRESS],
+        });
+
+        const balance = await publicClient.readContract({
+          address: USDC_ADDRESS,
+          abi: erc20Abi,
+          functionName: "balanceOf",
+          args: [user.wallet_address as `0x${string}`],
+        });
+
+        const requiredAmount = parseUnits(totalCost.toString(), 6); // USDC has 6 decimals
+
+        if (allowance < requiredAmount || balance < requiredAmount) {
+          return NextResponse.json(
+            {
+              error:
+                "Insufficient USDC allowance or balance. Please approve spending first.",
+              requiredAllowance: totalCost,
+              currentAllowance: Number(allowance) / 1000000, // Convert from wei to USDC
+              currentBalance: Number(balance) / 1000000, // Convert from wei to USDC
+            },
+            { status: 403 },
+          );
+        }
+
+        console.log(
+          `Allowance check passed: ${allowance} >= ${requiredAmount}`,
+        );
+      } catch (allowanceError) {
+        console.error("Failed to check onchain allowance:", allowanceError);
+        return NextResponse.json(
+          { error: "Failed to verify onchain allowance" },
+          { status: 500 },
+        );
+      }
     }
 
     // Cast tweets sequentially to maintain thread order
@@ -521,73 +535,89 @@ export const POST = withApiKeyAndJwtAuth(async function (
     const successfulCasts = castResults.filter((result) => result.success);
     const isFullThreadSuccess = successfulCasts.length === pendingTweets.length;
 
-    // Only charge if entire thread was successfully cast
-    const actualCost = isFullThreadSuccess ? CAST_COST : 0;
+    // Only charge if entire thread was successfully cast AND user doesn't have free casts
+    const actualCost = isFullThreadSuccess ? (hasFreeCasts ? 0 : CAST_COST) : 0;
 
-    // Process payment FIRST (0.1 USDC) - only if entire thread was successfully cast
-    const newBalance = (user.usdc_balance || 0) - actualCost;
-    const newTotalSpent = (user.total_spent || 0) + actualCost;
-
-    // Execute actual USDC payment via blockchain transaction
+    // Process payment or deduct free cast - only if entire thread was successfully cast
+    let newBalance = user.usdc_balance || 0;
+    let newTotalSpent = user.total_spent || 0;
+    let newFreeCastsLeft = user.free_casts_left || 0;
     let transactionHash: string | null = null;
 
-    if (actualCost > 0) {
-      try {
-        const privateKey = process.env.PRIVATE_KEY as `0x${string}`;
+    if (isFullThreadSuccess) {
+      if (hasFreeCasts) {
+        // Deduct from free casts
+        newFreeCastsLeft = newFreeCastsLeft - 1;
+        console.log(
+          `Using free cast for thread. Free casts remaining: ${newFreeCastsLeft}`,
+        );
+      } else if (actualCost > 0) {
+        // Process USDC payment
+        newBalance = newBalance - actualCost;
+        newTotalSpent = newTotalSpent + actualCost;
 
-        if (!privateKey) {
-          console.error("Private key not configured");
+        // Execute actual USDC payment via blockchain transaction
+        try {
+          const privateKey = process.env.PRIVATE_KEY as `0x${string}`;
+
+          if (!privateKey) {
+            console.error("Private key not configured");
+            return NextResponse.json(
+              { error: "Payment system not configured" },
+              { status: 500 },
+            );
+          }
+
+          const account = privateKeyToAccount(privateKey);
+
+          const walletClient = createWalletClient({
+            account,
+            chain: base,
+            transport: http(),
+          });
+
+          // Convert amount to proper USDC units (6 decimals)
+          const amountInUnits = parseUnits(actualCost.toString(), 6);
+
+          console.log("amountInUnits", amountInUnits);
+
+          transactionHash = await walletClient.writeContract({
+            address: USDC_ADDRESS,
+            abi: erc20Abi,
+            functionName: "transferFrom",
+            args: [
+              user.wallet_address as `0x${string}`,
+              SPENDER_ADDRESS,
+              amountInUnits,
+            ],
+          });
+
+          console.log("transactionHash", transactionHash);
+
+          console.log("Payment transaction successful:", transactionHash);
+        } catch (paymentError) {
+          console.error("Payment processing error:", paymentError);
           return NextResponse.json(
-            { error: "Payment system not configured" },
+            {
+              error: "Thread cast successfully but payment failed",
+              castResults,
+              totalCost: actualCost,
+            },
             { status: 500 },
           );
         }
-
-        const account = privateKeyToAccount(privateKey);
-
-        const walletClient = createWalletClient({
-          account,
-          chain: base,
-          transport: http(),
-        });
-
-        // Convert amount to proper USDC units (6 decimals)
-        const amountInUnits = parseUnits(actualCost.toString(), 6);
-
-        console.log("amountInUnits", amountInUnits);
-
-        transactionHash = await walletClient.writeContract({
-          address: USDC_ADDRESS,
-          abi: erc20Abi,
-          functionName: "transferFrom",
-          args: [
-            user.wallet_address as `0x${string}`,
-            SPENDER_ADDRESS,
-            amountInUnits,
-          ],
-        });
-
-        console.log("transactionHash", transactionHash);
-
-        console.log("Payment transaction successful:", transactionHash);
-      } catch (paymentError) {
-        console.error("Payment processing error:", paymentError);
-        return NextResponse.json(
-          {
-            error: "Thread cast successfully but payment failed",
-            castResults,
-            totalCost: actualCost,
-          },
-          { status: 500 },
-        );
       }
+    }
 
-      // Update user balance and total spent in a transaction
+    // Update user balance, total spent, and free casts (only if thread was successful)
+    if (isFullThreadSuccess) {
+      // Update user balance, total spent, and free casts
       const { error: updateUserError } = await supabase
         .from("users")
         .update({
           usdc_balance: newBalance,
           total_spent: newTotalSpent,
+          free_casts_left: newFreeCastsLeft,
           updated_at: new Date().toISOString(),
         })
         .eq("farcaster_fid", userFid);
@@ -609,32 +639,35 @@ export const POST = withApiKeyAndJwtAuth(async function (
           await supabase
             .from("tweets")
             .update({
-              cast_price: CAST_COST,
+              cast_price: hasFreeCasts ? 0 : CAST_COST,
               payment_approved: true,
-              payment_processed: true,
+              payment_processed: !hasFreeCasts, // Only mark as processed if payment was actually made
               updated_at: new Date().toISOString(),
             })
             .eq("id", tweet.id);
         }
       }
 
-      // Create transaction record with blockchain transaction hash
+      // Create transaction record
       const { error: transactionError } = await supabase
         .from("transactions")
         .insert({
           user_id: user.id,
-          transaction_type: "cast_payment",
+          transaction_type: hasFreeCasts ? "free_cast" : "cast_payment",
           amount: actualCost,
-          currency: "USDC",
+          currency: hasFreeCasts ? null : "USDC",
           status: "completed",
           transaction_hash: transactionHash,
-          description: `Payment for casting complete thread (${successfulCasts.length} tweets)`,
+          description: hasFreeCasts
+            ? `Free cast of complete thread (${successfulCasts.length} tweets)`
+            : `Payment for casting complete thread (${successfulCasts.length} tweets)`,
           metadata: {
             conversation_id: conversationId,
             thread_tweets: successfulCasts.length,
             total_cost: actualCost,
             cast_results: castResults,
             payment_transaction_hash: transactionHash,
+            is_free_cast: hasFreeCasts,
           },
         });
 
@@ -649,6 +682,11 @@ export const POST = withApiKeyAndJwtAuth(async function (
       totalCost: actualCost,
       castResults,
       paymentHash: transactionHash || undefined,
+      usedFreeCast: hasFreeCasts && isFullThreadSuccess,
+      freeCastsRemaining:
+        hasFreeCasts && isFullThreadSuccess
+          ? newFreeCastsLeft
+          : user.free_casts_left,
     };
 
     if (successfulCasts.length === 0) {

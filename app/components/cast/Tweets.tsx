@@ -220,6 +220,7 @@ export default function Tweets({ fid }: TweetsProps) {
   // Fetch user data to check for signer_uuid, allowance, and balance
   const { data: userData } = useGetUser(fid);
   const { hasAllowance, currentAllowance } = useUSDCApproval();
+  const { data: freeCastsData } = useFreeCasts();
   const hasSignerUuid = userData?.user?.neynar_signer_uuid;
   const userWalletAddress = userData?.user?.wallet_address;
 
@@ -234,6 +235,11 @@ export default function Tweets({ fid }: TweetsProps) {
       refetchInterval: 30000, // Refetch every 30 seconds
     },
   });
+
+  // Helper function to check if user has free casts remaining
+  const hasFreeCasts = () => {
+    return freeCastsData?.freeCastsLeft && freeCastsData.freeCastsLeft > 0;
+  };
 
   // Helper function to check if user has sufficient balance (onchain)
   const hasSufficientBalance = () => {
@@ -256,8 +262,7 @@ export default function Tweets({ fid }: TweetsProps) {
     return (
       hasSignerUuid &&
       userData?.user?.signer_approval_status === "approved" &&
-      hasSufficientAllowance() &&
-      hasSufficientBalance()
+      (hasFreeCasts() || (hasSufficientAllowance() && hasSufficientBalance()))
     );
   };
 
@@ -423,18 +428,21 @@ export default function Tweets({ fid }: TweetsProps) {
       return;
     }
 
-    // Check if user has sufficient allowance
-    if (!hasSufficientAllowance()) {
-      toast("Insufficient allowance");
-      setShowApproveSpending(true);
-      return;
-    }
+    // Check if user has free casts first - if they do, skip allowance/balance checks
+    if (!hasFreeCasts()) {
+      // Check if user has sufficient allowance
+      if (!hasSufficientAllowance()) {
+        toast("Insufficient allowance");
+        setShowApproveSpending(true);
+        return;
+      }
 
-    // Check if user has sufficient balance
-    if (!hasSufficientBalance()) {
-      toast("Insufficient balance");
-      setShowApproveSpending(true);
-      return;
+      // Check if user has sufficient balance
+      if (!hasSufficientBalance()) {
+        toast("Insufficient balance");
+        setShowApproveSpending(true);
+        return;
+      }
     }
 
     setShowEditModal(true);
@@ -450,18 +458,21 @@ export default function Tweets({ fid }: TweetsProps) {
       return;
     }
 
-    // Check if user has sufficient allowance
-    if (!hasSufficientAllowance()) {
-      toast("Insufficient allowance");
-      setShowApproveSpending(true);
-      return;
-    }
+    // Check if user has free casts first - if they do, skip allowance/balance checks
+    if (!hasFreeCasts()) {
+      // Check if user has sufficient allowance
+      if (!hasSufficientAllowance()) {
+        toast("Insufficient allowance");
+        setShowApproveSpending(true);
+        return;
+      }
 
-    // Check if user has sufficient balance
-    if (!hasSufficientBalance()) {
-      toast("Insufficient balance");
-      setShowApproveSpending(true);
-      return;
+      // Check if user has sufficient balance
+      if (!hasSufficientBalance()) {
+        toast("Insufficient balance");
+        setShowApproveSpending(true);
+        return;
+      }
     }
 
     await sdk.haptics.impactOccurred("medium");
