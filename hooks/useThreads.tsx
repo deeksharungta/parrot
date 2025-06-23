@@ -74,6 +74,9 @@ export function useCastThread() {
       // Dismiss any loading toasts and show success toast
       toast.dismiss();
       toast("Tweet Casted Successfully!");
+      queryClient.invalidateQueries({
+        queryKey: ["free-casts"],
+      });
       // Invalidate relevant queries
       queryClient.invalidateQueries({
         queryKey: ["threadPreview", variables.conversationId],
@@ -84,9 +87,6 @@ export function useCastThread() {
       });
       queryClient.invalidateQueries({
         queryKey: ["cachedTweets"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["freeCasts"],
       });
     },
     onError: (error) => {
