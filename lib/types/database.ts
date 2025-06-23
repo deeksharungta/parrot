@@ -26,6 +26,9 @@ export interface Database {
           notification_url: string | null;
           has_frame: boolean | null;
           wallet_address: string | null;
+          free_casts_given: number | null;
+          free_casts_left: number | null;
+          promotion_cast_hash: string | null;
         };
         Insert: {
           id?: string;
@@ -51,6 +54,9 @@ export interface Database {
           notification_url?: string | null;
           has_frame?: boolean | null;
           wallet_address?: string | null;
+          free_casts_given?: number | null;
+          free_casts_left?: number | null;
+          promotion_cast_hash?: string | null;
         };
         Update: {
           id?: string;
@@ -76,6 +82,9 @@ export interface Database {
           notification_url?: string | null;
           has_frame?: boolean | null;
           wallet_address?: string | null;
+          free_casts_given?: number | null;
+          free_casts_left?: number | null;
+          promotion_cast_hash?: string | null;
         };
       };
       tweets: {

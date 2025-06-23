@@ -1,13 +1,38 @@
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Cross from "../icons/Cross";
 import Button from "../ui/Button";
+import { usePromotionCast } from "@/hooks/usePromotionCast";
 
 interface PromotionalCastProps {
   onClose: () => void;
 }
 
 export default function PromotionalCast({ onClose }: PromotionalCastProps) {
+  const promotionCast = usePromotionCast();
+
+  const [castText, setCastText] = useState(
+    "🚀 Exciting news! We're launching our new casting feature. Share your thoughts with the world and connect with your community like never before! #NewFeature #Casting",
+  );
+
+  const handleCast = () => {
+    // Convert images to embeds (using placeholder URLs - you may want to use actual hosted image URLs)
+    const embeds = ["https://parrot.click"];
+
+    promotionCast.mutate(
+      {
+        text: castText,
+        embeds: embeds,
+      },
+      {
+        onSuccess: () => {
+          // Close modal on successful cast
+          onClose();
+        },
+      },
+    );
+  };
+
   return (
     <div className="fixed bg-white border border-[#ECECED] z-50 max-h-[85vh] overflow-y-auto bottom-2 left-2 right-2 rounded-[32px] p-6">
       <div className="flex items-center justify-between mb-3">
@@ -37,11 +62,12 @@ export default function PromotionalCast({ onClose }: PromotionalCastProps) {
       <div>
         <div className="relative">
           <textarea
-            value="🚀 Exciting news! We're launching our new casting feature. Share your thoughts with the world and connect with your community like never before! #NewFeature #Casting"
+            value={castText}
+            onChange={(e) => setCastText(e.target.value)}
             className="w-full p-3 rounded-xl resize-none focus:outline-none focus:border-transparent bg-[#f8f8f8] text-sm leading-relaxed touch-manipulation"
             rows={4}
             maxLength={280}
-            readOnly
+            placeholder="What's on your mind?"
           />
         </div>
 
@@ -67,7 +93,9 @@ export default function PromotionalCast({ onClose }: PromotionalCastProps) {
             </div>
           </div>
         </div>
-        <Button>Cast</Button>
+        <Button onClick={handleCast} disabled={promotionCast.isPending}>
+          {promotionCast.isPending ? "Casting..." : "Cast"}
+        </Button>
       </div>
     </div>
   );
