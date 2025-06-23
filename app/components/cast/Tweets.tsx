@@ -15,6 +15,7 @@ import { useGetUser } from "@/hooks/useUsers";
 import { useUSDCApproval } from "@/hooks/useUSDCApproval";
 import { useEditTweet, useCastTweet } from "@/hooks/useTweetEdit";
 import { useCastThread } from "@/hooks/useThreads";
+import { useFreeCasts } from "@/hooks/useFreeCasts";
 import ThreadTweetCard from "./ThreadTweetCard";
 import { useReadContract } from "wagmi";
 import { erc20Abi, formatUnits, parseUnits } from "viem";

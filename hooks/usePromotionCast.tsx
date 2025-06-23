@@ -76,6 +76,7 @@ export const usePromotionCast = () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["user-tweets"] });
       queryClient.invalidateQueries({ queryKey: ["promotion-cast-check"] });
+      queryClient.invalidateQueries({ queryKey: ["free-casts"] });
 
       // Show success toast
       toast("You've been granted 20 free casts.");
