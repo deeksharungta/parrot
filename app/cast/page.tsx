@@ -10,10 +10,13 @@ import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { useCurrentUser } from "@/hooks/useUsers";
 import Onboarding from "../components/welcome/Onboarding";
 import { analytics } from "@/lib/analytics";
+import { usePromotionCastCheck } from "@/hooks/usePromotionCast";
 
 export default function CastPage() {
   const { isFrameReady, setFrameReady, context } = useMiniKit();
   const { data: userData } = useCurrentUser();
+  const { data: promotionCastStatus, isLoading: isPromotionCastLoading } =
+    usePromotionCastCheck();
   const [showConnectNeynar, setShowConnectNeynar] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showEarlyAccessModal, setShowEarlyAccessModal] = useState(false);
@@ -51,11 +54,13 @@ export default function CastPage() {
     }
   }, [userData]);
 
-  // Show Early Access Modal when user has connected Neynar account
+  // Show Early Access Modal when user has connected Neynar account and hasn't cast promotional cast
   useEffect(() => {
     if (
       userData?.user?.neynar_signer_uuid &&
-      userData?.user?.signer_approval_status === "approved"
+      userData?.user?.signer_approval_status === "approved" &&
+      !isPromotionCastLoading &&
+      !promotionCastStatus?.hasCasted
     ) {
       // Check if we've already shown this modal to the user
       const hasSeenEarlyAccessModal = localStorage.getItem(
@@ -65,7 +70,7 @@ export default function CastPage() {
         setShowEarlyAccessModal(true);
       }
     }
-  }, [userData]);
+  }, [userData, promotionCastStatus, isPromotionCastLoading]);
 
   const handleConnectNeynarClose = () => {
     setShowConnectNeynar(false);
@@ -96,10 +101,12 @@ export default function CastPage() {
         isOpen={showConnectNeynar}
         onClose={handleConnectNeynarClose}
       />
-      <EarlyAccessModal
-        isOpen={showEarlyAccessModal}
-        onClose={handleEarlyAccessModalClose}
-      />
+      {showEarlyAccessModal && (
+        <EarlyAccessModal
+          isOpen={showEarlyAccessModal}
+          onClose={handleEarlyAccessModalClose}
+        />
+      )}
     </div>
   );
 }

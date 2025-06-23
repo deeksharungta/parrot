@@ -6,10 +6,15 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import EarlyAccessModal from "../promotional/EarlyAccessModal";
 import Settings from "../icons/Settings";
+import { usePromotionCastCheck } from "@/hooks/usePromotionCast";
 
 export default function Header({ title }: { title: string }) {
   const { context } = useMiniKit();
   const [earlyAccessModalOpen, setEarlyAccessModalOpen] = useState(false);
+  const { data: promotionCastStatus, isLoading } = usePromotionCastCheck();
+
+  // Don't show the settings button if user has already cast promotional cast
+  const showSettingsButton = !promotionCastStatus?.hasCasted && !isLoading;
 
   return (
     <>
@@ -23,13 +28,15 @@ export default function Header({ title }: { title: string }) {
           {title}
         </motion.p>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              setEarlyAccessModalOpen(true);
-            }}
-          >
-            <Settings isActive={false} />
-          </button>
+          {showSettingsButton && (
+            <button
+              onClick={() => {
+                setEarlyAccessModalOpen(true);
+              }}
+            >
+              <Settings isActive={false} />
+            </button>
+          )}
           <div className="rounded-full overflow-hidden">
             <Image
               src={context?.user?.pfpUrl ?? "/farcaster.png"}
@@ -41,10 +48,12 @@ export default function Header({ title }: { title: string }) {
           </div>
         </div>
       </div>
-      <EarlyAccessModal
-        isOpen={earlyAccessModalOpen}
-        onClose={() => setEarlyAccessModalOpen(false)}
-      />
+      {showSettingsButton && (
+        <EarlyAccessModal
+          isOpen={earlyAccessModalOpen}
+          onClose={() => setEarlyAccessModalOpen(false)}
+        />
+      )}
     </>
   );
 }
