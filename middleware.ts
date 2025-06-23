@@ -63,14 +63,15 @@ function addSecurityHeaders(response: NextResponse) {
     "camera=(), microphone=(), geolocation=()",
   );
 
-  // Content Security Policy - Updated for Farcaster frame compatibility and PostHog
+  // Content Security Policy - Updated for Farcaster frame compatibility, PostHog, and Sentry
   const csp = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://js.stripe.com https://us-assets.i.posthog.com https://*.posthog.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https: blob:",
-    "connect-src 'self' https://api.neynar.com https://api.twitter.com https://t.co https://*.supabase.co wss://*.supabase.co https://vercel.live https://*.loca.lt https://mainnet.base.org https://*.base.org https://api.coinbase.com https://*.coinbase.com https://ethereum-mainnet.s.chainbase.online https://*.alchemy.com https://*.infura.io https://*.quicknode.com wss://mainnet.base.org wss://*.base.org https://react-tweet.vercel.app https://us.i.posthog.com https://us-assets.i.posthog.com https://*.posthog.com",
+    "connect-src 'self' https://api.neynar.com https://api.twitter.com https://t.co https://*.supabase.co wss://*.supabase.co https://vercel.live https://*.loca.lt https://mainnet.base.org https://*.base.org https://api.coinbase.com https://*.coinbase.com https://ethereum-mainnet.s.chainbase.online https://*.alchemy.com https://*.infura.io https://*.quicknode.com wss://mainnet.base.org wss://*.base.org https://react-tweet.vercel.app https://us.i.posthog.com https://us-assets.i.posthog.com https://*.posthog.com https://*.sentry.io",
+    "worker-src 'self' blob:",
     "frame-src 'self' https://js.stripe.com",
     "object-src 'none'",
     "base-uri 'self'",
