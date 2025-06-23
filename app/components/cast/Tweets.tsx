@@ -240,21 +240,28 @@ export default function Tweets({ fid }: TweetsProps) {
         `📊 Filter results: ${tweets.length} total tweets -> ${filteredTweets.length} filtered tweets`,
       );
 
-      // Simple logic: if we have significantly more filtered tweets than stable tweets,
-      // it means tweets were restored, so update the stable array
-      if (stableTweets.length === 0) {
+      // Always update stable tweets to match current filtered tweets
+      if (filteredTweets.length > 0) {
         console.log(
-          `🔄 Setting initial stable tweets: ${filteredTweets.length}`,
+          `🔄 Updating stable tweets: ${stableTweets.length} -> ${filteredTweets.length}`,
         );
         setStableTweets(filteredTweets);
+
+        // Only reset index if we don't have any stable tweets or if current index is out of bounds
+        if (
+          stableTweets.length === 0 ||
+          currentIndex >= filteredTweets.length
+        ) {
+          console.log(`🔄 Resetting current index to 0`);
+          setCurrentIndex(0);
+        } else {
+          console.log(`📍 Keeping current index: ${currentIndex}`);
+        }
+      } else {
+        // No tweets available
+        console.log(`🔄 No tweets available, clearing stable tweets`);
+        setStableTweets([]);
         setCurrentIndex(0);
-      } else if (filteredTweets.length > stableTweets.length) {
-        // More tweets available than what we have - this indicates restore
-        console.log(
-          `🔄 Tweets restored! Updating stable tweets: ${stableTweets.length} -> ${filteredTweets.length}`,
-        );
-        setStableTweets(filteredTweets);
-        setCurrentIndex(0); // Reset to start to show restored tweets
       }
     } else if (tweets && tweets.length === 0) {
       // No tweets available, clear everything
