@@ -8,7 +8,7 @@ import { MiniKitProvider } from "@coinbase/onchainkit/minikit";
 import { WagmiProvider } from "wagmi";
 import { config } from "@/lib/wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { PostHogProvider } from "./components/PostHogProvider";
+import { PostHogSimpleProvider } from "./components/PostHogSimpleProvider";
 
 // Create QueryClient outside component to prevent re-creation
 const queryClient = new QueryClient({
@@ -25,7 +25,7 @@ const queryClient = new QueryClient({
 
 export function Providers(props: { children: ReactNode }) {
   return (
-    <PostHogProvider>
+    <PostHogSimpleProvider>
       <NeynarContextProvider
         settings={{
           clientId: process.env.NEXT_PUBLIC_NEYNAR_CLIENT_ID || "",
@@ -55,6 +55,6 @@ export function Providers(props: { children: ReactNode }) {
           </WagmiProvider>
         </QueryClientProvider>
       </NeynarContextProvider>
-    </PostHogProvider>
+    </PostHogSimpleProvider>
   );
 }
