@@ -17,14 +17,26 @@ export default function EarlyAccessModal({
   onClose,
 }: EarlyAccessModalProps) {
   const [showPromotionalCast, setShowPromotionalCast] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const handleCast = () => {
-    setShowPromotionalCast(true);
-    onClose();
+    setIsTransitioning(true);
+    // Delay showing promotional cast to allow modal exit animation
+    setTimeout(() => {
+      setShowPromotionalCast(true);
+      onClose();
+    }, 300); // Match the exit animation duration
   };
 
   const handleClosePromotionalCast = () => {
     setShowPromotionalCast(false);
+    setIsTransitioning(false);
+  };
+
+  const handleModalClose = () => {
+    if (!isTransitioning) {
+      onClose();
+    }
   };
 
   return (
@@ -38,7 +50,7 @@ export default function EarlyAccessModal({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               className="fixed inset-0 bg-white/20 z-40 backdrop-blur-sm"
-              onClick={onClose}
+              onClick={handleModalClose}
             />
 
             <motion.div
@@ -57,7 +69,7 @@ export default function EarlyAccessModal({
                 <h3 className="text-base font-semibold text-[#100c20]">
                   Early access bonus
                 </h3>
-                <button onClick={onClose} className="ml-auto">
+                <button onClick={handleModalClose} className="ml-auto">
                   <Cross />
                 </button>
               </div>
@@ -94,9 +106,18 @@ export default function EarlyAccessModal({
         )}
       </AnimatePresence>
 
-      {showPromotionalCast && (
-        <PromotionalCast onClose={handleClosePromotionalCast} />
-      )}
+      <AnimatePresence>
+        {showPromotionalCast && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+          >
+            <PromotionalCast onClose={handleClosePromotionalCast} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
