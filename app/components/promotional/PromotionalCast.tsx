@@ -117,7 +117,11 @@ export default function PromotionalCast({ onClose }: PromotionalCastProps) {
             </div>
           )}
 
-          <Button onClick={handleCast} disabled={promotionCast.isPending}>
+          <Button
+            onClick={handleCast}
+            disabled={promotionCast.isPending}
+            className="mt-4"
+          >
             {promotionCast.isPending ? "Casting..." : "Cast"}
           </Button>
         </div>
