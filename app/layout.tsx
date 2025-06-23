@@ -6,6 +6,7 @@ import { Viewport } from "next";
 import { Toaster } from "sonner";
 import AuthGuard from "@/components/AuthGuard";
 import { Analytics } from "@vercel/analytics/next";
+import * as Sentry from "@sentry/nextjs";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -26,24 +27,24 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
       description: "Make your post work for you",
-      images: [process.env.NEXT_PUBLIC_APP_HERO_IMAGE || ""],
+      images: [`${URL}/hero.png`],
     },
     other: {
       "fc:frame": JSON.stringify({
         version: "next",
-        imageUrl: process.env.NEXT_PUBLIC_APP_HERO_IMAGE,
+        imageUrl: `${URL}/hero.png`,
         button: {
           title: `Launch ${process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME}`,
           action: {
             type: "launch_frame",
             name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
             url: URL,
-            splashImageUrl: process.env.NEXT_PUBLIC_SPLASH_IMAGE,
-            splashBackgroundColor:
-              process.env.NEXT_PUBLIC_SPLASH_BACKGROUND_COLOR,
+            splashImageUrl: `${URL}/splash.png`,
+            splashBackgroundColor: "#4998D1",
           },
         },
       }),
+      ...Sentry.getTraceData(),
     },
   };
 }
