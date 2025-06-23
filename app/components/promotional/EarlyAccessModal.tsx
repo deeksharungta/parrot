@@ -46,7 +46,7 @@ export default function EarlyAccessModal({
                 <Cross />
               </button>
             </div>
-            <div className="my-6 overflow-hidden">
+            <div className="my-4 overflow-hidden">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="339"
@@ -60,17 +60,18 @@ export default function EarlyAccessModal({
                 />
               </svg>
             </div>
-            <Image
-              src="/freeCasts.svg"
-              alt="Early Access Bonus"
-              width={100}
-              height={100}
-              className="rounded-xl"
-            />
+            <div className="relativew-full h-44 mb-2">
+              <Image
+                src="/freeCasts.svg"
+                alt="Early Access Bonus"
+                fill
+                className="rounded-xl w-full h-full object-cover"
+              />
+            </div>
             <p className="text-sm font-normal text-[#494656]">
               Talk about Parrot and get 20 casts on us.
             </p>
-            <Button className="mt-6">Cast about Parrot</Button>
+            <Button className="mt-4">Cast about Parrot</Button>
           </motion.div>
         </>
       )}
