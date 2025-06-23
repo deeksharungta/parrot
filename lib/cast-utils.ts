@@ -427,3 +427,55 @@ export async function resolveTcoUrls(content: string): Promise<string> {
 
   return updatedContent;
 }
+
+export async function resolveTcoUrlsServerSide(
+  content: string,
+): Promise<string> {
+  if (!content) return content;
+
+  const tcoRegex = /https:\/\/t\.co\/\S+/g;
+  const matches = Array.from(content.matchAll(tcoRegex));
+
+  if (matches.length === 0) {
+    return content;
+  }
+
+  let updatedContent = content;
+
+  // Resolve all t.co URLs found in the content using server-side API
+  for (const match of matches) {
+    const tcoUrl = match[0];
+
+    try {
+      const response = await fetch("/api/resolve-url", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: tcoUrl }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const resolvedUrl = data.resolvedUrl;
+
+        // Only replace if we got a different URL
+        if (resolvedUrl && resolvedUrl !== tcoUrl) {
+          updatedContent = updatedContent.replace(tcoUrl, resolvedUrl);
+          console.log(`Resolved t.co URL: ${tcoUrl} -> ${resolvedUrl}`);
+        } else {
+          console.log(
+            `Could not resolve t.co URL: ${tcoUrl}, keeping original`,
+          );
+        }
+      } else {
+        console.error(`Failed to resolve t.co URL ${tcoUrl}: API error`);
+      }
+    } catch (error) {
+      console.error(`Failed to resolve t.co URL ${tcoUrl}:`, error);
+      // Keep the original t.co URL if resolution fails
+    }
+  }
+
+  return updatedContent;
+}

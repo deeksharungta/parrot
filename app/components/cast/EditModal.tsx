@@ -10,7 +10,7 @@ import UserMentionDropdown from "../ui/UserMentionDropdown";
 import { useThreadTweets } from "@/hooks/useThreadTweets";
 import {
   convertTwitterMentionsToFarcaster,
-  resolveTcoUrls,
+  resolveTcoUrlsServerSide,
 } from "@/lib/cast-utils";
 
 interface EditModalProps {
@@ -239,7 +239,7 @@ export function EditModal({
     );
 
     // Resolve t.co URLs to their actual destinations
-    processedContent = await resolveTcoUrls(processedContent);
+    processedContent = await resolveTcoUrlsServerSide(processedContent);
 
     return processedContent;
   };
