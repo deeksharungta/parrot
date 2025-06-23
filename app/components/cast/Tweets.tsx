@@ -240,61 +240,29 @@ export default function Tweets({ fid }: TweetsProps) {
         `📊 Filter results: ${tweets.length} total tweets -> ${filteredTweets.length} filtered tweets`,
       );
 
-      // If this is the first time loading tweets, set them all
+      // Simple logic: if we have significantly more filtered tweets than stable tweets,
+      // it means tweets were restored, so update the stable array
       if (stableTweets.length === 0) {
         console.log(
           `🔄 Setting initial stable tweets: ${filteredTweets.length}`,
         );
         setStableTweets(filteredTweets);
-      } else {
-        // Check if we need to refresh the entire list (when tweets are restored)
-        const currentTweetIds = new Set(stableTweets.map((t) => t.tweet_id));
-        const newTweetIds = new Set(filteredTweets.map((t) => t.tweet_id));
-
-        // If there are restored tweets that weren't in the current list, refresh the entire list
-        const hasRestoredTweets = filteredTweets.some(
-          (tweet) =>
-            !currentTweetIds.has(tweet.tweet_id) &&
-            (tweet.cast_status === "pending" || !tweet.cast_status),
-        );
-
-        console.log(`🔍 Checking for restored tweets: ${hasRestoredTweets}`);
+        setCurrentIndex(0);
+      } else if (filteredTweets.length > stableTweets.length) {
+        // More tweets available than what we have - this indicates restore
         console.log(
-          `📊 Current stable tweets: ${stableTweets.length}, Filtered tweets: ${filteredTweets.length}`,
+          `🔄 Tweets restored! Updating stable tweets: ${stableTweets.length} -> ${filteredTweets.length}`,
         );
-
-        if (hasRestoredTweets) {
-          console.log(
-            `🔄 Refreshing entire list with ${filteredTweets.length} tweets`,
-          );
-          setStableTweets(filteredTweets);
-          setCurrentIndex(0);
-          setProcessedTweetIds(new Set()); // Reset processed tweets
-        } else {
-          // Otherwise, only add new tweets that aren't already in the stable array
-          const newTweets = filteredTweets.filter(
-            (tweet) => !currentTweetIds.has(tweet.tweet_id),
-          );
-
-          if (newTweets.length > 0) {
-            console.log(
-              `➕ Adding ${newTweets.length} new tweets to existing list`,
-            );
-            // Add new tweets to the end of the existing array
-            setStableTweets((prev) => [...prev, ...newTweets]);
-          } else {
-            console.log(`ℹ️ No new tweets to add`);
-          }
-        }
+        setStableTweets(filteredTweets);
+        setCurrentIndex(0); // Reset to start to show restored tweets
       }
     } else if (tweets && tweets.length === 0) {
-      console.log(`🔄 No tweets found, clearing stable tweets`);
-      // If tweets array is empty, clear stable tweets too
+      // No tweets available, clear everything
+      console.log(`🔄 No tweets available, clearing stable tweets`);
       setStableTweets([]);
       setCurrentIndex(0);
-      setProcessedTweetIds(new Set());
     }
-  }, [tweets]);
+  }, [tweets, stableTweets.length]);
 
   const showTweets = stableTweets;
 
