@@ -1,4 +1,5 @@
 import { posthog } from "./posthog";
+import { sentry } from "./sentry";
 
 // Event names - keep these consistent across your app
 export const EVENTS = {
@@ -197,12 +198,19 @@ export const analytics = {
     }
   },
 
-  // Track errors
+  // Track errors (integrated with Sentry)
   trackError: (
     error: Error,
     context?: string,
     properties?: Record<string, any>,
   ) => {
+    // Send to Sentry for detailed error tracking
+    sentry.captureException(error, {
+      context,
+      ...properties,
+    });
+
+    // Also track in PostHog for analytics
     if (posthog) {
       posthog.capture(EVENTS.ERROR_OCCURRED, {
         error_message: error.message,
@@ -213,13 +221,93 @@ export const analytics = {
     }
   },
 
-  // Identify user with properties
+  // Track API errors with both Sentry and PostHog
+  trackApiError: (
+    error: Error,
+    endpoint: string,
+    method: string,
+    statusCode?: number,
+  ) => {
+    // Send to Sentry with API context
+    sentry.captureApiError(error, endpoint, method, statusCode);
+
+    // Also track in PostHog
+    if (posthog) {
+      posthog.capture(EVENTS.ERROR_OCCURRED, {
+        error_type: "api_error",
+        error_message: error.message,
+        endpoint,
+        method,
+        status_code: statusCode,
+      });
+    }
+  },
+
+  // Track authentication errors
+  trackAuthError: (error: Error, action: string, userId?: string) => {
+    // Send to Sentry
+    sentry.captureAuthError(error, action, userId);
+
+    // Also track in PostHog
+    if (posthog) {
+      posthog.capture(EVENTS.ERROR_OCCURRED, {
+        error_type: "auth_error",
+        error_message: error.message,
+        action,
+        user_id: userId,
+      });
+    }
+  },
+
+  // Track cast/tweet errors
+  trackCastError: (error: Error, tweetId: string, action: string) => {
+    // Send to Sentry
+    sentry.captureCastError(error, tweetId, action);
+
+    // Also track in PostHog
+    if (posthog) {
+      posthog.capture(EVENTS.ERROR_OCCURRED, {
+        error_type: "cast_error",
+        error_message: error.message,
+        tweet_id: tweetId,
+        action,
+      });
+    }
+  },
+
+  // Track payment errors
+  trackPaymentError: (error: Error, amount: number, action: string) => {
+    // Send to Sentry
+    sentry.capturePaymentError(error, amount, action);
+
+    // Also track in PostHog
+    if (posthog) {
+      posthog.capture(EVENTS.ERROR_OCCURRED, {
+        error_type: "payment_error",
+        error_message: error.message,
+        amount,
+        action,
+      });
+    }
+  },
+
+  // Identify user with properties (both PostHog and Sentry)
   identifyUser: (userId: string, userProperties: Record<string, any>) => {
+    // PostHog identification
     if (posthog) {
       posthog.identify(userId, {
         ...userProperties,
         identified_at: new Date().toISOString(),
       });
     }
+
+    // Sentry user context
+    sentry.setUser({
+      id: userId,
+      username: userProperties.username,
+      email: userProperties.email,
+      fid: userProperties.fid,
+      ...userProperties,
+    });
   },
 };

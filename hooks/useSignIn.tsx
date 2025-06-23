@@ -3,11 +3,13 @@ import { sdk } from "@farcaster/frame-sdk";
 import { useCallback, useState, useEffect } from "react";
 import { secureStorage } from "@/lib/secure-storage";
 import { analytics } from "@/lib/analytics";
+import { useSentry } from "./useSentry";
 
 export const useSignIn = () => {
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true); // Start with loading true to check token
   const [error, setError] = useState<string | null>(null);
+  const { trackAuthError, addBreadcrumb, setUser } = useSentry();
 
   // Function to validate token against backend
   const validateToken = useCallback(async (token: string) => {
@@ -28,6 +30,7 @@ export const useSignIn = () => {
       return data.isValid;
     } catch (error) {
       console.error("Token validation error:", error);
+      trackAuthError(error as Error, "token_validation");
       return false;
     }
   }, []);
@@ -52,6 +55,7 @@ export const useSignIn = () => {
         }
       } catch (error) {
         console.error("Error checking existing auth:", error);
+        trackAuthError(error as Error, "check_existing_auth");
         setIsSignedIn(false);
       } finally {
         setIsLoading(false);
@@ -149,12 +153,27 @@ export const useSignIn = () => {
 
       // Track successful sign-in
       analytics.trackSignIn("farcaster", context.user.fid.toString());
-      analytics.identifyUser(context.user.fid.toString(), {
+
+      const userProperties = {
         fid: context.user.fid,
         username: context.user.username,
         display_name: context.user.displayName,
         pfp_url: context.user.pfpUrl,
         signed_in_at: new Date().toISOString(),
+      };
+
+      analytics.identifyUser(context.user.fid.toString(), userProperties);
+
+      // Set Sentry user context
+      setUser({
+        id: context.user.fid.toString(),
+        ...userProperties,
+      });
+
+      // Add breadcrumb for successful sign-in
+      addBreadcrumb("User signed in successfully", "auth", {
+        fid: context.user.fid,
+        username: context.user.username,
       });
 
       setIsSignedIn(true);
@@ -162,20 +181,25 @@ export const useSignIn = () => {
     } catch (err) {
       console.error("Sign in error:", err);
 
-      // Handle specific SDK errors
+      // Track error to Sentry and PostHog
       if (err instanceof Error) {
+        trackAuthError(err, "sign_in");
+
         if (err.message.includes("SignIn.RejectedByUser")) {
           setError("Sign in was cancelled. Please try again.");
+          addBreadcrumb("User cancelled sign-in", "auth");
         } else if (
           err.message.includes("timeout") ||
           err.message.includes("Timeout")
         ) {
           setError("Sign in timed out. Please try again.");
+          addBreadcrumb("Sign-in timeout", "auth");
         } else {
           setError(err.message);
         }
       } else {
         setError("Sign in failed");
+        trackAuthError(new Error("Unknown sign-in error"), "sign_in");
       }
       throw err;
     } finally {
@@ -190,6 +214,7 @@ export const useSignIn = () => {
       secureStorage.removeToken();
     } catch (error) {
       console.error("Failed to remove token from secure storage:", error);
+      trackAuthError(error as Error, "logout");
     }
     setIsSignedIn(false);
   }, []);
