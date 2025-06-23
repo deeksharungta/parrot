@@ -76,6 +76,7 @@ export const useCastTweet = () => {
       // Invalidate tweet queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: ["tweets"] });
       queryClient.invalidateQueries({ queryKey: ["userTweets"] });
+      queryClient.invalidateQueries({ queryKey: ["freeCasts"] });
 
       // Dismiss any loading toasts and show success toast
       toast.dismiss();

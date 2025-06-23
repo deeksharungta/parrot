@@ -85,6 +85,9 @@ export function useCastThread() {
       queryClient.invalidateQueries({
         queryKey: ["cachedTweets"],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["freeCasts"],
+      });
     },
     onError: (error) => {
       // Dismiss any loading toasts and show error toast
