@@ -75,7 +75,7 @@ export default function EarlyAccessModal({
                   />
                 </svg>
               </div>
-              <div className="relativew-full h-44 mb-2">
+              <div className="relative w-full h-44 mb-2">
                 <Image
                   src="/freeCasts.svg"
                   alt="Early Access Bonus"
