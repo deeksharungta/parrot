@@ -8,6 +8,10 @@ import Image from "next/image";
 import { useUserSearch, FarcasterUser } from "@/hooks/useUserSearch";
 import UserMentionDropdown from "../ui/UserMentionDropdown";
 import { useThreadTweets } from "@/hooks/useThreadTweets";
+import {
+  convertTwitterMentionsToFarcaster,
+  resolveTcoUrls,
+} from "@/lib/cast-utils";
 
 interface EditModalProps {
   tweetId: string;
@@ -192,7 +196,55 @@ export function EditModal({
     }
   }, [isOpen, tweetData, databaseTweet, showConfirmation]);
 
-  // Cleanup tweet content function
+  // Helper function to process tweet content for Farcaster
+  const processContentForFarcaster = async (
+    content: string,
+    hasMediaAttached: boolean = false,
+    originalContent?: string,
+  ): Promise<string> => {
+    let processedContent = content;
+
+    // Remove t.co URLs (with or without "this@" prefix) but preserve whitespace
+    processedContent = processedContent.replace(
+      /this@https:\/\/t\.co\/\S*/g,
+      "",
+    );
+
+    // Only remove the last t.co link if there's media attached
+    if (hasMediaAttached) {
+      const tcoRegex = /https:\/\/t\.co\/\S+/g;
+      const matches = Array.from(processedContent.matchAll(tcoRegex));
+
+      if (matches.length > 0) {
+        // Only remove the last match
+        const lastMatch = matches[matches.length - 1];
+        if (lastMatch.index !== undefined) {
+          const beforeLastLink = processedContent.substring(0, lastMatch.index);
+          const afterLastLink = processedContent.substring(
+            lastMatch.index + lastMatch[0].length,
+          );
+          processedContent = beforeLastLink + afterLastLink;
+        }
+      }
+    }
+
+    // Trim trailing whitespace
+    processedContent = processedContent.replace(/\s+$/, "");
+
+    // Convert Twitter mentions to Farcaster format
+    processedContent = await convertTwitterMentionsToFarcaster(
+      processedContent,
+      true,
+      originalContent,
+    );
+
+    // Resolve t.co URLs to their actual destinations
+    processedContent = await resolveTcoUrls(processedContent);
+
+    return processedContent;
+  };
+
+  // Simple cleanup function for UI display (non-Farcaster processing)
   const cleanupTweetContent = (
     content: string,
     hasMediaAttached?: boolean,
@@ -255,75 +307,130 @@ export function EditModal({
   // Initialize thread editing states
   useEffect(() => {
     if (isThread && threadTweets && isOpen) {
-      const newStates = new Map<string, ThreadTweetEditState>();
+      const initializeThreadStates = async () => {
+        const newStates = new Map<string, ThreadTweetEditState>();
 
-      threadTweets.forEach((tweet) => {
-        const tweetContent = tweet.content || "";
-        const cleanedContent = cleanupTweetContent(
-          tweetContent,
-          tweetHasMedia(tweet),
-        );
+        for (const tweet of threadTweets) {
+          const tweetContent = tweet.content || "";
 
-        // Handle media URLs using utility function
-        const { imageUrls, videoUrls: videoUrlsArray } = parseMediaUrls(
-          tweet.media_urls,
-        );
+          try {
+            // Process the content to show what would be casted
+            const processedText = await processContentForFarcaster(
+              tweetContent,
+              tweetHasMedia(tweet),
+              tweetContent,
+            );
 
-        newStates.set(tweet.tweet_id, {
-          content: cleanedContent,
-          mediaUrls: imageUrls,
-          videoUrls: videoUrlsArray,
-          quotedTweetUrl: null, // TODO: Add quoted tweet support for threads if needed
-          showRetweet: true,
-          isRetweetRemoved: false,
-        });
-      });
+            // Handle media URLs using utility function
+            const { imageUrls, videoUrls: videoUrlsArray } = parseMediaUrls(
+              tweet.media_urls,
+            );
 
-      setThreadEditStates(newStates);
+            newStates.set(tweet.tweet_id, {
+              content: processedText,
+              mediaUrls: imageUrls,
+              videoUrls: videoUrlsArray,
+              quotedTweetUrl: null, // TODO: Add quoted tweet support for threads if needed
+              showRetweet: true,
+              isRetweetRemoved: false,
+            });
+          } catch (error) {
+            console.error(
+              `Error parsing thread tweet ${tweet.tweet_id}:`,
+              error,
+            );
+            const cleanedContent = await processContentForFarcaster(
+              tweetContent,
+              tweetHasMedia(tweet),
+              tweetContent,
+            );
 
-      // Set the first tweet as currently editing
-      if (threadTweets.length > 0) {
-        setCurrentEditingTweet(threadTweets[0].tweet_id);
-      }
+            // Handle media URLs using utility function
+            const { imageUrls, videoUrls: videoUrlsArray } = parseMediaUrls(
+              tweet.media_urls,
+            );
+
+            newStates.set(tweet.tweet_id, {
+              content: cleanedContent,
+              mediaUrls: imageUrls,
+              videoUrls: videoUrlsArray,
+              quotedTweetUrl: null,
+              showRetweet: true,
+              isRetweetRemoved: false,
+            });
+          }
+        }
+
+        setThreadEditStates(newStates);
+
+        // Set the first tweet as currently editing
+        if (threadTweets.length > 0) {
+          setCurrentEditingTweet(threadTweets[0].tweet_id);
+        }
+      };
+
+      initializeThreadStates();
     }
   }, [isThread, threadTweets, isOpen]);
 
   // Update state when tweet data loads (for single tweets)
   useEffect(() => {
     if ((tweetData || databaseTweet) && isOpen && !isThread) {
-      // Use database tweet data if available, otherwise fall back to Twitter API data
-      const tweet = databaseTweet || tweetData;
+      const initializeSingleTweet = async () => {
+        // Use database tweet data if available, otherwise fall back to Twitter API data
+        const tweet = databaseTweet || tweetData;
 
-      if (isRetweet) {
-        // For retweets, keep the text area empty
-        setContent("");
-      } else {
-        // For regular tweets, store both original and cleaned content
-        const text = databaseTweet
-          ? databaseTweet.content || databaseTweet.original_content || ""
-          : tweetData?.text || "";
-        setOriginalContent(text);
-        setContent(cleanupTweetContent(text, tweetHasMedia(tweet)));
-        setContentWasEdited(false); // Reset edit flag
-      }
+        if (isRetweet) {
+          // For retweets, keep the text area empty
+          setContent("");
+        } else {
+          // For regular tweets, get the original text and parse it
+          const text = databaseTweet
+            ? databaseTweet.content || databaseTweet.original_content || ""
+            : tweetData?.text || "";
+          setOriginalContent(text);
 
-      // Handle media from database structure or Twitter API using utility function
-      const mediaSource = databaseTweet?.media_urls || null;
-      const twitterMediaDetails = tweetData?.mediaDetails || undefined;
+          // Process the content to show what would be casted
+          try {
+            const processedText = await processContentForFarcaster(
+              text,
+              tweetHasMedia(tweet),
+              text,
+            );
+            setContent(processedText);
+          } catch (error) {
+            console.error("Error parsing tweet content:", error);
+            const cleanedText = await processContentForFarcaster(
+              text,
+              tweetHasMedia(tweet),
+              text,
+            );
+            setContent(cleanedText);
+          }
 
-      const { imageUrls, videoUrls: videoUrlsArray } = parseMediaUrls(
-        mediaSource,
-        twitterMediaDetails,
-      );
-      setMediaUrls(imageUrls);
-      setVideoUrls(videoUrlsArray);
+          setContentWasEdited(false); // Reset edit flag
+        }
 
-      setQuotedTweetUrl(
-        tweetData?.quoted_tweet
-          ? `https://twitter.com/${tweetData.quoted_tweet.user.screen_name}/status/${tweetData.quoted_tweet.id_str}`
-          : null,
-      );
-      setShowRetweet(true);
+        // Handle media from database structure or Twitter API using utility function
+        const mediaSource = databaseTweet?.media_urls || null;
+        const twitterMediaDetails = tweetData?.mediaDetails || undefined;
+
+        const { imageUrls, videoUrls: videoUrlsArray } = parseMediaUrls(
+          mediaSource,
+          twitterMediaDetails,
+        );
+        setMediaUrls(imageUrls);
+        setVideoUrls(videoUrlsArray);
+
+        setQuotedTweetUrl(
+          tweetData?.quoted_tweet
+            ? `https://twitter.com/${tweetData.quoted_tweet.user.screen_name}/status/${tweetData.quoted_tweet.id_str}`
+            : null,
+        );
+        setShowRetweet(true);
+      };
+
+      initializeSingleTweet();
     }
   }, [tweetData, databaseTweet, isOpen, isRetweet, isThread]);
 
@@ -499,8 +606,10 @@ export function EditModal({
     const cursor = e.target.selectionStart;
 
     if (isThread && currentEditingTweet) {
+      // For threads, we need to update the raw content but let the parsing effect handle the display
       updateCurrentEditingState({ content: newContent });
     } else {
+      // For single tweets, update the raw content
       setContent(newContent);
       setContentWasEdited(true); // Mark content as manually edited
     }
@@ -665,7 +774,7 @@ export function EditModal({
                 fill="none"
               >
                 <path
-                  d="M0.542969 8L6.83464 4.5C10.7468 2.3237 15.5058 2.3237 19.418 4.5V4.5C23.3301 6.6763 28.0891 6.6763 32.0013 4.5V4.5C35.9134 2.3237 40.6725 2.3237 44.5846 4.5V4.5C48.4968 6.6763 53.2558 6.6763 57.168 4.5V4.5C61.0801 2.3237 65.8391 2.3237 69.7513 4.5V4.5C73.6634 6.6763 78.4225 6.6763 82.3346 4.5V4.5C86.2468 2.3237 91.0058 2.3237 94.918 4.5V4.5C98.8301 6.6763 103.589 6.6763 107.501 4.5V4.5C111.413 2.3237 116.172 2.32371 120.085 4.5V4.5C123.997 6.67629 128.756 6.6763 132.668 4.5V4.5C136.58 2.3237 141.339 2.32371 145.251 4.5V4.5C149.163 6.67629 153.922 6.6763 157.835 4.5V4.5C161.747 2.3237 166.506 2.32371 170.418 4.5V4.5C174.33 6.67629 179.089 6.6763 183.001 4.5V4.5C186.913 2.3237 191.672 2.32371 195.585 4.5V4.5C199.497 6.67629 204.256 6.67629 208.168 4.5V4.5C212.08 2.3237 216.839 2.3237 220.751 4.5V4.5C224.663 6.6763 229.422 6.67629 233.335 4.5V4.5C237.247 2.32371 242.006 2.32371 245.918 4.5V4.5C249.83 6.67629 254.589 6.6763 258.501 4.5V4.5C262.413 2.3237 267.202 2.34012 271.114 4.51641V4.51641C274.99 6.67239 279.734 6.68865 283.609 4.53267L283.899 4.37148C287.659 2.2801 292.268 2.33272 295.994 4.48375V4.48375C299.745 6.64955 304.395 6.66581 308.146 4.5V4.5C311.897 2.33419 316.519 2.33419 320.271 4.5V4.5C324.022 6.66581 328.644 6.66581 332.395 4.5L338.457 1"
+                  d="M0.542969 8L6.83464 4.5C10.7468 2.3237 15.5058 2.3237 19.418 4.5V4.5C23.3301 6.6763 28.0891 6.6763 32.0013 4.5V4.5C35.9134 2.3237 40.6725 2.3237 44.5846 4.5V4.5C48.4968 6.6763 53.2558 6.6763 57.168 4.5V4.5C61.0801 2.3237 65.8391 2.32371 69.7513 4.5V4.5C73.6634 6.6763 78.4225 6.6763 82.3346 4.5V4.5C86.2468 2.3237 91.0058 2.32371 94.918 4.5V4.5C98.8301 6.6763 103.589 6.6763 107.501 4.5V4.5C111.413 2.3237 116.172 2.32371 120.085 4.5V4.5C123.997 6.67629 128.756 6.6763 132.668 4.5V4.5C136.58 2.32371 141.339 2.32371 145.251 4.5V4.5C149.163 6.67629 153.922 6.6763 157.835 4.5V4.5C161.747 2.3237 166.506 2.32371 170.418 4.5V4.5C174.33 6.67629 179.089 6.6763 183.001 4.5V4.5C186.913 2.3237 191.672 2.32371 195.585 4.5V4.5C199.497 6.67629 204.256 6.67629 208.168 4.5V4.5C212.08 2.3237 216.839 2.3237 220.751 4.5V4.5C224.663 6.6763 229.422 6.67629 233.335 4.5V4.5C237.247 2.32371 242.006 2.32371 245.918 4.5V4.5C249.83 6.67629 254.589 6.6763 258.501 4.5V4.5C262.413 2.3237 267.202 2.34012 271.114 4.51641V4.51641C274.99 6.67239 279.734 6.68865 283.609 4.53267L283.899 4.37148C287.659 2.2801 292.268 2.33272 295.994 4.48375V4.48375C299.745 6.64955 304.395 6.66581 308.146 4.5V4.5C311.897 2.33419 316.519 2.33419 320.271 4.5V4.5C324.022 6.66581 328.644 6.66581 332.395 4.5L338.457 1"
                   stroke="#E2E2E4"
                 />
               </svg>
