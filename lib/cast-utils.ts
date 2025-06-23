@@ -479,3 +479,53 @@ export async function resolveTcoUrlsServerSide(
 
   return updatedContent;
 }
+
+export async function convertTwitterMentionsToFarcasterServerSide(
+  content: string,
+  useCache: boolean = true,
+  originalContent?: string,
+): Promise<string> {
+  if (!content) return content;
+
+  try {
+    const response = await fetch("/api/convert-mentions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        content,
+        useCache,
+        originalContent,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(
+        `Mention conversion API response not ok:`,
+        response.status,
+        response.statusText,
+      );
+      return content; // Return original content if API fails
+    }
+
+    const data = await response.json();
+    console.log(`Mention conversion result:`, data);
+
+    // Check if conversion was successful
+    if (data.success && data.convertedContent) {
+      console.log(
+        `Successfully converted mentions: ${content} -> ${data.convertedContent}`,
+      );
+      return data.convertedContent;
+    } else {
+      console.log(
+        `Could not convert mentions: ${data.error || "No conversion found"}`,
+      );
+      return content; // Return original content if conversion failed
+    }
+  } catch (error) {
+    console.error(`Error converting Twitter mentions:`, error);
+    return content; // Return original content if there was an error
+  }
+}

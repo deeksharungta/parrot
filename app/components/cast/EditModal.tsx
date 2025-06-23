@@ -9,7 +9,7 @@ import { useUserSearch, FarcasterUser } from "@/hooks/useUserSearch";
 import UserMentionDropdown from "../ui/UserMentionDropdown";
 import { useThreadTweets } from "@/hooks/useThreadTweets";
 import {
-  convertTwitterMentionsToFarcaster,
+  convertTwitterMentionsToFarcasterServerSide,
   resolveTcoUrlsServerSide,
 } from "@/lib/cast-utils";
 
@@ -156,6 +156,9 @@ export function EditModal({
   const [isRetweetRemoved, setIsRetweetRemoved] = useState(false);
   const [dontShowAgain, setDontShowAgain] = useState(false);
 
+  // Loading state for URL resolution
+  const [isResolvingUrls, setIsResolvingUrls] = useState(false);
+
   // Thread editing state
   const [threadEditStates, setThreadEditStates] = useState<
     Map<string, ThreadTweetEditState>
@@ -202,46 +205,55 @@ export function EditModal({
     hasMediaAttached: boolean = false,
     originalContent?: string,
   ): Promise<string> => {
-    let processedContent = content;
+    // Set loading state before resolving URLs
+    setIsResolvingUrls(true);
+    try {
+      let processedContent = content;
 
-    // Remove t.co URLs (with or without "this@" prefix) but preserve whitespace
-    processedContent = processedContent.replace(
-      /this@https:\/\/t\.co\/\S*/g,
-      "",
-    );
+      // Remove t.co URLs (with or without "this@" prefix) but preserve whitespace
+      processedContent = processedContent.replace(
+        /this@https:\/\/t\.co\/\S*/g,
+        "",
+      );
 
-    // Only remove the last t.co link if there's media attached
-    if (hasMediaAttached) {
-      const tcoRegex = /https:\/\/t\.co\/\S+/g;
-      const matches = Array.from(processedContent.matchAll(tcoRegex));
+      // Only remove the last t.co link if there's media attached
+      if (hasMediaAttached) {
+        const tcoRegex = /https:\/\/t\.co\/\S+/g;
+        const matches = Array.from(processedContent.matchAll(tcoRegex));
 
-      if (matches.length > 0) {
-        // Only remove the last match
-        const lastMatch = matches[matches.length - 1];
-        if (lastMatch.index !== undefined) {
-          const beforeLastLink = processedContent.substring(0, lastMatch.index);
-          const afterLastLink = processedContent.substring(
-            lastMatch.index + lastMatch[0].length,
-          );
-          processedContent = beforeLastLink + afterLastLink;
+        if (matches.length > 0) {
+          // Only remove the last match
+          const lastMatch = matches[matches.length - 1];
+          if (lastMatch.index !== undefined) {
+            const beforeLastLink = processedContent.substring(
+              0,
+              lastMatch.index,
+            );
+            const afterLastLink = processedContent.substring(
+              lastMatch.index + lastMatch[0].length,
+            );
+            processedContent = beforeLastLink + afterLastLink;
+          }
         }
       }
+
+      // Trim trailing whitespace
+      processedContent = processedContent.replace(/\s+$/, "");
+
+      // Convert Twitter mentions to Farcaster format
+      processedContent = await convertTwitterMentionsToFarcasterServerSide(
+        processedContent,
+        true,
+        originalContent,
+      );
+
+      // Resolve t.co URLs to their actual destinations
+      processedContent = await resolveTcoUrlsServerSide(processedContent);
+      return processedContent;
+    } finally {
+      // Always clear loading state
+      setIsResolvingUrls(false);
     }
-
-    // Trim trailing whitespace
-    processedContent = processedContent.replace(/\s+$/, "");
-
-    // Convert Twitter mentions to Farcaster format
-    processedContent = await convertTwitterMentionsToFarcaster(
-      processedContent,
-      true,
-      originalContent,
-    );
-
-    // Resolve t.co URLs to their actual destinations
-    processedContent = await resolveTcoUrlsServerSide(processedContent);
-
-    return processedContent;
   };
 
   // Simple cleanup function for UI display (non-Farcaster processing)
@@ -450,6 +462,7 @@ export function EditModal({
       setDontShowAgain(false);
       setThreadEditStates(new Map());
       setCurrentEditingTweet(null);
+      setIsResolvingUrls(false);
     }
   }, [isOpen]);
 
@@ -814,6 +827,13 @@ export function EditModal({
               </div>
             )}
 
+            {/* Loading overlay for URL resolution */}
+            {isResolvingUrls && (
+              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-10 rounded-[32px]">
+                <div className="w-6 h-6 border-2 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
+
             <div>
               <div className="relative">
                 <textarea
@@ -824,6 +844,7 @@ export function EditModal({
                   rows={4}
                   maxLength={280}
                   placeholder={"What's happening? Use @ to mention users"}
+                  disabled={isResolvingUrls}
                 />
                 <UserMentionDropdown
                   users={userSearchData?.result?.users || []}
@@ -1084,6 +1105,7 @@ export function EditModal({
                 onClick={handleSave}
                 disabled={
                   isLoading ||
+                  isResolvingUrls ||
                   (!isRetweet &&
                     displayState.content.length === 0 &&
                     displayState.mediaUrls.length === 0 &&

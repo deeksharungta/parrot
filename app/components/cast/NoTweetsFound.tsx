@@ -42,7 +42,7 @@ export default function NoTweetsFound({ onRefresh }: NoTweetsFoundProps) {
         {isRestoring ? (
           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
         ) : (
-          "Show Again"
+          "Show Old Tweets"
         )}
       </Button>
     </div>
