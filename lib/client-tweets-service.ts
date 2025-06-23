@@ -128,8 +128,6 @@ export async function getCachedTweets(
   fid: number,
 ): Promise<CachedTweetsResponse> {
   try {
-    console.log(`🔍 getCachedTweets called for fid: ${fid}`);
-
     // Get JWT token from secure storage for authentication
     const token = secureStorage.getToken();
 
@@ -151,28 +149,15 @@ export async function getCachedTweets(
       }
 
       throw new Error(
-        errorData.error || "Failed to fetch cached tweets from server",
+        errorData.error || `HTTP error! status: ${response.status}`,
       );
     }
 
-    const result = await response.json();
-    console.log(`📊 getCachedTweets result:`, {
-      tweetsCount: result.tweets?.length || 0,
-      tweets: result.tweets?.map((t: any) => ({
-        tweet_id: t.tweet_id,
-        cast_status: t.cast_status,
-        content: t.content?.substring(0, 50) + "...",
-      })),
-    });
-
-    return result;
+    const data = await response.json();
+    return data;
   } catch (error) {
-    console.error("Error getting cached tweets:", error);
-    return {
-      tweets: [],
-      user: null,
-      lastFetched: null,
-    };
+    console.error("Error fetching cached tweets:", error);
+    throw error;
   }
 }
 

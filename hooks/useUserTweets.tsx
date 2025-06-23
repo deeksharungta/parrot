@@ -46,18 +46,20 @@ export const useUserTweets = (fid: number | undefined): UseUserTweetsResult => {
       if (!fid) {
         throw new Error("Unable to get user FID");
       }
-      console.log(`🔍 Query function called for fid: ${fid}`);
       const result = await getCachedTweets(fid);
-      console.log(`📊 Query result:`, {
-        tweetsCount: result.tweets?.length || 0,
-        hasUser: !!result.user,
-        lastFetched: result.lastFetched,
-      });
       return result;
     },
     enabled: !!fid,
     staleTime: 1 * 60 * 1000, // Consider cached data fresh for 1 minute
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    refetchOnWindowFocus: false,
+    retry: (failureCount, error) => {
+      // Don't retry on auth errors
+      if (error.message.includes("401") || error.message.includes("token")) {
+        return false;
+      }
+      return failureCount < 2;
+    },
   });
 
   // Background fetch for fresh tweets
@@ -132,21 +134,15 @@ export const useUserTweets = (fid: number | undefined): UseUserTweetsResult => {
 
   // Force refresh function for status updates
   const forceRefreshTweets = async () => {
-    console.log("🔄 forceRefreshTweets called");
-
     // Remove from cache and force refetch
     await queryClient.resetQueries({ queryKey: ["cached-tweets", fid] });
     await queryClient.invalidateQueries({ queryKey: ["cached-tweets", fid] });
-
-    console.log("🗑️ Cache cleared, forcing refetch...");
 
     // Force refetch the query immediately
     await queryClient.refetchQueries({
       queryKey: ["cached-tweets", fid],
       type: "active",
     });
-
-    console.log("✅ Refetch completed");
   };
 
   // Update tweet status function
