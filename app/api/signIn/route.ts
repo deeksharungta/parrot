@@ -1,11 +1,41 @@
 import neynarClient from "@/lib/neynarClient";
 import { NextRequest, NextResponse } from "next/server";
-import { verifyMessage } from "viem";
+import { createAppClient, viemConnector } from "@farcaster/auth-client";
 import * as jose from "jose";
 import { supabase } from "@/lib/supabase";
 
 export const POST = async (req: NextRequest) => {
   const { fid, signature, message, referrerFid } = await req.json();
+
+  // Extract nonce and domain from the message
+  // Message format: "example.com wants you to sign in with your Ethereum account:\n\n...\n\nNonce: abcd1234"
+  const nonce = message.match(/Nonce: (.+)/)?.[1];
+  const domain = message.match(/^([^\s]+)/)?.[1];
+
+  if (!nonce || !domain) {
+    return NextResponse.json(
+      { error: "Invalid message format" },
+      { status: 400 },
+    );
+  }
+
+  // Create Farcaster auth client with proper viem connector
+  const appClient = createAppClient({
+    ethereum: viemConnector(),
+  });
+
+  // Verify the sign in message with auth address support
+  const { data, success } = await appClient.verifySignInMessage({
+    nonce,
+    domain,
+    message,
+    signature,
+    acceptAuthAddress: true, // Enable auth address verification
+  });
+
+  if (!success || !data) {
+    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+  }
 
   // Check if user exists in database
   const { data: existingUser } = await supabase
@@ -15,9 +45,6 @@ export const POST = async (req: NextRequest) => {
     .single();
 
   let user = existingUser;
-
-  // Declare isValidSignature variable
-  let isValidSignature: boolean;
 
   if (!user) {
     // Fetch user from Neynar if not in database
@@ -55,35 +82,6 @@ export const POST = async (req: NextRequest) => {
     }
 
     user = newUser;
-
-    // Verify signature matches custody address (get from neynarUser since we don't store it)
-    isValidSignature = await verifyMessage({
-      address: neynarUser.custody_address as `0x${string}`,
-      message,
-      signature,
-    });
-  } else {
-    // For existing users, we need to get custody address from Neynar for verification
-    const { users } = await neynarClient.fetchBulkUsers([fid]);
-    const neynarUser = users[0];
-
-    if (!neynarUser) {
-      return NextResponse.json(
-        { error: "User not found in Neynar" },
-        { status: 404 },
-      );
-    }
-
-    // Verify signature matches custody address
-    isValidSignature = await verifyMessage({
-      address: neynarUser.custody_address as `0x${string}`,
-      message,
-      signature,
-    });
-  }
-
-  if (!isValidSignature) {
-    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 
   // Generate a session token using fid and current timestamp

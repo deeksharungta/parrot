@@ -105,6 +105,7 @@ export const useSignIn = () => {
         nonce,
         notBefore: notBefore.toISOString(),
         expirationTime: expirationTime.toISOString(),
+        acceptAuthAddress: true, // Enable auth address support
       });
 
       const referrerFid =
