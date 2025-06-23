@@ -42,7 +42,7 @@ export default function ApprovalPage() {
     <div>
       <Header title="Configure spending" />
       <motion.div
-        className="flex flex-col gap-5 mt-4 h-[calc(100dvh-100px)] px-5 pb-5"
+        className="flex flex-col gap-5 mt-4 h-[calc(100dvh-240px)] px-5 pb-5"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.2 }}
