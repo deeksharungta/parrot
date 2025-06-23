@@ -64,6 +64,7 @@ export default function Tweets({ fid }: TweetsProps) {
   const [processedTweetIds, setProcessedTweetIds] = useState<Set<string>>(
     new Set(),
   );
+  const [previousTweetCount, setPreviousTweetCount] = useState<number>(0);
 
   // Add debugging
   React.useEffect(() => {
@@ -240,34 +241,38 @@ export default function Tweets({ fid }: TweetsProps) {
         `📊 Filter results: ${tweets.length} total tweets -> ${filteredTweets.length} filtered tweets`,
       );
 
-      // Always update stable tweets to match current filtered tweets
-      if (filteredTweets.length > 0) {
+      // Only update stable tweets if:
+      // 1. We don't have any stable tweets yet (initial load)
+      // 2. We have significantly more tweets than before (indicating a refetch/restore)
+      const isInitialLoad = stableTweets.length === 0;
+      const isRefetch = tweets.length > previousTweetCount + 5; // Significant increase indicates refetch
+
+      if (isInitialLoad) {
         console.log(
-          `🔄 Updating stable tweets: ${stableTweets.length} -> ${filteredTweets.length}`,
+          `🔄 Initial load: Setting stable tweets to ${filteredTweets.length}`,
         );
         setStableTweets(filteredTweets);
-
-        // Only reset index if we don't have any stable tweets or if current index is out of bounds
-        if (
-          stableTweets.length === 0 ||
-          currentIndex >= filteredTweets.length
-        ) {
-          console.log(`🔄 Resetting current index to 0`);
-          setCurrentIndex(0);
-        } else {
-          console.log(`📍 Keeping current index: ${currentIndex}`);
-        }
-      } else {
-        // No tweets available
-        console.log(`🔄 No tweets available, clearing stable tweets`);
-        setStableTweets([]);
         setCurrentIndex(0);
+      } else if (isRefetch) {
+        console.log(
+          `🔄 Refetch detected (${previousTweetCount} -> ${tweets.length}): Updating stable tweets to ${filteredTweets.length}`,
+        );
+        setStableTweets(filteredTweets);
+        setCurrentIndex(0); // Reset to beginning after refetch
+      } else {
+        console.log(
+          `📍 Normal update: Keeping stable tweets unchanged (${stableTweets.length} stable, ${filteredTweets.length} filtered)`,
+        );
       }
+
+      // Update previous count for next comparison
+      setPreviousTweetCount(tweets.length);
     } else if (tweets && tweets.length === 0) {
-      // No tweets available, clear everything
+      // No tweets available
       console.log(`🔄 No tweets available, clearing stable tweets`);
       setStableTweets([]);
       setCurrentIndex(0);
+      setPreviousTweetCount(0);
     }
   }, [tweets, stableTweets.length]);
 
