@@ -326,6 +326,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
         // Check if tweet content is truncated and fetch full details if needed
         let finalTweetContent = tweet.content;
         let updatedMediaUrls = tweet.media_urls;
+        let fullTweetDetailsFetched = false;
 
         if (isTweetTruncated(tweet.content)) {
           console.log(
@@ -335,6 +336,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
 
           if (fullTweetDetails && fullTweetDetails.text) {
             finalTweetContent = fullTweetDetails.text;
+            fullTweetDetailsFetched = true;
             console.log(
               `Updated content for tweet ${tweet.tweet_id} with full text`,
             );
@@ -418,7 +420,11 @@ export const POST = withApiKeyAndJwtAuth(async function (
         }
 
         // Parse tweet content
-        const parsedCast = await parseTweetToFarcasterCast(finalTweet, true);
+        const parsedCast = await parseTweetToFarcasterCast(
+          finalTweet,
+          true,
+          fullTweetDetailsFetched,
+        );
 
         // Convert Twitter mentions to Farcaster format
         const convertedContent = await convertTwitterMentionsToFarcaster(
@@ -445,8 +451,10 @@ export const POST = withApiKeyAndJwtAuth(async function (
           }
           castPayload.embeds = limitedEmbeds.map((url) => ({ url }));
 
-          // Remove last t.co link if there are media embeds
-          castPayload.text = removeLastTcoLinkIfMedia(castPayload.text, true);
+          // Remove last t.co link if there are media embeds (but not if full tweet details were fetched)
+          if (!fullTweetDetailsFetched) {
+            castPayload.text = removeLastTcoLinkIfMedia(castPayload.text, true);
+          }
         }
 
         // If this is not the first tweet in the thread, reply to the previous cast

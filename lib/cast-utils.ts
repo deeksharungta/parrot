@@ -296,6 +296,7 @@ function removeTwitterLinks(
 export async function parseTweetToFarcasterCast(
   tweet: Database["public"]["Tables"]["tweets"]["Row"],
   isEdit: boolean = false,
+  fullTweetDetailsFetched: boolean = false,
 ): Promise<{
   content: string;
   embeds: string[];
@@ -347,7 +348,7 @@ export async function parseTweetToFarcasterCast(
   );
 
   // Remove Twitter shortened URLs (t.co links) only if there's media
-  const tweetHasMedia = hasMedia(tweet);
+  const tweetHasMedia = hasMedia(tweet) && !fullTweetDetailsFetched;
   content = removeTwitterLinks(content, tweetHasMedia);
 
   // // Resolve t.co URLs to their actual destinations

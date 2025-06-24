@@ -288,6 +288,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
     // Check if tweet content is truncated and fetch full details if needed
     let finalTweetContent = tweet.content;
     let updatedMediaUrls = tweet.media_urls;
+    let fullTweetDetailsFetched = false;
 
     if (isTweetTruncated(tweet.content)) {
       console.log(
@@ -297,6 +298,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
 
       if (fullTweetDetails && fullTweetDetails.text) {
         finalTweetContent = fullTweetDetails.text;
+        fullTweetDetailsFetched = true;
         console.log(
           `Updated content for tweet ${tweet.tweet_id} with full text`,
         );
@@ -357,7 +359,11 @@ export const POST = withApiKeyAndJwtAuth(async function (
     };
 
     // Parse tweet content with potential overrides for edited values
-    let parsedCast = await parseTweetToFarcasterCast(updatedTweet, isEdit);
+    let parsedCast = await parseTweetToFarcasterCast(
+      updatedTweet,
+      isEdit,
+      fullTweetDetailsFetched,
+    );
 
     // Override with edited values if provided
     if (
@@ -466,8 +472,12 @@ export const POST = withApiKeyAndJwtAuth(async function (
         embeds.splice(embedLimit);
       }
 
-      // Remove last t.co link if there are media embeds
-      if (content !== undefined && embeds.length > 0) {
+      // Remove last t.co link if there are media embeds (but not if full tweet details were fetched)
+      if (
+        content !== undefined &&
+        embeds.length > 0 &&
+        !fullTweetDetailsFetched
+      ) {
         parsedCast.content = removeLastTcoLinkIfMedia(parsedCast.content, true);
       }
 
