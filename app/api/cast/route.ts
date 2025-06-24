@@ -265,10 +265,6 @@ export const POST = withApiKeyAndJwtAuth(async function (
             { status: 403 },
           );
         }
-
-        console.log(
-          `Allowance check passed: ${allowance} >= ${requiredAmount}`,
-        );
       } catch (allowanceError) {
         console.error("Failed to check onchain allowance:", allowanceError);
         return NextResponse.json(
@@ -370,9 +366,6 @@ export const POST = withApiKeyAndJwtAuth(async function (
       quotedTweetUrl !== undefined ||
       videoUrls !== undefined
     ) {
-      console.log("mediaUrls", mediaUrls);
-      console.log("quotedTweetUrl", quotedTweetUrl);
-
       const embeds: string[] = [];
 
       if (tweet.is_retweet) {
@@ -387,9 +380,15 @@ export const POST = withApiKeyAndJwtAuth(async function (
           embeds.push(tweet.twitter_url || "");
         }
       } else {
-        // Use edited content if provided
+        // Use edited content if provided AND it's longer than database content OR it's an explicit edit
         if (content !== undefined) {
-          parsedCast.content = decodeHtmlEntities(content);
+          // Only override if:
+          // 1. This is an explicit edit (isEdit = true), OR
+          // 2. The provided content is longer than the parsed content (indicating it's a genuine override)
+          // 3. Otherwise, keep the full database content to avoid truncation
+          if (isEdit || content.length > parsedCast.content.length) {
+            parsedCast.content = decodeHtmlEntities(content);
+          }
         }
 
         // Use provided quoted tweet URL or fall back to database value
@@ -464,13 +463,8 @@ export const POST = withApiKeyAndJwtAuth(async function (
       // Check user's embed limit based on pro subscription status
       const embedLimit = await getEmbedLimit(userFid);
       if (embeds.length > embedLimit) {
-        console.log(
-          `Limiting embeds from ${embeds.length} to ${embedLimit} based on user subscription status (FID: ${userFid})`,
-        );
         embeds.splice(embedLimit);
       }
-
-      console.log("embeds", embeds);
 
       // Remove last t.co link if there are media embeds
       if (content !== undefined && embeds.length > 0) {
@@ -555,7 +549,6 @@ export const POST = withApiKeyAndJwtAuth(async function (
     if (hasFreeCasts) {
       // Deduct from free casts
       newFreeCastsLeft = newFreeCastsLeft - 1;
-      console.log(`Using free cast. Free casts remaining: ${newFreeCastsLeft}`);
     } else {
       // Process USDC payment
       newBalance = newBalance - CAST_COST;
@@ -584,8 +577,6 @@ export const POST = withApiKeyAndJwtAuth(async function (
         // Convert amount to proper USDC units (6 decimals)
         const amountInUnits = parseUnits(CAST_COST.toString(), 6);
 
-        console.log("amountInUnits", amountInUnits);
-
         // Get the current nonce to avoid conflicts with concurrent transactions
         const nonce = await publicClient.getTransactionCount({
           address: account.address,
@@ -603,10 +594,6 @@ export const POST = withApiKeyAndJwtAuth(async function (
           ],
           nonce,
         });
-
-        console.log("transactionHash", transactionHash);
-
-        console.log("Payment transaction successful:", transactionHash);
       } catch (paymentError) {
         console.error("Payment processing error:", paymentError);
         return NextResponse.json(
