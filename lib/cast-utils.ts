@@ -340,13 +340,6 @@ export async function parseTweetToFarcasterCast(
   // Clean up HTML entities and formatting FIRST
   content = decodeHtmlEntities(content);
 
-  // Convert Twitter mentions to Farcaster format
-  content = await convertTwitterMentionsToFarcaster(
-    content,
-    isEdit,
-    tweet.original_content || undefined,
-  );
-
   // Remove Twitter shortened URLs (t.co links) only if there's media
   const tweetHasMedia = hasMedia(tweet) && !fullTweetDetailsFetched;
   content = removeTwitterLinks(content, tweetHasMedia);
