@@ -376,8 +376,11 @@ export const POST = withApiKeyAndJwtAuth(async function (
       const embeds: string[] = [];
 
       if (tweet.is_retweet) {
-        if (content && content.trim().length > 0) {
+        // For retweets, preserve user-added commentary if provided, otherwise keep empty
+        if (content !== undefined && content.trim().length > 0) {
           parsedCast.content = decodeHtmlEntities(content);
+        } else {
+          parsedCast.content = "";
         }
 
         if (!isRetweetRemoved) {
