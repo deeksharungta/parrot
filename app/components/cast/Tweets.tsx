@@ -154,11 +154,8 @@ export default function Tweets({ fid }: TweetsProps) {
 
   // Helper function to check if tweet contains video or GIF
   const hasVideoOrGif = (tweet: any) => {
-    if (
-      !tweet.is_retweet &&
-      !tweet.quoted_tweet_url &&
-      (!tweet?.media_urls || typeof tweet.media_urls !== "object")
-    ) {
+    // Return false if tweet doesn't have media_urls or it's not an object
+    if (!tweet?.media_urls || typeof tweet.media_urls !== "object") {
       return false;
     }
 
