@@ -5,21 +5,21 @@ import Navbar from "../components/ui/Navbar";
 import Header from "../components/ui/Header";
 import Tweets from "../components/cast/Tweets";
 import { ConnectNeynar } from "../components/cast/ConnectNeynar";
-import EarlyAccessModal from "../components/promotional/EarlyAccessModal";
+// import EarlyAccessModal from "../components/promotional/EarlyAccessModal";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { useCurrentUser } from "@/hooks/useUsers";
 import Onboarding from "../components/welcome/Onboarding";
 import { analytics } from "@/lib/analytics";
-import { usePromotionCastCheck } from "@/hooks/usePromotionCast";
+// import { usePromotionCastCheck } from "@/hooks/usePromotionCast";
 
 export default function CastPage() {
   const { isFrameReady, setFrameReady, context } = useMiniKit();
   const { data: userData } = useCurrentUser();
-  const { data: promotionCastStatus, isLoading: isPromotionCastLoading } =
-    usePromotionCastCheck();
+  // const { data: promotionCastStatus, isLoading: isPromotionCastLoading } =
+  //   usePromotionCastCheck();
   const [showConnectNeynar, setShowConnectNeynar] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [showEarlyAccessModal, setShowEarlyAccessModal] = useState(false);
+  // const [showEarlyAccessModal, setShowEarlyAccessModal] = useState(false);
 
   // Track page view
   useEffect(() => {
@@ -55,32 +55,32 @@ export default function CastPage() {
   }, [userData]);
 
   // Show Early Access Modal when user has connected Neynar account and hasn't cast promotional cast
-  useEffect(() => {
-    if (
-      userData?.user?.neynar_signer_uuid &&
-      userData?.user?.signer_approval_status === "approved" &&
-      !isPromotionCastLoading &&
-      !promotionCastStatus?.hasCasted
-    ) {
-      // Check if we've already shown this modal to the user
-      const hasSeenEarlyAccessModal = localStorage.getItem(
-        "hasSeenEarlyAccessModal",
-      );
-      if (!hasSeenEarlyAccessModal) {
-        setShowEarlyAccessModal(true);
-      }
-    }
-  }, [userData, promotionCastStatus, isPromotionCastLoading]);
+  // useEffect(() => {
+  //   if (
+  //     userData?.user?.neynar_signer_uuid &&
+  //     userData?.user?.signer_approval_status === "approved" &&
+  //     !isPromotionCastLoading &&
+  //     !promotionCastStatus?.hasCasted
+  //   ) {
+  //     // Check if we've already shown this modal to the user
+  //     const hasSeenEarlyAccessModal = localStorage.getItem(
+  //       "hasSeenEarlyAccessModal",
+  //     );
+  //     if (!hasSeenEarlyAccessModal) {
+  //       setShowEarlyAccessModal(true);
+  //     }
+  //   }
+  // }, [userData, promotionCastStatus, isPromotionCastLoading]);
 
   const handleConnectNeynarClose = () => {
     setShowConnectNeynar(false);
   };
 
-  const handleEarlyAccessModalClose = () => {
-    setShowEarlyAccessModal(false);
-    // Mark that user has seen the modal
-    localStorage.setItem("hasSeenEarlyAccessModal", "true");
-  };
+  // const handleEarlyAccessModalClose = () => {
+  //   setShowEarlyAccessModal(false);
+  //   // Mark that user has seen the modal
+  //   localStorage.setItem("hasSeenEarlyAccessModal", "true");
+  // };
 
   if (!context?.user?.fid) {
     return null;
@@ -101,12 +101,12 @@ export default function CastPage() {
         isOpen={showConnectNeynar}
         onClose={handleConnectNeynarClose}
       />
-      {showEarlyAccessModal && (
+      {/* {showEarlyAccessModal && (
         <EarlyAccessModal
           isOpen={showEarlyAccessModal}
           onClose={handleEarlyAccessModalClose}
         />
-      )}
+      )} */}
     </div>
   );
 }

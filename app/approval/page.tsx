@@ -12,7 +12,7 @@ import { useAccount } from "wagmi";
 import { useUSDCApproval } from "@/hooks/useUSDCApproval";
 import { Loader2 } from "lucide-react";
 import { analytics } from "@/lib/analytics";
-import FreeCastBanner from "../components/promotional/FreeCastBanner";
+// import FreeCastBanner from "../components/promotional/FreeCastBanner";
 
 export default function ApprovalPage() {
   const { isFrameReady, setFrameReady } = useMiniKit();
@@ -47,7 +47,7 @@ export default function ApprovalPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.2 }}
       >
-        <FreeCastBanner />
+        {/* <FreeCastBanner /> */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

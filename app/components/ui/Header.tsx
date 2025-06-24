@@ -4,17 +4,17 @@ import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import Image from "next/image";
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import EarlyAccessModal from "../promotional/EarlyAccessModal";
+// import EarlyAccessModal from "../promotional/EarlyAccessModal";
 import Settings from "../icons/Settings";
-import { usePromotionCastCheck } from "@/hooks/usePromotionCast";
+// import { usePromotionCastCheck } from "@/hooks/usePromotionCast";
 
 export default function Header({ title }: { title: string }) {
   const { context } = useMiniKit();
-  const [earlyAccessModalOpen, setEarlyAccessModalOpen] = useState(false);
-  const { data: promotionCastStatus, isLoading } = usePromotionCastCheck();
+  // const [earlyAccessModalOpen, setEarlyAccessModalOpen] = useState(false);
+  // const { data: promotionCastStatus, isLoading } = usePromotionCastCheck();
 
   // Don't show the settings button if user has already cast promotional cast
-  const showSettingsButton = !promotionCastStatus?.hasCasted && !isLoading;
+  // const showSettingsButton = !promotionCastStatus?.hasCasted && !isLoading;
 
   return (
     <>
@@ -28,7 +28,7 @@ export default function Header({ title }: { title: string }) {
           {title}
         </motion.p>
         <div className="flex items-center gap-2">
-          {showSettingsButton && (
+          {/* {showSettingsButton && (
             <button
               onClick={() => {
                 setEarlyAccessModalOpen(true);
@@ -36,7 +36,7 @@ export default function Header({ title }: { title: string }) {
             >
               <Settings isActive={false} />
             </button>
-          )}
+          )} */}
           <div className="rounded-full overflow-hidden">
             <Image
               src={context?.user?.pfpUrl ?? "/farcaster.png"}
@@ -48,12 +48,12 @@ export default function Header({ title }: { title: string }) {
           </div>
         </div>
       </div>
-      {showSettingsButton && (
+      {/* {showSettingsButton && (
         <EarlyAccessModal
           isOpen={earlyAccessModalOpen}
           onClose={() => setEarlyAccessModalOpen(false)}
         />
-      )}
+      )} */}
     </>
   );
 }
