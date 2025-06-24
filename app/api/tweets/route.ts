@@ -118,7 +118,7 @@ export const GET = withApiKeyAndJwtAuth(async function (
 
     // Step 3: Fetch tweets from RapidAPI
     const tweetsResponse = await fetch(
-      `https://${RAPIDAPI_HOST}/user/tweets?username=iamgaurangdesai&limit=10`,
+      `https://${RAPIDAPI_HOST}/user/tweets?username=${twitterUsername}&limit=10`,
       {
         method: "GET",
         headers: {

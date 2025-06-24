@@ -236,7 +236,7 @@ async function fetchTweetsFromTwitterAPI(fid: number): Promise<{
   // Step 3: Fetch tweets from RapidAPI (with rate limiting)
   await rapidApiRateLimiter.waitForSlot();
   const tweetsResponse = await fetch(
-    `https://${RAPIDAPI_HOST}/user/tweets?username=iamgaurangdesai&limit=10`,
+    `https://${RAPIDAPI_HOST}/user/tweets?username=${twitterUsername}&limit=10`,
     {
       method: "GET",
       headers: {
