@@ -477,7 +477,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
             tweet.media_urls.types.includes("animated_gif");
 
           if (hasVideo || hasGif) {
-            castPayload.embeds = [tweet.twitter_url || ""];
+            castPayload.embeds = [{ url: tweet.twitter_url || "" }];
             castPayload.text = "";
           }
         }
