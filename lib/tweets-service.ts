@@ -430,41 +430,62 @@ export async function saveTweetsToDatabase(
       // For retweets, we want to store the retweeter's information (not the original tweet author)
       // But we also want to handle cases where we want the original author's info
       const userInfo = tweet.user;
-      let mediaItems: Array<{ type: string; url: string }> = [];
+      let finalMediaUrls: Record<string, any> = {};
 
       // Process media URLs from original tweet data
       if (tweet.media_url && tweet.media_url.length > 0) {
-        tweet.media_url.forEach((url: string) => {
-          mediaItems.push({ type: "photo", url });
-        });
+        finalMediaUrls.images = tweet.media_url;
       }
-
       if (tweet.video_url && tweet.video_url.length > 0) {
-        tweet.video_url.forEach((video: any) => {
-          if (typeof video === "string") {
-            mediaItems.push({ type: "video", url: video });
-          } else if (video.url) {
-            mediaItems.push({ type: "video", url: video.url });
-          }
-        });
+        finalMediaUrls.videos = tweet.video_url;
       }
 
       // Process extended_entities for comprehensive media handling
       if (tweet.extended_entities?.media) {
-        tweet.extended_entities.media.forEach((media: any) => {
-          if (media.media_url_https || media.media_url) {
-            const url = media.media_url_https || media.media_url;
-            const type = media.type || "photo"; // Default to photo if type is missing
+        const mediaTypes: string[] = [];
+        const allMediaUrls: string[] = [];
 
-            // Check if we already have this URL to avoid duplicates
-            const isDuplicate = mediaItems.some((item) => item.url === url);
-            if (!isDuplicate) {
-              mediaItems.push({ type, url });
-            }
+        tweet.extended_entities.media.forEach((media: any) => {
+          if (media.type) {
+            mediaTypes.push(media.type);
+          }
+          if (media.media_url_https || media.media_url) {
+            allMediaUrls.push(media.media_url_https || media.media_url);
           }
         });
-      }
 
+        // Store types for easy checking later
+        if (mediaTypes.length > 0) {
+          finalMediaUrls.types = mediaTypes;
+        }
+
+        // Store media URLs by type for backward compatibility
+        const gifs = tweet.extended_entities.media.filter(
+          (media: any) => media.type === "animated_gif",
+        );
+        const videos = tweet.extended_entities.media.filter(
+          (media: any) => media.type === "video",
+        );
+        const photos = tweet.extended_entities.media.filter(
+          (media: any) => media.type === "photo",
+        );
+
+        if (gifs.length > 0) {
+          finalMediaUrls.gifs = gifs.map(
+            (gif: any) => gif.media_url_https || gif.media_url,
+          );
+        }
+        if (videos.length > 0 && !finalMediaUrls.videos) {
+          finalMediaUrls.videos = videos.map(
+            (video: any) => video.media_url_https || video.media_url,
+          );
+        }
+        if (photos.length > 0 && !finalMediaUrls.images) {
+          finalMediaUrls.images = photos.map(
+            (photo: any) => photo.media_url_https || photo.media_url,
+          );
+        }
+      }
       // Thread analysis
       let threadPosition: number | null = null;
       let threadTotalCount: number | null = null;
@@ -504,7 +525,8 @@ export async function saveTweetsToDatabase(
         is_edited: false,
         edit_count: 0,
         auto_cast: false,
-        media_urls: mediaItems.length > 0 ? mediaItems : null,
+        media_urls:
+          Object.keys(finalMediaUrls).length > 0 ? finalMediaUrls : null,
         quoted_tweet_url: tweet.quoted_status_id
           ? `https://twitter.com/i/status/${tweet.quoted_status_id}`
           : null,
