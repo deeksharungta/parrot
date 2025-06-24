@@ -152,6 +152,29 @@ export default function Tweets({ fid }: TweetsProps) {
     return allowanceInUSDC >= MIN_ALLOWANCE;
   };
 
+  // Helper function to check if tweet contains video or GIF
+  const hasVideoOrGif = (tweet: any) => {
+    if (
+      !tweet.is_retweet &&
+      !tweet.quoted_tweet_url &&
+      (!tweet?.media_urls || typeof tweet.media_urls !== "object")
+    ) {
+      return false;
+    }
+
+    const hasVideo =
+      tweet.media_urls.videos &&
+      Array.isArray(tweet.media_urls.videos) &&
+      tweet.media_urls.videos.length > 0;
+
+    const hasGif =
+      tweet.media_urls.types &&
+      Array.isArray(tweet.media_urls.types) &&
+      tweet.media_urls.types.includes("animated_gif");
+
+    return hasVideo || hasGif;
+  };
+
   // Helper function to check all prerequisites for casting
   const canCast = () => {
     return (
@@ -313,6 +336,11 @@ export default function Tweets({ fid }: TweetsProps) {
 
   const handleEdit = () => {
     const currentTweet = showTweets[currentIndex];
+
+    // Check if tweet contains video or GIF - prevent editing
+    if (hasVideoOrGif(currentTweet)) {
+      return;
+    }
 
     // Check if user has signer_uuid before opening edit modal
     if (
@@ -891,7 +919,11 @@ export default function Tweets({ fid }: TweetsProps) {
         <div className="flex flex-col items-center gap-1">
           <button
             onClick={handleEdit}
-            disabled={isEditLoading || editTweetMutation.isPending}
+            disabled={
+              isEditLoading ||
+              editTweetMutation.isPending ||
+              hasVideoOrGif(currentTweet)
+            }
             className="rounded-full bg-[#F8F8F8] p-4 flex items-center justify-center hover:bg-[#ECECED] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isEditLoading || editTweetMutation.isPending ? (
