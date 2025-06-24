@@ -311,6 +311,31 @@ export async function parseTweetToFarcasterCast(
     };
   }
 
+  // Check if tweet has video or GIF content - if so, embed entire tweet like retweets
+  if (
+    !tweet.is_retweet &&
+    !tweet.quoted_tweet_url &&
+    tweet.media_urls &&
+    typeof tweet.media_urls === "object"
+  ) {
+    const hasVideo =
+      tweet.media_urls.videos &&
+      Array.isArray(tweet.media_urls.videos) &&
+      tweet.media_urls.videos.length > 0;
+    const hasGif =
+      tweet.media_urls.types &&
+      Array.isArray(tweet.media_urls.types) &&
+      tweet.media_urls.types.includes("animated_gif");
+
+    if (hasVideo || hasGif) {
+      embeds.push(tweet.twitter_url || "");
+      return {
+        content: "",
+        embeds,
+      };
+    }
+  }
+
   // Clean up HTML entities and formatting FIRST
   content = decodeHtmlEntities(content);
 
