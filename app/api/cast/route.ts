@@ -505,6 +505,27 @@ export const POST = withApiKeyAndJwtAuth(async function (
       castPayload.embeds = parsedCast.embeds.map((url) => ({ url }));
     }
 
+    if (
+      !tweet.is_retweet &&
+      !tweet.quoted_tweet_url &&
+      tweet.media_urls &&
+      typeof tweet.media_urls === "object"
+    ) {
+      const hasVideo =
+        tweet.media_urls.videos &&
+        Array.isArray(tweet.media_urls.videos) &&
+        tweet.media_urls.videos.length > 0;
+      const hasGif =
+        tweet.media_urls.types &&
+        Array.isArray(tweet.media_urls.types) &&
+        tweet.media_urls.types.includes("animated_gif");
+
+      if (hasVideo || hasGif) {
+        castPayload.embeds = [tweet.twitter_url || ""];
+        castPayload.text = "";
+      }
+    }
+
     const castResponse = await fetch(`${NEYNAR_BASE_URL}/farcaster/cast`, {
       method: "POST",
       headers: {
