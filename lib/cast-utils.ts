@@ -443,10 +443,7 @@ export async function resolveTcoUrls(content: string): Promise<string> {
       // Replace the t.co URL with the resolved URL
       const resolvedUrl = response.url;
       updatedContent = updatedContent.replace(tcoUrl, resolvedUrl);
-
-      console.log(`Resolved t.co URL: ${tcoUrl} -> ${resolvedUrl}`);
     } catch (error) {
-      console.error(`Failed to resolve t.co URL ${tcoUrl}:`, error);
       // Keep the original t.co URL if resolution fails
     }
   }
@@ -488,11 +485,7 @@ export async function resolveTcoUrlsServerSide(
         // Only replace if we got a different URL
         if (resolvedUrl && resolvedUrl !== tcoUrl) {
           updatedContent = updatedContent.replace(tcoUrl, resolvedUrl);
-          console.log(`Resolved t.co URL: ${tcoUrl} -> ${resolvedUrl}`);
         } else {
-          console.log(
-            `Could not resolve t.co URL: ${tcoUrl}, keeping original`,
-          );
         }
       } else {
         console.error(`Failed to resolve t.co URL ${tcoUrl}: API error`);
@@ -536,18 +529,11 @@ export async function convertTwitterMentionsToFarcasterServerSide(
     }
 
     const data = await response.json();
-    console.log(`Mention conversion result:`, data);
 
     // Check if conversion was successful
     if (data.success && data.convertedContent) {
-      console.log(
-        `Successfully converted mentions: ${content} -> ${data.convertedContent}`,
-      );
       return data.convertedContent;
     } else {
-      console.log(
-        `Could not convert mentions: ${data.error || "No conversion found"}`,
-      );
       return content; // Return original content if conversion failed
     }
   } catch (error) {
