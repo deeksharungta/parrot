@@ -842,7 +842,6 @@ export function EditModal({
                   onChange={handleContentChange}
                   className="w-full p-3 rounded-xl resize-none focus:outline-none focus:border-transparent bg-[#f8f8f8] text-sm leading-relaxed touch-manipulation rows-6"
                   rows={4}
-                  maxLength={280}
                   placeholder={"What's happening? Use @ to mention users"}
                   disabled={isResolvingUrls}
                 />
