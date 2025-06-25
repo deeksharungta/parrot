@@ -13,6 +13,7 @@ import {
   getEmbedLimit,
   resolveTcoUrls,
   convertTwitterMentionsToFarcaster,
+  checkUserProStatus,
 } from "@/lib/cast-utils";
 import { base } from "viem/chains";
 import { USDC_ADDRESS, SPENDER_ADDRESS } from "@/lib/constants";
@@ -498,10 +499,18 @@ export const POST = withApiKeyAndJwtAuth(async function (
       tweet.original_content || undefined,
     );
 
+    // Check user's pro status and truncate text accordingly
+    const isProUser = await checkUserProStatus(userFid);
+    const textLimit = isProUser ? 10000 : 1024;
+    const truncatedContent =
+      convertedContent.length > textLimit
+        ? convertedContent.substring(0, textLimit)
+        : convertedContent;
+
     // Cast to Farcaster using Neynar API (AFTER payment is confirmed)
     const castPayload: any = {
       signer_uuid: user.neynar_signer_uuid,
-      text: convertedContent,
+      text: truncatedContent,
     };
 
     // Add embeds if available (images, quoted tweets, etc.)
