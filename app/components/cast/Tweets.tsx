@@ -71,6 +71,11 @@ export default function Tweets({ fid }: TweetsProps) {
     if (tweets && tweets.length > 0) {
       // Filter to only show thread starters or non-thread tweets, and exclude videos/GIFs
       const filteredTweets = tweets.filter((tweet) => {
+        // First check if tweet has video or GIF - exclude if it does
+        if (hasVideoOrGif(tweet)) {
+          return false;
+        }
+
         // Show non-thread tweets
         if (!tweet.is_thread_tweet) {
           return true;
