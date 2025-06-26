@@ -8,6 +8,7 @@ import Image from "next/image";
 import { useUserSearch, FarcasterUser } from "@/hooks/useUserSearch";
 import UserMentionDropdown from "../ui/UserMentionDropdown";
 import { useThreadTweets } from "@/hooks/useThreadTweets";
+import { useProStatus } from "@/hooks/useProStatus";
 import {
   convertTwitterMentionsToFarcasterServerSide,
   resolveTcoUrlsServerSide,
@@ -51,6 +52,10 @@ interface ThreadTweetEditState {
 }
 
 const STORAGE_KEY = "hide_cast_confirmation";
+
+// Character limits
+const PRO_CHARACTER_LIMIT = 10000;
+const STANDARD_CHARACTER_LIMIT = 1024;
 
 // Utility function to handle media URLs consistently
 const parseMediaUrls = (
@@ -134,6 +139,7 @@ export function EditModal({
   showConfirmation = false,
 }: EditModalProps) {
   const { data: tweetData } = useTweet(tweetId);
+  const { data: proStatusData } = useProStatus();
 
   // Thread data
   const { threadTweets, isLoading: threadLoading } = useThreadTweets(
@@ -183,6 +189,9 @@ export function EditModal({
 
   // Check if this is a thread
   const isThread = !!conversationId && threadTweets && threadTweets.length > 1;
+
+  // Get pro status from hook
+  const isProUser = proStatusData?.isProUser || false;
 
   // Check if user has previously chosen to hide confirmation (only for confirmation mode)
   useEffect(() => {
@@ -841,6 +850,9 @@ export function EditModal({
                   value={displayState.content}
                   onChange={handleContentChange}
                   className="w-full p-3 rounded-xl resize-none focus:outline-none focus:border-transparent bg-[#f8f8f8] text-sm leading-relaxed touch-manipulation rows-6"
+                  maxLength={
+                    isProUser ? PRO_CHARACTER_LIMIT : STANDARD_CHARACTER_LIMIT
+                  }
                   rows={4}
                   placeholder={"What's happening? Use @ to mention users"}
                   disabled={isResolvingUrls}
