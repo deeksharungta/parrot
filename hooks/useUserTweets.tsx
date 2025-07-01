@@ -26,6 +26,7 @@ interface UseUserTweetsResult {
     tweetId: string,
     status: "approved" | "rejected" | "cast" | "failed",
   ) => Promise<void>;
+  isFullyLoaded: boolean;
 }
 
 export const useUserTweets = (fid: number | undefined): UseUserTweetsResult => {
@@ -182,5 +183,6 @@ export const useUserTweets = (fid: number | undefined): UseUserTweetsResult => {
     refreshTweets,
     forceRefreshTweets,
     updateTweetStatus: updateTweetStatusHandler,
+    isFullyLoaded: !isLoadingCached && !isLoadingFresh,
   };
 };

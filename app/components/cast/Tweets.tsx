@@ -57,6 +57,7 @@ export default function Tweets({ fid }: TweetsProps) {
     refreshTweets,
     forceRefreshTweets,
     updateTweetStatus: updateTweetStatusHandler,
+    isFullyLoaded,
   } = useUserTweets(fid);
 
   // Keep the original tweets array stable during the swiping session
@@ -241,7 +242,7 @@ export default function Tweets({ fid }: TweetsProps) {
   const isFirstTimeUser = showTweets.length === 0 && !isLoading && !isError;
 
   // Handle loading and error states
-  if (isLoading || (isFirstTimeUser && isLoadingFresh)) {
+  if (!isFullyLoaded) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-6">
         <div className="text-center">
@@ -293,7 +294,7 @@ export default function Tweets({ fid }: TweetsProps) {
   }
 
   // Show NoTweetsFound when no tweets are available (but no error occurred)
-  if (!isLoading && !isLoadingFresh && showTweets.length === 0) {
+  if (isFullyLoaded && showTweets.length === 0) {
     return <NoTweetsFound onRefresh={forceRefreshTweets} />;
   }
 
