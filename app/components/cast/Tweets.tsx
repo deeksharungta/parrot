@@ -90,16 +90,18 @@ export default function Tweets({ fid }: TweetsProps) {
         return false;
       });
 
-      // Only update stable tweets if:
+      // Update stable tweets if:
       // 1. We don't have any stable tweets yet (initial load)
       // 2. We have significantly more tweets than before (indicating a refetch/restore)
+      // 3. We have fresh tweets available (hasNewTweets indicator)
       const isInitialLoad = stableTweets.length === 0;
       const isRefetch = tweets.length > previousTweetCount + 5; // Significant increase indicates refetch
+      const hasFreshTweets = hasNewTweets; // Fresh tweets indicator from hook
 
       if (isInitialLoad) {
         setStableTweets(filteredTweets);
         setCurrentIndex(0);
-      } else if (isRefetch) {
+      } else if (isRefetch || hasFreshTweets) {
         setStableTweets(filteredTweets);
         setCurrentIndex(0); // Reset to beginning after refetch
       }
@@ -112,7 +114,7 @@ export default function Tweets({ fid }: TweetsProps) {
       setCurrentIndex(0);
       setPreviousTweetCount(0);
     }
-  }, [tweets, stableTweets.length]);
+  }, [tweets, stableTweets.length, hasNewTweets]);
 
   const showTweets = stableTweets;
 
