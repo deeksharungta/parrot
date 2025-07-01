@@ -147,6 +147,12 @@ export const useUserTweets = (fid: number | undefined): UseUserTweetsResult => {
       queryKey: ["cached-tweets", fid],
       type: "active",
     });
+
+    // Set hasNewTweets to trigger UI update
+    setHasNewTweets(true);
+
+    // Auto-hide the indicator after 3 seconds
+    setTimeout(() => setHasNewTweets(false), 3000);
   };
 
   // Update tweet status function
