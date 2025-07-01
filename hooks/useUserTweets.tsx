@@ -33,6 +33,7 @@ export const useUserTweets = (fid: number | undefined): UseUserTweetsResult => {
   const queryClient = useQueryClient();
   const [isLoadingFresh, setIsLoadingFresh] = useState(false);
   const [hasNewTweets, setHasNewTweets] = useState(false);
+  const [hasFetchedFreshOnce, setHasFetchedFreshOnce] = useState(false);
 
   // Query for cached tweets - shows immediately
   const {
@@ -81,8 +82,10 @@ export const useUserTweets = (fid: number | undefined): UseUserTweetsResult => {
         // Auto-hide the "new tweets" indicator after 3 seconds
         setTimeout(() => setHasNewTweets(false), 3000);
       }
+      setHasFetchedFreshOnce(true);
     } catch (error) {
       console.error("Error fetching fresh tweets:", error);
+      setHasFetchedFreshOnce(true);
     } finally {
       setIsLoadingFresh(false);
     }
@@ -183,6 +186,6 @@ export const useUserTweets = (fid: number | undefined): UseUserTweetsResult => {
     refreshTweets,
     forceRefreshTweets,
     updateTweetStatus: updateTweetStatusHandler,
-    isFullyLoaded: !isLoadingCached && !isLoadingFresh,
+    isFullyLoaded: !isLoadingCached && hasFetchedFreshOnce,
   };
 };
