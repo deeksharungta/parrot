@@ -138,8 +138,7 @@ export const useUserTweets = (fid: number | undefined): UseUserTweetsResult => {
 
   // Force refresh function for status updates
   const forceRefreshTweets = async () => {
-    // Remove from cache and force refetch
-    await queryClient.resetQueries({ queryKey: ["cached-tweets", fid] });
+    // Invalidate and refetch without clearing cache to prevent flicker
     await queryClient.invalidateQueries({ queryKey: ["cached-tweets", fid] });
 
     // Force refetch the query immediately
