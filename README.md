@@ -353,7 +353,7 @@ curl -X GET http://localhost:3000/api/user?fid=123
 
 ## 🤝 Contributing
 
-We welcome contributions! Please follow these steps:
+We welcome contributions! Please follow these steps-
 
 1. **Fork the repository**
 2. **Create a feature branch**
