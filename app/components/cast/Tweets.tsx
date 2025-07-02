@@ -129,15 +129,19 @@ export default function Tweets({ fid }: TweetsProps) {
       // Update stable tweets if:
       // 1. We don't have any stable tweets yet (initial load)
       // 2. We have significantly more tweets than before (indicating a refetch/restore)
-      // 3. We have fresh tweets available (hasNewTweets indicator)
+      // 3. We have fresh tweets available (hasNewTweets indicator) AND tweet count increased (not decreased)
       const isInitialLoad = stableTweets.length === 0;
       const isRefetch = tweets.length > previousTweetCount + 5; // Significant increase indicates refetch
-      const hasFreshTweets = hasNewTweets; // Fresh tweets indicator from hook
+      const hasFreshTweets =
+        hasNewTweets && tweets.length >= previousTweetCount; // Only count as fresh if count didn't decrease
 
       console.log("🔍 Update conditions check:", {
         isInitialLoad,
         isRefetch,
         hasFreshTweets,
+        hasNewTweetsFlag: hasNewTweets,
+        tweetCountChanged: tweets.length !== previousTweetCount,
+        tweetCountIncreased: tweets.length >= previousTweetCount,
         shouldUpdate: isInitialLoad || isRefetch || hasFreshTweets,
       });
 
@@ -155,7 +159,11 @@ export default function Tweets({ fid }: TweetsProps) {
         setStableTweets(filteredTweets);
         setCurrentIndex(0); // Reset to beginning after refetch
       } else {
-        console.log("⏭️ No update needed - keeping existing stableTweets");
+        console.log("⏭️ No update needed - keeping existing stableTweets", {
+          reason: hasNewTweets
+            ? "hasNewTweets but count decreased (rejections)"
+            : "no changes",
+        });
       }
 
       // Update previous count for next comparison
