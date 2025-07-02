@@ -60,6 +60,27 @@ export default function Tweets({ fid }: TweetsProps) {
     isFullyLoaded,
   } = useUserTweets(fid);
 
+  // Debug hook data changes
+  React.useEffect(() => {
+    console.log("🎣 useUserTweets data changed:", {
+      tweetsCount: tweets?.length || 0,
+      isLoading,
+      isLoadingFresh,
+      hasNewTweets,
+      isFullyLoaded,
+      isError,
+      errorMessage: error?.message,
+    });
+  }, [
+    tweets,
+    isLoading,
+    isLoadingFresh,
+    hasNewTweets,
+    isFullyLoaded,
+    isError,
+    error,
+  ]);
+
   // Keep the original tweets array stable during the swiping session
   const [stableTweets, setStableTweets] = useState<any[]>([]);
   const [processedTweetIds, setProcessedTweetIds] = useState<Set<string>>(
@@ -69,6 +90,15 @@ export default function Tweets({ fid }: TweetsProps) {
 
   // Update stable tweets when new tweets are loaded
   React.useEffect(() => {
+    console.log("🔄 stableTweets useEffect triggered:", {
+      tweetsLength: tweets?.length || 0,
+      stableTweetsLength: stableTweets.length,
+      hasNewTweets,
+      previousTweetCount,
+      currentIndex,
+      processedTweetIds: Array.from(processedTweetIds),
+    });
+
     if (tweets && tweets.length > 0) {
       // Filter to only show thread starters or non-thread tweets, and exclude videos/GIFs
       const filteredTweets = tweets.filter((tweet) => {
@@ -90,6 +120,12 @@ export default function Tweets({ fid }: TweetsProps) {
         return false;
       });
 
+      console.log("📊 Tweet filtering results:", {
+        originalTweetsCount: tweets.length,
+        filteredTweetsCount: filteredTweets.length,
+        removedCount: tweets.length - filteredTweets.length,
+      });
+
       // Update stable tweets if:
       // 1. We don't have any stable tweets yet (initial load)
       // 2. We have significantly more tweets than before (indicating a refetch/restore)
@@ -98,17 +134,34 @@ export default function Tweets({ fid }: TweetsProps) {
       const isRefetch = tweets.length > previousTweetCount + 5; // Significant increase indicates refetch
       const hasFreshTweets = hasNewTweets; // Fresh tweets indicator from hook
 
+      console.log("🔍 Update conditions check:", {
+        isInitialLoad,
+        isRefetch,
+        hasFreshTweets,
+        shouldUpdate: isInitialLoad || isRefetch || hasFreshTweets,
+      });
+
       if (isInitialLoad) {
+        console.log("🆕 Initial load - setting stableTweets");
         setStableTweets(filteredTweets);
         setCurrentIndex(0);
       } else if (isRefetch || hasFreshTweets) {
+        console.log(
+          "🔄 Refetch or fresh tweets detected - updating stableTweets",
+          {
+            reason: isRefetch ? "refetch" : "fresh tweets",
+          },
+        );
         setStableTweets(filteredTweets);
         setCurrentIndex(0); // Reset to beginning after refetch
+      } else {
+        console.log("⏭️ No update needed - keeping existing stableTweets");
       }
 
       // Update previous count for next comparison
       setPreviousTweetCount(tweets.length);
     } else if (tweets && tweets.length === 0) {
+      console.log("🈳 No tweets available - clearing stableTweets");
       // No tweets available
       setStableTweets([]);
       setCurrentIndex(0);
@@ -232,6 +285,17 @@ export default function Tweets({ fid }: TweetsProps) {
   const [isCastLoading, setIsCastLoading] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
+  // Debug showTweets changes
+  React.useEffect(() => {
+    console.log("👀 showTweets changed:", {
+      showTweetsLength: showTweets.length,
+      stableTweetsLength: stableTweets.length,
+      currentIndex,
+      firstTweetId: showTweets[0]?.tweet_id,
+      currentTweetId: showTweets[currentIndex]?.tweet_id,
+    });
+  }, [showTweets, currentIndex]);
+
   // New hooks for editing and casting
   const editTweetMutation = useEditTweet();
   const castTweetMutation = useCastTweet();
@@ -304,9 +368,25 @@ export default function Tweets({ fid }: TweetsProps) {
     await sdk.haptics.impactOccurred("medium");
     const currentTweet = showTweets[currentIndex];
 
+    console.log("❌ handleReject called:", {
+      currentIndex,
+      tweetId: currentTweet?.tweet_id,
+      stableTweetsLength: stableTweets.length,
+      tweetsLength: tweets?.length || 0,
+      processedTweetIdsCount: processedTweetIds.size,
+    });
+
     // Track this tweet as processed
     if (currentTweet?.tweet_id) {
-      setProcessedTweetIds((prev) => new Set(prev).add(currentTweet.tweet_id));
+      setProcessedTweetIds((prev) => {
+        const newSet = new Set(prev).add(currentTweet.tweet_id);
+        console.log("📝 Updated processedTweetIds:", {
+          previousSize: prev.size,
+          newSize: newSet.size,
+          addedTweetId: currentTweet.tweet_id,
+        });
+        return newSet;
+      });
     }
 
     // Move to next tweet immediately for better UX
@@ -314,6 +394,11 @@ export default function Tweets({ fid }: TweetsProps) {
     setTimeout(() => {
       setIsAnimating(true);
       setTimeout(() => {
+        console.log("⏭️ Moving to next tweet:", {
+          previousIndex: currentIndex,
+          newIndex: currentIndex + 1,
+          totalTweets: stableTweets.length,
+        });
         setCurrentIndex(currentIndex + 1);
         setSwipeDirection(null);
         setIsAnimating(false);
@@ -323,6 +408,12 @@ export default function Tweets({ fid }: TweetsProps) {
     // Update tweet status in database asynchronously to avoid reloading
     if (currentTweet?.tweet_id) {
       try {
+        console.log("🗄️ Calling updateTweetStatusHandler:", {
+          tweetId: currentTweet.tweet_id,
+          status: "rejected",
+          currentTweetsLength: tweets?.length || 0,
+        });
+
         // Don't await this to prevent blocking the UI transition
         updateTweetStatusHandler(currentTweet.tweet_id, "rejected").catch(
           (error) => {
