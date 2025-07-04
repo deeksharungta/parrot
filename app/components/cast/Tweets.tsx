@@ -462,21 +462,24 @@ export default function Tweets({ fid }: TweetsProps) {
         );
       } else {
         // Cast single tweet
-        castTweetMutation.mutate(
-          {
-            tweetId: currentTweet.tweet_id,
-            content: currentTweet.content || "",
+        const castData: any = {
+          tweetId: currentTweet.tweet_id,
+        };
+
+        // Only pass content for non-retweets
+        if (!currentTweet.is_retweet) {
+          castData.content = currentTweet.content || "";
+        }
+
+        castTweetMutation.mutate(castData, {
+          onSuccess: async () => {
+            await sdk.haptics.notificationOccurred("success");
           },
-          {
-            onSuccess: async () => {
-              await sdk.haptics.notificationOccurred("success");
-            },
-            onError: async (error) => {
-              console.error("Error casting tweet:", error);
-              await sdk.haptics.notificationOccurred("error");
-            },
+          onError: async (error) => {
+            console.error("Error casting tweet:", error);
+            await sdk.haptics.notificationOccurred("error");
           },
-        );
+        });
       }
     }
   };
