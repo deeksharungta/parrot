@@ -103,7 +103,7 @@ export default function HomePage() {
               onClick={() => {
                 // You can add logic here to redirect to Farcaster or show instructions
                 window.open(
-                  "https://farcaster.xyz/miniapps/ke9DBKcdqnOq/parrot",
+                  "https://farcaster.xyz/miniapps/wttQ9mMjERiS/parrot",
                   "_blank",
                 );
               }}
