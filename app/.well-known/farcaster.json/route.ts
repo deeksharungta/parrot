@@ -20,6 +20,16 @@ export async function GET() {
       splashImageUrl: `${appUrl}/splash.png`,
       splashBackgroundColor: "#4998D1",
       webhookUrl: `${appUrl}/api/webhook`,
+      subtitle: "Make your post work for you",
+      description: "Make your post work for you",
+      screenshotUrls: [`${appUrl}/screenshot.png`],
+      primaryCategory: "social",
+      tags: ["social", "twitter", "cast"],
+      heroImageUrl: `${appUrl}/hero.png`,
+      tagline: "Make your post work for you",
+      ogTitle: "Parrot",
+      ogDescription: "Make your post work for you",
+      ogImageUrl: `${appUrl}/hero.png`,
     },
   };
 
