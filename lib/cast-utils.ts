@@ -96,7 +96,7 @@ export async function convertTwitterMentionsToFarcaster(
         // If no API key, use fallback format
         convertedContent = convertedContent.replace(
           new RegExp(`@${username}\\b`, "g"),
-          `${username}.twitter`,
+          `x.com/${username}`,
         );
         continue;
       }
@@ -115,7 +115,7 @@ export async function convertTwitterMentionsToFarcaster(
           // If no Farcaster user found, use the fallback format
           convertedContent = convertedContent.replace(
             new RegExp(`@${username}\\b`, "g"),
-            `${username}.twitter`,
+            `x.com/${username}`,
           );
         }
       } catch (error) {
@@ -123,7 +123,7 @@ export async function convertTwitterMentionsToFarcaster(
         // Use fallback format if conversion fails
         convertedContent = convertedContent.replace(
           new RegExp(`@${username}\\b`, "g"),
-          `${username}.twitter`,
+          `x.com/${username}`,
         );
       }
     }
@@ -143,7 +143,7 @@ export async function convertTwitterMentionsToFarcaster(
         // If no API key, use fallback format
         convertedContent = convertedContent.replace(
           new RegExp(`@${username}\\b`, "g"),
-          `${username}.twitter`,
+          `x.com/${username}`,
         );
         continue;
       }
@@ -162,7 +162,7 @@ export async function convertTwitterMentionsToFarcaster(
           // If no Farcaster user found, use the fallback format
           convertedContent = convertedContent.replace(
             new RegExp(`@${username}\\b`, "g"),
-            `${username}.twitter`,
+            `x.com/${username}`,
           );
         }
       } catch (error) {
@@ -170,7 +170,7 @@ export async function convertTwitterMentionsToFarcaster(
         // Use fallback format if conversion fails
         convertedContent = convertedContent.replace(
           new RegExp(`@${username}\\b`, "g"),
-          `${username}.twitter`,
+          `x.com/${username}`,
         );
       }
     }
