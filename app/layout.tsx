@@ -4,7 +4,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { Viewport } from "next";
 import { Toaster } from "sonner";
-import AuthGuard from "@/components/AuthGuard";
+import { Instrument_Serif } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import * as Sentry from "@sentry/nextjs";
 
@@ -12,6 +12,12 @@ const outfit = Outfit({
   subsets: ["latin"],
   variable: "--font-outfit",
   weight: ["300", "400", "500", "600"],
+});
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  variable: "--font-instrument-serif",
+  weight: ["400"],
 });
 
 export const viewport: Viewport = {
@@ -55,7 +61,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={outfit.variable}>
+    <html
+      lang="en"
+      className={`${outfit.variable} ${instrumentSerif.variable}`}
+    >
       <body className="font-sans antialiased bg-white text-gray-900">
         <Providers>{children}</Providers>
         <Toaster
