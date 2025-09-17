@@ -11,6 +11,7 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-outfit)"],
         serif: ["var(--font-instrument-serif)"],
+        zing: ["var(--font-zing)"],
       },
       colors: {
         background: "var(--background)",

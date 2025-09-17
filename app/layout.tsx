@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { Providers } from "./providers";
 import { Viewport } from "next";
@@ -18,6 +19,12 @@ const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
   variable: "--font-instrument-serif",
   weight: ["400"],
+});
+
+const zingFont = localFont({
+  src: "../public/fonts/zing-font.otf",
+  variable: "--font-zing",
+  display: "swap",
 });
 
 export const viewport: Viewport = {
@@ -63,7 +70,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${outfit.variable} ${instrumentSerif.variable}`}
+      className={`${outfit.variable} ${instrumentSerif.variable} ${zingFont.variable}`}
     >
       <body className="font-sans antialiased bg-white text-gray-900">
         <Providers>{children}</Providers>
