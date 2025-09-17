@@ -467,28 +467,6 @@ export const POST = withApiKeyAndJwtAuth(async function (
         }
       }
 
-      // Extract and embed regular URLs from content (lowest priority) - same as in parseTweetToFarcasterCast
-      if (parsedCast.content) {
-        const urlRegex =
-          /https?:\/\/(?:[-\w.])+(?:\.[a-zA-Z]{2,})+(?:\/[^\s]*)?/g;
-        const matches = Array.from(parsedCast.content.matchAll(urlRegex));
-        const contentUrls = matches
-          .map((match) => match[0])
-          .filter((url) => {
-            try {
-              new URL(url);
-              return true;
-            } catch {
-              return false;
-            }
-          });
-
-        // Add URLs as embeds with lowest priority
-        contentUrls.forEach((url) => {
-          embeds.push(url);
-        });
-      }
-
       // Check user's embed limit based on pro subscription status
       const embedLimit = await getEmbedLimit(userFid);
       if (embeds.length > embedLimit) {
@@ -513,6 +491,40 @@ export const POST = withApiKeyAndJwtAuth(async function (
 
     // Resolve any t.co URLs in the content before casting
     const resolvedContent = await resolveTcoUrls(parsedCast.content);
+
+    // Extract and embed regular URLs from resolved content (lowest priority)
+    // Only do this if we used the override logic (when any override params were provided)
+    if (
+      content !== undefined ||
+      mediaUrls !== undefined ||
+      quotedTweetUrl !== undefined ||
+      videoUrls !== undefined
+    ) {
+      const urlRegex =
+        /https?:\/\/(?:[-\w.])+(?:\.[a-zA-Z]{2,})+(?:\/[^\s]*)?/g;
+      const matches = Array.from(resolvedContent.matchAll(urlRegex));
+      const contentUrls = matches
+        .map((match) => match[0])
+        .filter((url) => {
+          try {
+            new URL(url);
+            return true;
+          } catch {
+            return false;
+          }
+        });
+
+      // Add URLs as embeds with lowest priority
+      contentUrls.forEach((url) => {
+        parsedCast.embeds.push(url);
+      });
+
+      // Re-apply embed limit after adding content links
+      const embedLimit = await getEmbedLimit(userFid);
+      if (parsedCast.embeds.length > embedLimit) {
+        parsedCast.embeds.splice(embedLimit);
+      }
+    }
 
     // Convert Twitter mentions to Farcaster format
     const convertedContent = await convertTwitterMentionsToFarcaster(
