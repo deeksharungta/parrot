@@ -467,6 +467,28 @@ export const POST = withApiKeyAndJwtAuth(async function (
         }
       }
 
+      // Extract and embed regular URLs from content (lowest priority) - same as in parseTweetToFarcasterCast
+      if (parsedCast.content) {
+        const urlRegex =
+          /https?:\/\/(?:[-\w.])+(?:\.[a-zA-Z]{2,})+(?:\/[^\s]*)?/g;
+        const matches = Array.from(parsedCast.content.matchAll(urlRegex));
+        const contentUrls = matches
+          .map((match) => match[0])
+          .filter((url) => {
+            try {
+              new URL(url);
+              return true;
+            } catch {
+              return false;
+            }
+          });
+
+        // Add URLs as embeds with lowest priority
+        contentUrls.forEach((url) => {
+          embeds.push(url);
+        });
+      }
+
       // Check user's embed limit based on pro subscription status
       const embedLimit = await getEmbedLimit(userFid);
       if (embeds.length > embedLimit) {
