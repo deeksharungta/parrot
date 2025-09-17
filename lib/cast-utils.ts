@@ -288,6 +288,31 @@ function removeTwitterLinks(
 }
 
 /**
+ * Extract URLs from text content for embedding
+ * @param content - Text content to extract URLs from
+ * @returns string[] - Array of URLs found in the content
+ */
+function extractUrlsFromContent(content: string): string[] {
+  if (!content) return [];
+
+  // Regex to match HTTP/HTTPS URLs (at this point t.co URLs should be resolved)
+  const urlRegex = /https?:\/\/(?:[-\w.])+(?:\.[a-zA-Z]{2,})+(?:\/[^\s]*)?/g;
+  const matches = Array.from(content.matchAll(urlRegex));
+
+  return matches
+    .map((match) => match[0])
+    .filter((url) => {
+      // Additional filtering to ensure valid URLs
+      try {
+        new URL(url);
+        return true;
+      } catch {
+        return false;
+      }
+    });
+}
+
+/**
  * Parse tweet content to Farcaster cast format
  * @param tweetData - The tweet data object
  * @param isEdit - Whether this content is from EditModal (to skip mention conversion)
@@ -399,6 +424,15 @@ export async function parseTweetToFarcasterCast(
       }
     });
   }
+
+  // Extract and embed regular URLs from content (lowest priority)
+  // Note: Final embed limit is applied later based on user's pro status
+  const contentUrls = extractUrlsFromContent(content);
+
+  // Add URLs as embeds with lowest priority (will be trimmed later if needed)
+  contentUrls.forEach((url: string) => {
+    embeds.push(url);
+  });
 
   return {
     content,
