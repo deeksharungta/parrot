@@ -9,6 +9,7 @@ import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { motion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { analytics } from "@/lib/analytics";
+import XUsername from "../components/settings/XUsername";
 
 export default function SettingsPage() {
   const { isFrameReady, setFrameReady } = useMiniKit();
@@ -30,7 +31,8 @@ export default function SettingsPage() {
 
   const settingsItems = [
     { component: YoloMode, delay: 0.3 },
-    { component: DisconnectNeynar, delay: 0.4 },
+    { component: XUsername, delay: 0.4 },
+    { component: DisconnectNeynar, delay: 0.5 },
   ];
 
   return (
@@ -40,14 +42,14 @@ export default function SettingsPage() {
         className="flex flex-col gap-5 mt-4 h-[calc(100dvh-170px)] px-5 pb-5"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
       >
         {settingsItems.map((item, index) => (
           <motion.div
             key={index}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: item.delay }}
+            transition={{ duration: 0.5, delay: item.delay }}
           >
             <item.component />
           </motion.div>
