@@ -17,6 +17,8 @@ const config: Config = {
         background: "var(--background)",
         foreground: "var(--foreground)",
         danger: "#D60000",
+        "black-v1": "#111111",
+        "black-v2": "#2D2D2D",
       },
       boxShadow: {
         "danger-top": "0px -4px 0px 0px #D60000 inset",
