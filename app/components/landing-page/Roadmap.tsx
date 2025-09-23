@@ -4,19 +4,37 @@ import React from "react";
 export default function Roadmap() {
   return (
     <div>
-      <p className="text-black-v1 max-w-[1150px] mx-auto font-zing font-thin text-[90px] leading-none tracking-[-0.15px] text-center">
+      <p className="text-black-v1 max-w-[1150px] mx-auto font-zing font-thin text-[90px] leading-[87%] tracking-[-0.15px] text-center mt-28">
         The
         <span className="font-serif font-normal italic">
           {" "}
-          Distribution Market{" "}
+          Distribution <br />
+          Market{" "}
         </span>{" "}
         Is Changing
       </p>
-      <p className="text-black mx-auto font-serif font-normal text-sm text-center">
+      <p className="text-black mx-auto font-serif font-normal text-sm text-center mt-4">
         Distribution isn&apos;t just reach, it&apos;s about entering new markets
-        where every post can earn. Parrot routes your content to onchain
-        platforms, unlocking likes, tips, collectibles.
+        where every post can earn. Parrot routes your
+        <br />
+        content to onchain platforms, unlocking likes, tips, collectibles.
       </p>
+      <div className="flex items-center justify-center gap-0 mt-2">
+        <Image
+          src="/landing/parrot-still.svg"
+          alt="Parrot"
+          width={46}
+          height={46}
+        />
+        <Image
+          src="/landing/parrot-still.svg"
+          alt="Roadmap"
+          width={46}
+          height={46}
+          className="scale-x-[-1] -ml-1"
+        />
+      </div>
+      <div className="h-[1px] bg-black w-24 mx-auto -mt-1" />
       <div className="grid grid-cols-2 gap-10 mx-auto">
         <div className="relative mb-10">
           <Image
