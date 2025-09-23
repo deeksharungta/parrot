@@ -19,6 +19,18 @@ const config: Config = {
         danger: "#D60000",
         "black-v1": "#111111",
         "black-v2": "#2D2D2D",
+        orange: {
+          50: "#fff7ed",
+          100: "#ffedd5",
+          200: "#fed7aa",
+          300: "#fdba74",
+          400: "#fb923c",
+          500: "#f97316",
+          600: "#ea580c",
+          700: "#c2410c",
+          800: "#9a3412",
+          900: "#7c2d12",
+        },
       },
       boxShadow: {
         "danger-top": "0px -4px 0px 0px #D60000 inset",
