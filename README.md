@@ -405,4 +405,3 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
   <strong>Built with ❤️ for the Farcaster ecosystem</strong>
 </div>
 
-hey
