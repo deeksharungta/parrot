@@ -48,14 +48,14 @@ export default function Hero() {
           alt="Hero"
           width={676}
           height={327}
-          className="absolute top-0 -right-60 z-10 opacity-50 -rotate-180"
+          className="absolute top-0 -right-60 z-10"
         />
         <Image
           src="/landing/cloud-3.svg"
           alt="Hero"
           width={674}
           height={326}
-          className="absolute -bottom-40 right-0 z-20"
+          className="absolute -bottom-0 right-0 z-20"
         />
         <Image
           src="/landing/header-bg.svg"
