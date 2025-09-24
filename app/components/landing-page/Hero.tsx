@@ -1,9 +1,70 @@
+import Image from "next/image";
+import Link from "next/link";
 import React from "react";
 
 export default function Hero() {
   return (
     <>
-      <div className="flex flex-col gap-2 px-10">
+      <div className=" w-[1392px] h-[635px] relative mx-auto mt-6 rounded-3xl overflow-hidden">
+        <Image
+          src="/landing/header-title.svg"
+          alt="Parrot"
+          width={120}
+          height={58}
+          className="absolute top-4 left-4 z-10"
+        />
+        <Link
+          href="/"
+          className="absolute top-6 right-6 z-10 font-zing font-thin text-sm uppercase text-white text-shadow-white"
+        >
+          Open Mini App
+        </Link>
+        <p className="font-zing font-thin text-[32px] absolute top-40 left-1/2 transform -translate-x-1/2 z-10 text-white text-shadow-white text-center tracking-[-7%]">
+          Make your posts work for you
+        </p>
+        <Image
+          src="/landing/parrot-title.svg"
+          alt="Hero"
+          width={1276}
+          height={691}
+          className="absolute bottom-0 left-1/2 transform -translate-x-1/2 z-10"
+        />
+        <Image
+          src="/landing/parrot.svg"
+          alt="Hero"
+          width={400}
+          height={400}
+          className="absolute top-56 left-1/2 transform -translate-x-1/2 z-10"
+        />
+        <Image
+          src="/landing/cloud-1.svg"
+          alt="Hero"
+          width={400}
+          height={400}
+          className="absolute top-56 -left-20 z-20"
+        />
+        <Image
+          src="/landing/cloud-2.svg"
+          alt="Hero"
+          width={676}
+          height={327}
+          className="absolute top-0 -right-60 z-10 opacity-50 -rotate-180"
+        />
+        <Image
+          src="/landing/cloud-3.svg"
+          alt="Hero"
+          width={674}
+          height={326}
+          className="absolute -bottom-40 right-0 z-20"
+        />
+        <Image
+          src="/landing/header-bg.svg"
+          alt="Hero"
+          fill
+          className="object-cover object-bottom"
+        />
+      </div>
+      <div className="flex flex-col gap-2 px-10 mx-auto mt-7">
         <p className="text-black-v1 font-zing font-thin text-2xl">
           Internet Distribution Market
         </p>
@@ -39,7 +100,7 @@ export default function Hero() {
           </p>
         </div>
       </div>
-      <p className="text-black-v1 max-w-[1150px] mx-auto font-zing font-thin text-[90px] leading-none tracking-[-0.15px] text-center">
+      <p className="text-black-v1 max-w-[1150px] mx-auto font-zing font-thin text-[90px] leading-none tracking-[-0.15px] text-center my-24">
         Connect your <span className="font-serif font-normal">Socials</span>,&
         <span className="font-serif font-normal"> Parrot</span> fetchs all your
         <span className="font-serif font-normal"> posts </span> to spot what
