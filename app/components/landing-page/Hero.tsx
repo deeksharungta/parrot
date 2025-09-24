@@ -163,20 +163,15 @@ export default function Hero() {
         </span>{" "}
         - send
         <span className="font-serif font-normal"> content </span> to
+        <span className="font-serif font-normal"> Farcaster </span> or
         <span className="font-serif font-normal relative">
-          {" "}
           <Image
             src="/landing/farcaster.svg"
             alt="Farcaster"
             width={98}
             height={98}
-            className="absolute top-0 left-0"
-          />
-          Farcaster{" "}
-        </span>{" "}
-        or
-        <span className="font-serif font-normal relative">
-          {" "}
+            className="absolute top-3 -left-72"
+          />{" "}
           Zora{" "}
           <Image
             src="/landing/zora.svg"
