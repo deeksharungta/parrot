@@ -35,60 +35,64 @@ export default function Roadmap() {
         />
       </div>
       <div className="h-[1px] bg-black w-24 mx-auto -mt-1" />
-      <div className="grid grid-cols-2 gap-10 mx-auto">
-        <div className="relative mb-10">
-          <Image
-            src="/landing/page.svg"
-            alt="Page"
-            width={350}
-            height={250}
-            className="absolute top-0 left-0 rotate-[5.29deg]"
-          />
-          <Image
-            src="/landing/tape.svg"
-            alt="Roadmap"
-            width={81}
-            height={23}
-            className="absolute -top-3 -left-3 rotate-[5.29deg]"
-          />
-          <p className="font-zing font-thin text-black text-2xl absolute top-9 left-10 rotate-[2.25deg]">
-            Now
-          </p>
-          <p className="font-serif font-normal text-xl absolute top-[5.4rem] left-10 italic text-black rotate-[3deg]">
-            Post from X to Farcaster
-            <br />- Pick X posts and cast
-            <br />- YOLO mode (set once and forget)
-            <br />- Reverse FC account tag
-            <br />- Supports threads, long tweets, images, links
-          </p>
+      <div className="relative h-[600px] z-20">
+        <div className="relative">
+          <div className="grid grid-cols-2 gap-10 mx-auto mt-40 relative z-30">
+            <div className="relative mb-10 z-30 ml-80">
+              <Image
+                src="/landing/page.svg"
+                alt="Page"
+                width={350}
+                height={250}
+                className="absolute top-0 left-0 rotate-[5.29deg]"
+              />
+              <Image
+                src="/landing/tape.svg"
+                alt="Roadmap"
+                width={81}
+                height={23}
+                className="absolute -top-3 -left-3 rotate-[5.29deg]"
+              />
+              <p className="font-zing font-thin text-black text-2xl absolute top-7 left-10 rotate-[2.25deg]">
+                Now
+              </p>
+              <p className="font-serif font-normal text-lg absolute top-[5.4rem] left-9 italic text-black rotate-[3deg] leading-[146%]">
+                Post from X to Farcaster
+                <br />- Pick X posts and cast
+                <br />- YOLO mode (set once and forget)
+                <br />- Reverse FC account tag
+                <br />- Supports threads, long tweets, images, links
+              </p>
+            </div>
+            <div className="relative mb-10 z-30">
+              <Image
+                src="/landing/page.svg"
+                alt="Page"
+                width={350}
+                height={250}
+                className="absolute top-0 left-0"
+              />
+              <Image
+                src="/landing/tape.svg"
+                alt="Roadmap"
+                width={81}
+                height={23}
+                className="absolute -top-3 -left-3"
+              />
+              <p className="font-zing font-thin text-black text-2xl absolute top-9 left-10 -rotate-[3.24deg]">
+                Future
+              </p>
+              <p className="font-serif font-normal text-xl absolute top-[5.4rem] left-10 italic text-black -rotate-[2.49deg] ">
+                - X to Lens <br />- Insta to Zora <br />- Medium to Paragraph{" "}
+                <br />- Medium to Paragraph
+              </p>
+            </div>
+          </div>
         </div>
-        <div className="relative mb-10">
-          <Image
-            src="/landing/page.svg"
-            alt="Page"
-            width={350}
-            height={250}
-            className="absolute top-0 left-0"
-          />
-          <Image
-            src="/landing/tape.svg"
-            alt="Roadmap"
-            width={81}
-            height={23}
-            className="absolute -top-3 -left-3"
-          />
-          <p className="font-zing font-thin text-black text-2xl absolute top-9 left-10 -rotate-[3.24deg]">
-            Future
-          </p>
-          <p className="font-serif font-normal text-xl absolute top-[5.4rem] left-10 italic text-black -rotate-[2.49deg]">
-            - X to Lens <br />- Insta to Zora <br />- Medium to Paragraph <br />
-            - Medium to Paragraph
-          </p>
-        </div>
+        <p className="font-zing font-thin text-black text-[370px] text-center opacity-5 absolute left-1/2 transform -translate-x-1/2 z-0">
+          Roadmap
+        </p>
       </div>
-      <p className="font-zing font-thin text-black text-[370px] text-center opacity-5">
-        Roadmap
-      </p>
     </div>
   );
 }

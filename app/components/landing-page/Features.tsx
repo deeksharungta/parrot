@@ -23,7 +23,7 @@ export default function Features() {
         </div>
         <div className="border-black border w-fit ">
           <Image
-            src="/landing/feature-1.svg"
+            src="/landing/feature-2.svg"
             alt="Pick"
             width={424}
             height={415}
@@ -36,7 +36,7 @@ export default function Features() {
         </div>
         <div className="border-black border w-fit ">
           <Image
-            src="/landing/feature-1.svg"
+            src="/landing/feature-3.svg"
             alt="Pick"
             width={424}
             height={415}
