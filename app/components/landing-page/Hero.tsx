@@ -101,15 +101,92 @@ export default function Hero() {
         </div>
       </div>
       <p className="text-black-v1 max-w-[1150px] mx-auto font-zing font-thin text-[90px] leading-none tracking-[-0.15px] text-center my-24">
-        Connect your <span className="font-serif font-normal">Socials</span>,&
-        <span className="font-serif font-normal"> Parrot</span> fetchs all your
-        <span className="font-serif font-normal"> posts </span> to spot what
+        Connect your{" "}
+        <span className="font-serif font-normal relative">
+          Socials
+          <Image
+            src="/landing/blue-bird.svg"
+            alt="Blue Bird"
+            width={122}
+            height={122}
+            className="absolute -top-8 -left-20"
+          />
+        </span>
+        ,&
+        <span className="font-serif font-normal relative">
+          {" "}
+          Parrot{" "}
+          <Image
+            src="/landing/parrot-still.svg"
+            alt="Parrot Still"
+            width={98}
+            height={98}
+            className="absolute -top-2 -right-4"
+          />
+        </span>{" "}
+        fetchs all your
+        <span className="font-serif font-normal relative">
+          {" "}
+          posts{" "}
+          <Image
+            src="/landing/phone.svg"
+            alt="Phone"
+            width={64}
+            height={96}
+            className="absolute top-2 -right-28"
+          />
+        </span>{" "}
+        to spot what
         <span className="font-serif font-normal"> performs</span>. Pick and
-        <span className="font-serif font-normal"> post </span>
-        with <span className="font-serif font-normal"> one tap </span> - send
+        <span className="font-serif font-normal relative">
+          {" "}
+          <Image
+            src="/landing/thumbs-up.svg"
+            alt="Thumbs Up"
+            width={112}
+            height={112}
+            className="absolute -top-2 -left-52"
+          />
+          post{" "}
+        </span>
+        with{" "}
+        <span className="font-serif font-normal relative">
+          {" "}
+          <Image
+            src="/landing/arrow.svg"
+            alt="Arrow"
+            width={104}
+            height={93}
+            className="absolute top-2 -right-14"
+          />
+          one tap{" "}
+        </span>{" "}
+        - send
         <span className="font-serif font-normal"> content </span> to
-        <span className="font-serif font-normal"> Farcaster </span> or
-        <span className="font-serif font-normal"> Zora</span>, instantly.
+        <span className="font-serif font-normal relative">
+          {" "}
+          <Image
+            src="/landing/farcaster.svg"
+            alt="Farcaster"
+            width={98}
+            height={98}
+            className="absolute top-0 left-0"
+          />
+          Farcaster{" "}
+        </span>{" "}
+        or
+        <span className="font-serif font-normal relative">
+          {" "}
+          Zora{" "}
+          <Image
+            src="/landing/zora.svg"
+            alt="Zora"
+            width={66}
+            height={66}
+            className="absolute top-0 -right-6"
+          />
+        </span>
+        , instantly.
       </p>
     </>
   );
