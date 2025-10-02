@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import Container from "../ui/Container";
 
 export default function XUsername() {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -16,46 +15,27 @@ export default function XUsername() {
     key: keyof typeof preferences,
     value: boolean,
   ) => {
-    setPreferences((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+    if (value) {
+      // If turning on this option, turn off all others
+      setPreferences((prev) => {
+        const newPreferences = Object.keys(prev).reduce(
+          (acc, k) => {
+            acc[k as keyof typeof prev] = false;
+            return acc;
+          },
+          {} as typeof prev,
+        );
+        newPreferences[key] = true;
+        return newPreferences;
+      });
+    } else {
+      // If turning off this option, just turn it off
+      setPreferences((prev) => ({
+        ...prev,
+        [key]: false,
+      }));
+    }
   };
-
-  const CustomToggle = ({
-    children,
-    checked,
-    onChange,
-  }: {
-    children: React.ReactNode;
-    checked: boolean;
-    onChange: (checked: boolean) => void;
-  }) => (
-    <div className="flex items-center justify-between w-full py-3">
-      <div className="flex-1">
-        <div className="text-sm">{children}</div>
-      </div>
-      <motion.button
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-          checked ? "bg-[#100C20]" : "bg-[#ECECED]"
-        } cursor-pointer`}
-        onClick={() => onChange(!checked)}
-        whileTap={{ scale: 0.95 }}
-      >
-        <motion.span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-            checked ? "translate-x-6" : "translate-x-1"
-          } shadow-sm`}
-          layout
-          transition={{
-            type: "spring",
-            stiffness: 500,
-            damping: 30,
-          }}
-        />
-      </motion.button>
-    </div>
-  );
 
   return (
     <div className="bg-white rounded-2xl border border-[#ECECED] overflow-hidden">
@@ -96,7 +76,7 @@ export default function XUsername() {
           </motion.div>
         </div>
         {isExpanded && (
-          <motion.div className="my-4 overflow-hidden ">
+          <motion.div className="mt-4 overflow-hidden ">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="304"
@@ -124,50 +104,87 @@ export default function XUsername() {
         }}
         className="overflow-hidden mx-auto"
       >
-        <div className="px-6 pb-6 space-y-1">
+        <div className="px-6 pb-4 space-y-2">
           <CustomToggle
+            label="x.com/elonmusk"
+            description="profile link"
             checked={preferences.profileLink}
             onChange={(value) => handleToggleChange("profileLink", value)}
-          >
-            <span className="text-[#100C20] font-medium">x.com/elonmusk</span>
-            <span className="text-[#8C8A94] ml-1">profile link</span>
-          </CustomToggle>
+          />
 
           <CustomToggle
+            label="elonmusk"
+            description="username"
             checked={preferences.username}
             onChange={(value) => handleToggleChange("username", value)}
-          >
-            <span className="text-[#100C20] font-medium">elonmusk</span>
-            <span className="text-[#8C8A94] ml-1">username</span>
-          </CustomToggle>
+          />
 
           <CustomToggle
+            label="elonmusk(x.com/elonmusk)"
+            description="username(link)"
             checked={preferences.usernameWithLink}
             onChange={(value) => handleToggleChange("usernameWithLink", value)}
-          >
-            <span className="text-[#100C20] font-medium">
-              elonmusk(x.com/elonmusk)
-            </span>
-            <span className="text-[#8C8A94] ml-1">username(link)</span>
-          </CustomToggle>
+          />
 
           <CustomToggle
+            label="Elon"
+            description="first name"
             checked={preferences.firstName}
             onChange={(value) => handleToggleChange("firstName", value)}
-          >
-            <span className="text-[#100C20] font-medium">Elon</span>
-            <span className="text-[#8C8A94] ml-1">first name</span>
-          </CustomToggle>
+          />
 
           <CustomToggle
+            label="Elon Musk"
+            description="full name"
             checked={preferences.fullName}
             onChange={(value) => handleToggleChange("fullName", value)}
-          >
-            <span className="text-[#100C20] font-medium">Elon Musk</span>
-            <span className="text-[#8C8A94] ml-1">full name</span>
-          </CustomToggle>
+          />
         </div>
       </motion.div>
+    </div>
+  );
+}
+interface ToggleProps {
+  label: string;
+  description?: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  disabled?: boolean;
+}
+
+function CustomToggle({
+  label,
+  description,
+  checked,
+  onChange,
+  disabled = false,
+}: ToggleProps) {
+  return (
+    <div className="flex items-center justify-between w-full">
+      <div>
+        <span className="text-[#100C20] font-medium text-sm">{label}</span>
+        <span className="text-[#8C8A94] ml-1 text-sm">{description}</span>
+      </div>
+      <motion.button
+        className={`relative inline-flex h-5 w-8 items-center rounded-full transition-colors ${
+          checked ? "bg-[#100C20]" : "bg-[#ECECED]"
+        } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+        onClick={() => !disabled && onChange(!checked)}
+        whileTap={disabled ? {} : { scale: 0.95 }}
+        disabled={disabled}
+      >
+        <motion.span
+          className="inline-block h-3 w-3 rounded-full bg-white shadow-sm"
+          animate={{
+            x: checked ? 16 : 3,
+          }}
+          transition={{
+            type: "spring",
+            stiffness: 500,
+            damping: 30,
+          }}
+        />
+      </motion.button>
     </div>
   );
 }
