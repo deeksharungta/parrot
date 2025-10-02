@@ -29,6 +29,13 @@ export interface Database {
           free_casts_given: number | null;
           free_casts_left: number | null;
           promotion_cast_hash: string | null;
+          x_username_preference:
+            | "profile_link"
+            | "username"
+            | "username_with_link"
+            | "first_name"
+            | "full_name"
+            | null;
         };
         Insert: {
           id?: string;
@@ -57,6 +64,13 @@ export interface Database {
           free_casts_given?: number | null;
           free_casts_left?: number | null;
           promotion_cast_hash?: string | null;
+          x_username_preference?:
+            | "profile_link"
+            | "username"
+            | "username_with_link"
+            | "first_name"
+            | "full_name"
+            | null;
         };
         Update: {
           id?: string;
@@ -85,6 +99,13 @@ export interface Database {
           free_casts_given?: number | null;
           free_casts_left?: number | null;
           promotion_cast_hash?: string | null;
+          x_username_preference?:
+            | "profile_link"
+            | "username"
+            | "username_with_link"
+            | "first_name"
+            | "full_name"
+            | null;
         };
       };
       tweets: {

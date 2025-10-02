@@ -1,7 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useMiniKit } from "@coinbase/onchainkit/minikit";
+import { useCurrentUser, useUpdateUser } from "@/hooks/useUsers";
+import { toast } from "sonner";
 
 export default function XUsername() {
+  const { context } = useMiniKit();
+  const { data: userData } = useCurrentUser();
+  const updateUser = useUpdateUser();
+
   const [isExpanded, setIsExpanded] = useState(false);
   const [preferences, setPreferences] = useState({
     profileLink: true,
@@ -11,29 +18,109 @@ export default function XUsername() {
     fullName: false,
   });
 
+  // Load preference from database on mount
+  useEffect(() => {
+    if (userData?.user?.x_username_preference) {
+      const dbPreference = userData.user.x_username_preference;
+      setPreferences({
+        profileLink: dbPreference === "profile_link",
+        username: dbPreference === "username",
+        usernameWithLink: dbPreference === "username_with_link",
+        firstName: dbPreference === "first_name",
+        fullName: dbPreference === "full_name",
+      });
+    } else {
+      // Default to profile_link if no preference is set
+      setPreferences({
+        profileLink: true,
+        username: false,
+        usernameWithLink: false,
+        firstName: false,
+        fullName: false,
+      });
+    }
+  }, [userData?.user?.x_username_preference]);
+
   const handleToggleChange = (
     key: keyof typeof preferences,
     value: boolean,
   ) => {
+    if (!context?.user?.fid || !userData?.user) return;
+
     if (value) {
       // If turning on this option, turn off all others
-      setPreferences((prev) => {
-        const newPreferences = Object.keys(prev).reduce(
-          (acc, k) => {
-            acc[k as keyof typeof prev] = false;
-            return acc;
+      const newPreferences = Object.keys(preferences).reduce(
+        (acc, k) => {
+          acc[k as keyof typeof preferences] = false;
+          return acc;
+        },
+        {} as typeof preferences,
+      );
+      newPreferences[key] = true;
+      setPreferences(newPreferences);
+
+      // Map the preference key to database value
+      const preferenceMap = {
+        profileLink: "profile_link",
+        username: "username",
+        usernameWithLink: "username_with_link",
+        firstName: "first_name",
+        fullName: "full_name",
+      } as const;
+
+      const dbPreference = preferenceMap[key];
+
+      // Save to database
+      updateUser.mutate(
+        {
+          farcaster_fid: context.user.fid,
+          x_username_preference: dbPreference,
+        },
+        {
+          onSuccess: () => {
+            toast("Preference saved", {
+              description: "Your X username preference has been updated",
+            });
           },
-          {} as typeof prev,
-        );
-        newPreferences[key] = true;
-        return newPreferences;
-      });
+          onError: (error) => {
+            console.error("Failed to save preference:", error);
+            toast.error("Failed to save preference", {
+              description: "Please try again",
+            });
+            // Revert the local state on error
+            setPreferences(preferences);
+          },
+        },
+      );
     } else {
       // If turning off this option, just turn it off
       setPreferences((prev) => ({
         ...prev,
         [key]: false,
       }));
+
+      // Save null preference to database (no preference selected)
+      updateUser.mutate(
+        {
+          farcaster_fid: context.user.fid,
+          x_username_preference: null,
+        },
+        {
+          onSuccess: () => {
+            toast("Preference cleared", {
+              description: "Your X username preference has been cleared",
+            });
+          },
+          onError: (error) => {
+            console.error("Failed to clear preference:", error);
+            toast.error("Failed to clear preference", {
+              description: "Please try again",
+            });
+            // Revert the local state on error
+            setPreferences(preferences);
+          },
+        },
+      );
     }
   };
 
