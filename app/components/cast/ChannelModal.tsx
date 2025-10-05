@@ -141,7 +141,7 @@ export default function ChannelModal({
               stiffness: 300,
               duration: 0.3,
             }}
-            className="fixed bg-white border border-[#ECECED] z-50 max-h-[85vh] overflow-hidden bottom-2 left-2 right-2 rounded-[32px] p-6"
+            className="fixed bg-white border border-[#ECECED] z-50 h-[85vh] max-h-[600px] flex flex-col bottom-2 left-2 right-2 rounded-[32px] p-6"
           >
             <div className="flex items-center justify-between mb-6">
               <h3 className="font-semibold text-[#100c20] text-base">
@@ -182,70 +182,74 @@ export default function ChannelModal({
                 className="w-full pl-10 pr-3 py-2 bg-[#f8f8f8] rounded-xl border-none text-sm placeholder-[#B3B1B8] focus:outline-none focus:ring-0 focus:ring-offset-0"
               />
             </div>
-            <div className="space-y-2 mb-6">
-              {isLoadingChannels ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="text-sm text-[#8C8A94]">
-                    {searchQuery.trim().length > 0
-                      ? "Searching channels..."
-                      : "Loading channels..."}
-                  </div>
-                </div>
-              ) : channelError ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="text-sm text-red-500">
-                    Error: {channelError.message}
-                  </div>
-                </div>
-              ) : displayChannels.length === 0 ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="text-sm text-[#8C8A94]">
-                    {searchQuery.trim().length > 0
-                      ? "No channels found for your search"
-                      : "No channels found"}
-                  </div>
-                </div>
-              ) : (
-                displayChannels.map((ch) => {
-                  const isNotAllowed = !ch.isUserMember && !ch.public_casting;
-
-                  return (
-                    <div
-                      key={ch.id}
-                      onClick={() => !isNotAllowed && setSelectedChannel(ch.id)}
-                      className={`flex items-center justify-between transition-colors px-3 py-2 rounded-xl ${
-                        isNotAllowed
-                          ? "opacity-20 cursor-not-allowed bg-[#f8f8f8] border border-transparent"
-                          : selectedChannel === ch.id
-                            ? "bg-[#F3F3F4] border border-[#D9D8DC] cursor-pointer"
-                            : "bg-[#f8f8f8] hover:bg-[#F3F3F4] border hover:border-[#D9D8DC] border-transparent cursor-pointer"
-                      }`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        {ch.image_url ? (
-                          <img
-                            src={ch.image_url}
-                            alt={ch.name}
-                            className="w-5 h-5 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="text-lg">{ch.icon || "📺"}</div>
-                        )}
-                        <div className="flex flex-col">
-                          <span className="font-medium text-[#494656] text-sm">
-                            {ch.name}
-                          </span>
-                        </div>
-                      </div>
-                      {ch.userCount && (
-                        <span className="text-xs text-[#8C8A94]">
-                          {ch.userCount}
-                        </span>
-                      )}
+            <div className="flex-1 overflow-y-auto mb-6">
+              <div className="space-y-2">
+                {isLoadingChannels ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-sm text-[#8C8A94]">
+                      {searchQuery.trim().length > 0
+                        ? "Searching channels..."
+                        : "Loading channels..."}
                     </div>
-                  );
-                })
-              )}
+                  </div>
+                ) : channelError ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-sm text-red-500">
+                      Error: {channelError.message}
+                    </div>
+                  </div>
+                ) : displayChannels.length === 0 ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-sm text-[#8C8A94]">
+                      {searchQuery.trim().length > 0
+                        ? "No channels found for your search"
+                        : "No channels found"}
+                    </div>
+                  </div>
+                ) : (
+                  displayChannels.map((ch) => {
+                    const isNotAllowed = !ch.isUserMember && !ch.public_casting;
+
+                    return (
+                      <div
+                        key={ch.id}
+                        onClick={() =>
+                          !isNotAllowed && setSelectedChannel(ch.id)
+                        }
+                        className={`flex items-center justify-between transition-colors px-3 py-2 rounded-xl ${
+                          isNotAllowed
+                            ? "opacity-20 cursor-not-allowed bg-[#f8f8f8] border border-transparent"
+                            : selectedChannel === ch.id
+                              ? "bg-[#F3F3F4] border border-[#D9D8DC] cursor-pointer"
+                              : "bg-[#f8f8f8] hover:bg-[#F3F3F4] border hover:border-[#D9D8DC] border-transparent cursor-pointer"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          {ch.image_url ? (
+                            <img
+                              src={ch.image_url}
+                              alt={ch.name}
+                              className="w-5 h-5 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="text-lg">{ch.icon || "📺"}</div>
+                          )}
+                          <div className="flex flex-col">
+                            <span className="font-medium text-[#494656] text-sm">
+                              {ch.name}
+                            </span>
+                          </div>
+                        </div>
+                        {ch.userCount && (
+                          <span className="text-xs text-[#8C8A94]">
+                            {ch.userCount}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </div>
 
             <div className="flex gap-3">
