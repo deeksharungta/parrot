@@ -148,7 +148,7 @@ export default function ChannelModal({
               stiffness: 300,
               duration: 0.3,
             }}
-            className="fixed bg-white border border-[#ECECED] z-50 h-[85vh] max-h-[600px] flex flex-col bottom-2 left-2 right-2 rounded-[32px] p-6"
+            className="fixed bg-white border border-[#ECECED] z-50 max-h-[70vh] flex flex-col bottom-2 left-2 right-2 rounded-[32px] p-6"
           >
             <div className="flex items-center justify-between mb-6">
               <h3 className="font-semibold text-[#100c20] text-base">
@@ -189,7 +189,7 @@ export default function ChannelModal({
                 className="w-full pl-10 pr-3 py-2 bg-[#f8f8f8] rounded-xl border-none text-sm placeholder-[#B3B1B8] focus:outline-none focus:ring-0 focus:ring-offset-0"
               />
             </div>
-            <div className="flex-1 overflow-y-auto mb-6">
+            <div className="overflow-y-auto mb-6 max-h-[400px]">
               <div className="space-y-2">
                 {isLoadingChannels ? (
                   <div className="flex items-center justify-center py-8">
