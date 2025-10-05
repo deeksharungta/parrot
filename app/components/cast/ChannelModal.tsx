@@ -166,7 +166,7 @@ export default function ChannelModal({
                         <img
                           src={ch.image_url}
                           alt={ch.name}
-                          className="w-6 h-6 rounded-full object-cover"
+                          className="w-5 h-5 rounded-full object-cover"
                         />
                       ) : (
                         <div className="text-lg">{ch.icon || "📺"}</div>
@@ -175,11 +175,6 @@ export default function ChannelModal({
                         <span className="font-medium text-[#494656] text-sm">
                           {ch.name}
                         </span>
-                        {ch.description && (
-                          <span className="text-xs text-[#8C8A94] truncate max-w-[200px]">
-                            {ch.description}
-                          </span>
-                        )}
                       </div>
                     </div>
                     {ch.userCount && (
