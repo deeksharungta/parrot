@@ -26,7 +26,14 @@ interface ChannelModalProps {
 
 // Default channels that are always available
 const defaultChannels: Channel[] = [
-  { id: "home", name: "Home", icon: "🏠", userCount: "" },
+  {
+    id: "home",
+    name: "Home",
+    icon: "🏠",
+    userCount: "",
+    public_casting: true,
+    isUserMember: true,
+  },
 ];
 
 export default function ChannelModal({
