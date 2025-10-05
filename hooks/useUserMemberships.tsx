@@ -11,6 +11,9 @@ interface Channel {
   parent_url?: string;
   created_at: string;
   updated_at: string;
+  public_casting?: boolean;
+  member_count?: number;
+  follower_count?: number;
   [key: string]: any; // for other channel properties
 }
 

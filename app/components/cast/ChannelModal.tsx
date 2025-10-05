@@ -4,6 +4,7 @@ import Cross from "../icons/Cross";
 import Button from "../ui/Button";
 import Search from "../icons/Search";
 import { useGetUserMemberships } from "../../../hooks/useUserMemberships";
+import { useChannelSearch } from "../../../hooks/useChannelSearch";
 
 interface Channel {
   id: string;
@@ -12,6 +13,8 @@ interface Channel {
   userCount?: string;
   description?: string;
   image_url?: string;
+  public_casting?: boolean;
+  isUserMember?: boolean;
 }
 
 interface ChannelModalProps {
@@ -45,6 +48,16 @@ export default function ChannelModal({
     limit: 50,
   });
 
+  // Search for channels when user types in search box
+  const {
+    channels: searchResults,
+    isLoading: searchLoading,
+    error: searchError,
+  } = useChannelSearch({
+    query: searchQuery,
+    limit: 20,
+  });
+
   // Transform memberships data to match our Channel interface
   const userChannels: Channel[] =
     memberships?.map((membership) => ({
@@ -52,17 +65,55 @@ export default function ChannelModal({
       name: membership.channel.name,
       description: membership.channel.description,
       image_url: membership.channel.image_url,
+      public_casting: membership.channel.public_casting,
+      isUserMember: true,
       userCount: membership.channel.member_count
         ? `${membership.channel.member_count} members`
         : "",
     })) || [];
 
-  // Combine default channels with user channels
-  const allChannels = [...defaultChannels, ...userChannels];
+  // Transform search results to match our Channel interface
+  const searchChannels: Channel[] =
+    searchResults?.map((channel) => {
+      // Check if user is a member of this channel
+      const isUserMember =
+        memberships?.some(
+          (membership) => membership.channel.id === channel.id,
+        ) || false;
 
-  const filteredChannels = allChannels.filter((ch) =>
-    ch.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+      return {
+        id: channel.id,
+        name: channel.name,
+        description: channel.description,
+        image_url: channel.image_url,
+        public_casting: channel.public_casting,
+        isUserMember,
+        userCount: isUserMember
+          ? channel.member_count
+            ? `${channel.member_count} members`
+            : channel.follower_count
+              ? `${channel.follower_count} followers`
+              : ""
+          : !channel.public_casting
+            ? "not allowed"
+            : channel.member_count
+              ? `${channel.member_count} members`
+              : channel.follower_count
+                ? `${channel.follower_count} followers`
+                : "",
+      };
+    }) || [];
+
+  // Combine default channels with user channels
+  const allUserChannels = [...defaultChannels, ...userChannels];
+
+  // Show search results when user is searching, otherwise show user channels
+  const displayChannels =
+    searchQuery.trim().length > 0 ? searchChannels : allUserChannels;
+  const isLoadingChannels =
+    searchQuery.trim().length > 0 ? searchLoading : membershipsLoading;
+  const channelError =
+    searchQuery.trim().length > 0 ? searchError : membershipsError;
 
   const handleSelectChannel = () => {
     console.log("Select channel:", selectedChannel);
@@ -132,58 +183,68 @@ export default function ChannelModal({
               />
             </div>
             <div className="space-y-2 mb-6">
-              {membershipsLoading ? (
+              {isLoadingChannels ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="text-sm text-[#8C8A94]">
-                    Loading channels...
+                    {searchQuery.trim().length > 0
+                      ? "Searching channels..."
+                      : "Loading channels..."}
                   </div>
                 </div>
-              ) : membershipsError ? (
+              ) : channelError ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="text-sm text-red-500">
-                    Error loading channels: {membershipsError.message}
+                    Error: {channelError.message}
                   </div>
                 </div>
-              ) : filteredChannels.length === 0 ? (
+              ) : displayChannels.length === 0 ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="text-sm text-[#8C8A94]">
-                    No channels found
+                    {searchQuery.trim().length > 0
+                      ? "No channels found for your search"
+                      : "No channels found"}
                   </div>
                 </div>
               ) : (
-                filteredChannels.map((ch) => (
-                  <div
-                    key={ch.id}
-                    onClick={() => setSelectedChannel(ch.id)}
-                    className={`flex items-center justify-between cursor-pointer transition-colors px-3 py-2 rounded-xl ${
-                      selectedChannel === ch.id
-                        ? "bg-[#F3F3F4] border border-[#D9D8DC]"
-                        : "bg-[#f8f8f8] hover:bg-[#F3F3F4] border hover:border-[#D9D8DC] border-transparent"
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      {ch.image_url ? (
-                        <img
-                          src={ch.image_url}
-                          alt={ch.name}
-                          className="w-5 h-5 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="text-lg">{ch.icon || "📺"}</div>
-                      )}
-                      <div className="flex flex-col">
-                        <span className="font-medium text-[#494656] text-sm">
-                          {ch.name}
-                        </span>
+                displayChannels.map((ch) => {
+                  const isNotAllowed = !ch.isUserMember && !ch.public_casting;
+
+                  return (
+                    <div
+                      key={ch.id}
+                      onClick={() => !isNotAllowed && setSelectedChannel(ch.id)}
+                      className={`flex items-center justify-between transition-colors px-3 py-2 rounded-xl ${
+                        isNotAllowed
+                          ? "opacity-20 cursor-not-allowed bg-[#f8f8f8] border border-transparent"
+                          : selectedChannel === ch.id
+                            ? "bg-[#F3F3F4] border border-[#D9D8DC] cursor-pointer"
+                            : "bg-[#f8f8f8] hover:bg-[#F3F3F4] border hover:border-[#D9D8DC] border-transparent cursor-pointer"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        {ch.image_url ? (
+                          <img
+                            src={ch.image_url}
+                            alt={ch.name}
+                            className="w-5 h-5 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="text-lg">{ch.icon || "📺"}</div>
+                        )}
+                        <div className="flex flex-col">
+                          <span className="font-medium text-[#494656] text-sm">
+                            {ch.name}
+                          </span>
+                        </div>
                       </div>
+                      {ch.userCount && (
+                        <span className="text-xs text-[#8C8A94]">
+                          {ch.userCount}
+                        </span>
+                      )}
                     </div>
-                    {ch.userCount && (
-                      <span className="text-xs text-[#8C8A94]">
-                        {ch.userCount}
-                      </span>
-                    )}
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
 
@@ -196,8 +257,8 @@ export default function ChannelModal({
                 className="flex-1"
               >
                 Select{" "}
-                {allChannels.find((ch) => ch.id === selectedChannel)?.name ||
-                  "Home"}
+                {displayChannels.find((ch) => ch.id === selectedChannel)
+                  ?.name || "Home"}
               </Button>
             </div>
           </motion.div>
