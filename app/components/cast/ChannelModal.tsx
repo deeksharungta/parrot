@@ -45,8 +45,6 @@ export default function ChannelModal({
     limit: 50,
   });
 
-  console.log("memberships", memberships);
-
   // Transform memberships data to match our Channel interface
   const userChannels: Channel[] =
     memberships?.map((membership) => ({
@@ -54,7 +52,9 @@ export default function ChannelModal({
       name: membership.channel.name,
       description: membership.channel.description,
       image_url: membership.channel.image_url,
-      userCount: "", // User count not available in the API response
+      userCount: membership.channel.member_count
+        ? `${membership.channel.member_count} members`
+        : "",
     })) || [];
 
   // Combine default channels with user channels

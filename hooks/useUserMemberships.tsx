@@ -22,7 +22,7 @@ interface Membership {
 }
 
 interface UserMembershipsResponse {
-  memberships: Membership[];
+  members: Membership[];
   next?: {
     cursor: string;
   };
@@ -96,7 +96,7 @@ export const useGetUserMemberships = (
   });
 
   // Extract memberships and next cursor from the response
-  const memberships = membershipsResponse?.memberships ?? null;
+  const memberships = membershipsResponse?.members ?? null;
   const nextCursor = membershipsResponse?.next?.cursor ?? null;
 
   return {
