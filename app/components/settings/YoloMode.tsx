@@ -8,6 +8,7 @@ import YoloModeModal from "../modals/YoloModeModal";
 import { toast } from "sonner";
 import Edit from "../icons/Edit";
 import { analytics } from "@/lib/analytics";
+import ChannelModal from "../cast/ChannelModal";
 
 export default function YoloMode() {
   const { context } = useMiniKit();
@@ -143,15 +144,20 @@ export default function YoloMode() {
           notify you.
         </p>
       </Container>
-
-      <YoloModeModal
+      <ChannelModal
+        channel="Twitter"
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        isLoading={updateUser.isPending}
+      />
+      {/* <YoloModeModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         onSave={handleSaveSettings}
         isLoading={updateUser.isPending}
         currentSettings={currentSettings}
         isConfiguring={isConfiguring}
-      />
+      /> */}
     </>
   );
 }
