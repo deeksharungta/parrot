@@ -9,10 +9,13 @@ import { useUserSearch, FarcasterUser } from "@/hooks/useUserSearch";
 import UserMentionDropdown from "../ui/UserMentionDropdown";
 import { useThreadTweets } from "@/hooks/useThreadTweets";
 import { useProStatus } from "@/hooks/useProStatus";
+import { useUserChannels } from "@/hooks/useUserChannels";
 import {
   convertTwitterMentionsToFarcasterServerSide,
   resolveTcoUrlsServerSide,
 } from "@/lib/cast-utils";
+import { ChevronDown } from "lucide-react";
+import Home from "../icons/Home";
 
 interface EditModalProps {
   tweetId: string;
@@ -186,6 +189,13 @@ export function EditModal({
     currentMentionQuery,
     currentMentionQuery.length > 0,
   );
+
+  // User channels hook - fetch top 3 recent channels
+  const { channels: userChannels, isLoading: isLoadingChannels } =
+    useUserChannels({
+      fid: 369341, // TODO: Get actual FID from user context
+      limit: 3,
+    });
 
   // Check if this is a thread
   const isThread = !!conversationId && threadTweets && threadTweets.length > 1;
@@ -800,6 +810,48 @@ export function EditModal({
                   stroke="#E2E2E4"
                 />
               </svg>
+            </div>
+
+            {/* Channel Selector */}
+            <div className="flex flex-col gap-1 mb-4">
+              <h4 className="text-[#494656] text-xs font-medium font-sans">
+                Channel
+              </h4>
+              <button className="w-full flex items-center justify-between px-3 py-2 bg-[#F8F8F8] rounded-xl text-sm text-[#494656] ">
+                <div className="flex items-center gap-2">
+                  <Home />
+                  <span>Home</span>
+                </div>
+                <ChevronDown height={16} width={16} />
+              </button>
+              {!isLoadingChannels && userChannels.length > 0 && (
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-[#8C8A94]">Recently used</p>
+                  <div className="flex items-center gap-1">
+                    {userChannels.slice(0, 3).map((channel) => (
+                      <div
+                        key={channel.id}
+                        className="flex items-center gap-1 py-1 px-1.5 rounded-md bg-[#F3F3F4] cursor-pointer transition-colors"
+                      >
+                        {channel.image_url ? (
+                          <Image
+                            src={channel.image_url}
+                            alt={channel.name}
+                            width={12}
+                            height={12}
+                            className="rounded-full flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-3 h-3 bg-gray-200 rounded-full flex-shrink-0"></div>
+                        )}
+                        <span className="text-[10px] text-[#494656] truncate">
+                          {channel.name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Thread Navigation */}

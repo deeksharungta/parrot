@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Cross from "../icons/Cross";
 import Button from "../ui/Button";
 import Search from "../icons/Search";
+import Home from "../icons/Home";
 import { useGetUserMemberships } from "../../../hooks/useUserMemberships";
 import { useChannelSearch } from "../../../hooks/useChannelSearch";
 
@@ -243,6 +244,8 @@ export default function ChannelModal({
                               alt={ch.name}
                               className="w-5 h-5 rounded-full object-cover"
                             />
+                          ) : ch.id === "home" ? (
+                            <Home />
                           ) : (
                             <div className="text-lg">{ch.icon || "📺"}</div>
                           )}
