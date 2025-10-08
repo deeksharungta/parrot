@@ -270,6 +270,7 @@ export async function castThread(
     videoUrls: Array<{ url: string; bitrate: number; content_type: string }>;
     isRetweetRemoved: boolean;
   }>,
+  channel_id?: string, // Add channel_id parameter
 ): Promise<{
   success: boolean;
   totalCost: number;
@@ -298,6 +299,7 @@ export async function castThread(
         conversationId,
         ...(fid ? { fid } : {}), // Only include fid if provided
         ...(threadTweets ? { threadTweets } : {}), // Include thread tweets if provided
+        ...(channel_id ? { channel_id } : {}), // Include channel_id if provided
       }),
     });
 

@@ -53,6 +53,7 @@ export function useCastThread() {
       conversationId,
       fid,
       threadTweets,
+      channel_id,
     }: {
       conversationId: string;
       fid?: number; // Make fid optional since it will be determined by JWT
@@ -67,8 +68,9 @@ export function useCastThread() {
         }>;
         isRetweetRemoved: boolean;
       }>;
+      channel_id?: string; // Add channel_id parameter
     }) => {
-      return await castThread(conversationId, fid, threadTweets);
+      return await castThread(conversationId, fid, threadTweets, channel_id);
     },
     onSuccess: (data, variables) => {
       // Dismiss any loading toasts and show success toast

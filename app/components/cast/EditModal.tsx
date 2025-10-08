@@ -34,6 +34,7 @@ interface EditModalProps {
       videoUrls: Array<{ url: string; bitrate: number; content_type: string }>;
       isRetweetRemoved: boolean;
     }>, // Add thread tweets for saving
+    channel_id?: string, // Add channel_id parameter
   ) => void;
   onClose: () => void;
   isLoading: boolean;
@@ -622,6 +623,7 @@ export function EditModal({
         firstTweetState?.isRetweetRemoved || false,
         firstTweetState?.videoUrls || [],
         threadTweetEdits,
+        selectedChannel.id === "home" ? undefined : selectedChannel.id,
       );
     } else {
       // Single tweet mode - use original content if nothing was edited
@@ -634,6 +636,8 @@ export function EditModal({
         displayState.quotedTweetUrl,
         displayState.isRetweetRemoved,
         displayState.videoUrls,
+        undefined, // threadTweets for single tweet
+        selectedChannel.id === "home" ? undefined : selectedChannel.id,
       );
     }
   };

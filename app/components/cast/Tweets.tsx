@@ -574,6 +574,7 @@ export default function Tweets({ fid }: TweetsProps) {
       videoUrls: Array<{ url: string; bitrate: number; content_type: string }>;
       isRetweetRemoved: boolean;
     }>,
+    channel_id?: string, // Add channel_id parameter
   ) => {
     setIsEditLoading(true);
     const currentTweet = showTweets[currentIndex];
@@ -624,6 +625,7 @@ export default function Tweets({ fid }: TweetsProps) {
           // Cast entire thread (note: for threads, we cast the whole thread, not just the edited tweet)
           await castThreadMutation.mutateAsync({
             conversationId: currentTweet.conversation_id,
+            channel_id: channel_id,
           });
         } else {
           // Cast single edited tweet
@@ -635,6 +637,7 @@ export default function Tweets({ fid }: TweetsProps) {
             isRetweetRemoved: isRetweetRemoved,
             videoUrls: videoUrls,
             isEdit: true,
+            channel_id: channel_id,
           });
         }
 

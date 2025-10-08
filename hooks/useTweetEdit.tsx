@@ -60,6 +60,7 @@ export const useCastTweet = () => {
       isRetweetRemoved?: boolean;
       videoUrls?: Array<{ url: string; bitrate: number; content_type: string }>;
       isEdit?: boolean;
+      channel_id?: string; // Add channel_id parameter
     }): Promise<any> => {
       const response = await post("/api/cast", castData);
 
