@@ -461,9 +461,24 @@ export const POST = withApiKeyAndJwtAuth(async function (
           text: truncatedContent,
         };
 
-        // Add channel_id if provided (not for home feed)
-        if (channel_id && channel_id.trim() !== "") {
+        // Add channel_id only to the first tweet in the thread
+        if (
+          channel_id &&
+          channel_id.trim() !== "" &&
+          (!tweet.thread_position || tweet.thread_position === 1)
+        ) {
           castPayload.channel_id = channel_id;
+          console.log(`=== FIRST TWEET WITH CHANNEL ===`);
+          console.log("Tweet ID:", tweet.tweet_id);
+          console.log("Thread Position:", tweet.thread_position);
+          console.log("Channel ID:", channel_id);
+          console.log("===============================");
+        } else if (tweet.thread_position && tweet.thread_position > 1) {
+          console.log(`=== REPLY TWEET (NO CHANNEL_ID) ===`);
+          console.log("Tweet ID:", tweet.tweet_id);
+          console.log("Thread Position:", tweet.thread_position);
+          console.log("Parent Hash:", lastCastHash);
+          console.log("===============================");
         }
 
         // Add embeds if available (images, quoted tweets, etc.)
