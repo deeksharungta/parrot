@@ -625,6 +625,7 @@ export default function Tweets({ fid }: TweetsProps) {
           // Cast entire thread (note: for threads, we cast the whole thread, not just the edited tweet)
           await castThreadMutation.mutateAsync({
             conversationId: currentTweet.conversation_id,
+            threadTweets: threadTweets,
             channel_id: channel_id,
           });
         } else {
