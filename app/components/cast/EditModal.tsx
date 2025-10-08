@@ -16,6 +16,7 @@ import {
 } from "@/lib/cast-utils";
 import { ChevronDown } from "lucide-react";
 import Home from "../icons/Home";
+import ChannelModal from "./ChannelModal";
 
 interface EditModalProps {
   tweetId: string;
@@ -183,6 +184,18 @@ export function EditModal({
   const [currentMentionQuery, setCurrentMentionQuery] = useState("");
   const [cursorPosition, setCursorPosition] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Channel selection functionality
+  const [showChannelModal, setShowChannelModal] = useState(false);
+  const [selectedChannel, setSelectedChannel] = useState<{
+    id: string;
+    name: string;
+    image_url?: string;
+  }>({
+    id: "home",
+    name: "Home",
+    image_url: undefined,
+  });
 
   // User search hook
   const { data: userSearchData, isLoading: isSearching } = useUserSearch(
@@ -698,6 +711,27 @@ export function EditModal({
     }
   };
 
+  const handleOpenChannelModal = () => {
+    setShowChannelModal(true);
+  };
+
+  const handleCloseChannelModal = () => {
+    setShowChannelModal(false);
+  };
+
+  const handleChannelSelect = (
+    channelId: string,
+    channelName: string,
+    imageUrl?: string,
+  ) => {
+    setSelectedChannel({
+      id: channelId,
+      name: channelName,
+      image_url: imageUrl,
+    });
+    setShowChannelModal(false);
+  };
+
   // Close dropdown when clicking outside or pressing escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -817,10 +851,25 @@ export function EditModal({
               <h4 className="text-[#494656] text-xs font-medium font-sans">
                 Channel
               </h4>
-              <button className="w-full flex items-center justify-between px-3 py-2 bg-[#F8F8F8] rounded-xl text-sm text-[#494656] ">
+              <button
+                onClick={handleOpenChannelModal}
+                className="w-full flex items-center justify-between px-3 py-2 bg-[#F8F8F8] rounded-xl text-sm text-[#494656] hover:bg-gray-50 transition-colors"
+              >
                 <div className="flex items-center gap-2">
-                  <Home />
-                  <span>Home</span>
+                  {selectedChannel.id === "home" ? (
+                    <Home />
+                  ) : selectedChannel.image_url ? (
+                    <Image
+                      src={selectedChannel.image_url}
+                      alt={selectedChannel.name}
+                      width={16}
+                      height={16}
+                      className="rounded-full flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-4 h-4 bg-gray-200 rounded-full flex-shrink-0"></div>
+                  )}
+                  <span>{selectedChannel.name}</span>
                 </div>
                 <ChevronDown height={16} width={16} />
               </button>
@@ -829,9 +878,16 @@ export function EditModal({
                   <p className="text-xs text-[#8C8A94]">Recently used</p>
                   <div className="flex items-center gap-1">
                     {userChannels.slice(0, 3).map((channel) => (
-                      <div
+                      <button
                         key={channel.id}
-                        className="flex items-center gap-1 py-1 px-1.5 rounded-md bg-[#F3F3F4] cursor-pointer transition-colors"
+                        onClick={() =>
+                          handleChannelSelect(
+                            channel.id,
+                            channel.name,
+                            channel.image_url,
+                          )
+                        }
+                        className="flex items-center gap-1 py-1 px-1.5 rounded-md bg-[#F3F3F4] hover:bg-[#E8E8E9] cursor-pointer transition-colors"
                       >
                         {channel.image_url ? (
                           <Image
@@ -847,7 +903,7 @@ export function EditModal({
                         <span className="text-[10px] text-[#494656] truncate">
                           {channel.name}
                         </span>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -1193,6 +1249,15 @@ export function EditModal({
           </motion.div>
         </>
       )}
+
+      {/* Channel Selection Modal */}
+      <ChannelModal
+        channel={selectedChannel.id}
+        isOpen={showChannelModal}
+        onClose={handleCloseChannelModal}
+        isLoading={false}
+        onChannelSelect={handleChannelSelect}
+      />
     </AnimatePresence>
   );
 }

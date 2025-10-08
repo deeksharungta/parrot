@@ -159,6 +159,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
       isRetweetRemoved,
       videoUrls,
       isEdit = false,
+      channel_id,
     } = body;
 
     // Log incoming request parameters
@@ -669,6 +670,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
     console.log("=== CASTING DETAILS ===");
     console.log("Tweet ID:", tweetId);
     console.log("User FID:", userFid);
+    console.log("Channel ID:", channel_id || "none (home feed)");
     console.log("Original tweet content:", tweet.content);
     console.log("Final resolved content:", resolvedContent);
     console.log("Converted content (mentions):", convertedContent);
@@ -688,6 +690,11 @@ export const POST = withApiKeyAndJwtAuth(async function (
       signer_uuid: user.neynar_signer_uuid,
       text: truncatedContent,
     };
+
+    // Add channel_id if provided (not for home feed)
+    if (channel_id && channel_id.trim() !== "") {
+      castPayload.channel_id = channel_id;
+    }
 
     // Add embeds if available (images, quoted tweets, etc.)
     if (parsedCast.embeds && parsedCast.embeds.length > 0) {

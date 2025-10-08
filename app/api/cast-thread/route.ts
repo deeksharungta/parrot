@@ -168,7 +168,12 @@ export const POST = withApiKeyAndJwtAuth(async function (
 ) {
   try {
     const body = await request.json();
-    const { conversationId, fid, threadTweets: editedThreadTweets } = body;
+    const {
+      conversationId,
+      fid,
+      threadTweets: editedThreadTweets,
+      channel_id,
+    } = body;
 
     if (!conversationId) {
       return NextResponse.json(
@@ -176,6 +181,14 @@ export const POST = withApiKeyAndJwtAuth(async function (
         { status: 400 },
       );
     }
+
+    // Log incoming request parameters
+    console.log("=== INCOMING CAST THREAD REQUEST ===");
+    console.log("Authenticated FID:", authenticatedFid);
+    console.log("Conversation ID:", conversationId);
+    console.log("Channel ID:", channel_id || "none (home feed)");
+    console.log("Request body:", JSON.stringify(body, null, 2));
+    console.log("====================================");
 
     // Use the authenticated user's FID instead of the one from the request body
     const userFid = fid || authenticatedFid;
@@ -447,6 +460,11 @@ export const POST = withApiKeyAndJwtAuth(async function (
           signer_uuid: user.neynar_signer_uuid,
           text: truncatedContent,
         };
+
+        // Add channel_id if provided (not for home feed)
+        if (channel_id && channel_id.trim() !== "") {
+          castPayload.channel_id = channel_id;
+        }
 
         // Add embeds if available (images, quoted tweets, etc.)
         if (parsedCast.embeds && parsedCast.embeds.length > 0) {

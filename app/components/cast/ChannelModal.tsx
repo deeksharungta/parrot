@@ -23,6 +23,11 @@ interface ChannelModalProps {
   isOpen: boolean;
   onClose: () => void;
   isLoading: boolean;
+  onChannelSelect?: (
+    channelId: string,
+    channelName: string,
+    imageUrl?: string,
+  ) => void;
 }
 
 // Default channels that are always available
@@ -42,6 +47,7 @@ export default function ChannelModal({
   isOpen,
   onClose,
   isLoading,
+  onChannelSelect,
 }: ChannelModalProps) {
   const [selectedChannel, setSelectedChannel] = useState("home");
   const [searchQuery, setSearchQuery] = useState("");
@@ -127,7 +133,10 @@ export default function ChannelModal({
     searchQuery.trim().length > 0 ? searchError : membershipsError;
 
   const handleSelectChannel = () => {
-    console.log("Select channel:", selectedChannel);
+    const channelData = displayChannels.find((ch) => ch.id === selectedChannel);
+    if (channelData && onChannelSelect) {
+      onChannelSelect(channelData.id, channelData.name, channelData.image_url);
+    }
   };
   return (
     <AnimatePresence>
@@ -152,7 +161,7 @@ export default function ChannelModal({
               stiffness: 300,
               duration: 0.3,
             }}
-            className="fixed bg-white border border-[#ECECED] z-50 max-h-[70vh] flex flex-col bottom-2 left-2 right-2 rounded-[32px] p-6"
+            className="fixed bg-white border border-[#ECECED] z-50 max-h-[60vh] flex flex-col bottom-2 left-2 right-2 rounded-[32px] p-6"
           >
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
