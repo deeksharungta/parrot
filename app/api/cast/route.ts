@@ -161,6 +161,12 @@ export const POST = withApiKeyAndJwtAuth(async function (
       isEdit = false,
     } = body;
 
+    // Log incoming request parameters
+    console.log("=== INCOMING CAST REQUEST ===");
+    console.log("Authenticated FID:", authenticatedFid);
+    console.log("Request body:", JSON.stringify(body, null, 2));
+    console.log("=============================");
+
     if (!tweetId) {
       return NextResponse.json(
         { error: "tweetId is required" },
@@ -541,6 +547,24 @@ export const POST = withApiKeyAndJwtAuth(async function (
         ? convertedContent.substring(0, textLimit)
         : convertedContent;
 
+    // Log what we're about to cast
+    console.log("=== CASTING DETAILS ===");
+    console.log("Tweet ID:", tweetId);
+    console.log("User FID:", userFid);
+    console.log("Original tweet content:", tweet.content);
+    console.log("Final resolved content:", resolvedContent);
+    console.log("Converted content (mentions):", convertedContent);
+    console.log("Final truncated content:", truncatedContent);
+    console.log("Content length:", truncatedContent.length);
+    console.log("Text limit:", textLimit);
+    console.log("Is pro user:", isProUser);
+    console.log("Embeds:", parsedCast.embeds);
+    console.log("Embed count:", parsedCast.embeds?.length || 0);
+    console.log("Is retweet:", tweet.is_retweet);
+    console.log("Has quoted tweet:", !!tweet.quoted_tweet_url);
+    console.log("Media URLs:", tweet.media_urls);
+    console.log("========================");
+
     // Cast to Farcaster using Neynar API (AFTER payment is confirmed)
     const castPayload: any = {
       signer_uuid: user.neynar_signer_uuid,
@@ -573,6 +597,11 @@ export const POST = withApiKeyAndJwtAuth(async function (
       }
     }
 
+    // Log the final cast payload being sent to Neynar
+    console.log("=== FINAL CAST PAYLOAD ===");
+    console.log("Cast payload:", JSON.stringify(castPayload, null, 2));
+    console.log("==========================");
+
     const castResponse = await fetch(`${NEYNAR_BASE_URL}/farcaster/cast`, {
       method: "POST",
       headers: {
@@ -592,6 +621,12 @@ export const POST = withApiKeyAndJwtAuth(async function (
     }
 
     const castData = await castResponse.json();
+
+    // Log the Neynar API response
+    console.log("=== NEYNAR API RESPONSE ===");
+    console.log("Response status:", castResponse.status);
+    console.log("Response data:", JSON.stringify(castData, null, 2));
+    console.log("===========================");
 
     // Process payment or deduct free cast
     let newBalance = user.usdc_balance || 0;
