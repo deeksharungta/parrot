@@ -326,11 +326,14 @@ export const POST = withApiKeyAndJwtAuth(async function (
         console.log(
           `Updated content for tweet ${tweet.tweet_id} with full text`,
         );
-        
+
         console.log("=== FULL TWEET DETAILS PROCESSED ===");
         console.log("Original content:", tweet.content);
         console.log("Full content:", finalTweetContent);
-        console.log("Content length change:", finalTweetContent.length - tweet.content.length);
+        console.log(
+          "Content length change:",
+          finalTweetContent.length - tweet.content.length,
+        );
         console.log("=====================================");
 
         // Also update media URLs from full details if available - using new simplified format
@@ -414,7 +417,10 @@ export const POST = withApiKeyAndJwtAuth(async function (
       console.log("=== OVERRIDE LOGIC TRIGGERED ===");
       console.log("Content override provided:", content !== undefined);
       console.log("Media URLs override provided:", mediaUrls !== undefined);
-      console.log("Quoted tweet URL override provided:", quotedTweetUrl !== undefined);
+      console.log(
+        "Quoted tweet URL override provided:",
+        quotedTweetUrl !== undefined,
+      );
       console.log("Video URLs override provided:", videoUrls !== undefined);
       console.log("Is edit mode:", isEdit);
       console.log("=================================");
@@ -439,7 +445,25 @@ export const POST = withApiKeyAndJwtAuth(async function (
           // 2. The provided content is longer than the parsed content (indicating it's a genuine override)
           // 3. Otherwise, keep the full database content to avoid truncation
           if (isEdit || content.length > parsedCast.content.length) {
-            parsedCast.content = decodeHtmlEntities(content);
+            console.log("=== CONTENT OVERRIDE DECISION ===");
+            console.log("User provided content:", content);
+            console.log("Original tweet content:", tweet.content);
+            console.log("Content matches original:", content === tweet.content);
+            console.log("Full tweet content:", finalTweetContent);
+
+            // If the user provided content is the same as the original tweet content (with t.co),
+            // use the full content instead. Otherwise, use the user's provided content.
+            if (content === tweet.content) {
+              // User provided the original truncated content, use the full content
+              parsedCast.content = decodeHtmlEntities(finalTweetContent);
+              console.log("Using full content (user provided original)");
+            } else {
+              // User provided custom content, use it
+              parsedCast.content = decodeHtmlEntities(content);
+              console.log("Using user's custom content");
+            }
+            console.log("Final parsed content:", parsedCast.content);
+            console.log("================================");
           }
         }
 
@@ -518,12 +542,12 @@ export const POST = withApiKeyAndJwtAuth(async function (
       console.log("Embed limit:", embedLimit);
       console.log("Embeds before limit:", embeds);
       console.log("Embed count before limit:", embeds.length);
-      
+
       if (embeds.length > embedLimit) {
         embeds.splice(embedLimit);
         console.log("Embeds truncated to limit");
       }
-      
+
       console.log("Final embeds:", embeds);
       console.log("Final embed count:", embeds.length);
       console.log("========================");
@@ -559,7 +583,10 @@ export const POST = withApiKeyAndJwtAuth(async function (
     console.log("=== URL RESOLUTION ===");
     console.log("Content before URL resolution:", parsedCast.content);
     console.log("Content after URL resolution:", resolvedContent);
-    console.log("URL resolution changed content:", resolvedContent !== parsedCast.content);
+    console.log(
+      "URL resolution changed content:",
+      resolvedContent !== parsedCast.content,
+    );
     console.log("======================");
 
     // Extract and embed regular URLs from resolved content (lowest priority)
@@ -612,7 +639,10 @@ export const POST = withApiKeyAndJwtAuth(async function (
     console.log("=== MENTION CONVERSION ===");
     console.log("Content before mention conversion:", resolvedContent);
     console.log("Content after mention conversion:", convertedContent);
-    console.log("Mention conversion changed content:", convertedContent !== resolvedContent);
+    console.log(
+      "Mention conversion changed content:",
+      convertedContent !== resolvedContent,
+    );
     console.log("==========================");
 
     // Check user's pro status and truncate text accordingly
@@ -628,7 +658,10 @@ export const POST = withApiKeyAndJwtAuth(async function (
     console.log("Text limit:", textLimit);
     console.log("Content before truncation:", convertedContent);
     console.log("Content after truncation:", truncatedContent);
-    console.log("Content was truncated:", truncatedContent.length < convertedContent.length);
+    console.log(
+      "Content was truncated:",
+      truncatedContent.length < convertedContent.length,
+    );
     console.log("Content length:", truncatedContent.length);
     console.log("====================================");
 
