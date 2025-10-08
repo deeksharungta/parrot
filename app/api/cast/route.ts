@@ -393,8 +393,27 @@ export const POST = withApiKeyAndJwtAuth(async function (
           // 1. This is an explicit edit (isEdit = true), OR
           // 2. The provided content is longer than the parsed content (indicating it's a genuine override)
           // 3. Otherwise, keep the full database content to avoid truncation
-          if (isEdit || content.length > parsedCast.content.length) {
-            parsedCast.content = decodeHtmlEntities(content);
+
+           if (isEdit || content.length > parsedCast.content.length) {
+            console.log("=== CONTENT OVERRIDE DECISION ===");
+            console.log("User provided content:", content);
+            console.log("Original tweet content:", tweet.content);
+            console.log("Content matches original:", content === tweet.content);
+            console.log("Full tweet content:", finalTweetContent);
+
+            // If the user provided content is the same as the original tweet content (with t.co),
+            // use the full content instead. Otherwise, use the user's provided content.
+            if (content === tweet.content) {
+              // User provided the original truncated content, use the full content
+              parsedCast.content = decodeHtmlEntities(finalTweetContent);
+              console.log("Using full content (user provided original)");
+            } else {
+              // User provided custom content, use it
+              parsedCast.content = decodeHtmlEntities(content);
+              console.log("Using user's custom content");
+            }
+            console.log("Final parsed content:", parsedCast.content);
+            console.log("================================");
           }
         }
 
