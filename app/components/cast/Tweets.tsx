@@ -23,6 +23,7 @@ import { USDC_ADDRESS } from "@/lib/constants";
 import { toast } from "sonner";
 import { Database } from "@/lib/types/database";
 import { analytics } from "@/lib/analytics";
+import { LowBalanceModal } from "./LowBalance";
 
 type TweetType = Database["public"]["Tables"]["tweets"]["Row"];
 
@@ -229,6 +230,7 @@ export default function Tweets({ fid }: TweetsProps) {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showConnectNeynar, setShowConnectNeynar] = useState(false);
   const [showApproveSpending, setShowApproveSpending] = useState(false);
+  const [showLowBalanceModal, setShowLowBalanceModal] = useState(false);
   const [isEditLoading, setIsEditLoading] = useState(false);
   const [isCastLoading, setIsCastLoading] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -365,7 +367,7 @@ export default function Tweets({ fid }: TweetsProps) {
       // Check if user has sufficient balance
       if (!hasSufficientBalance()) {
         toast("Insufficient balance");
-        setShowApproveSpending(true);
+        setShowLowBalanceModal(true);
         return;
       }
     }
@@ -395,7 +397,7 @@ export default function Tweets({ fid }: TweetsProps) {
       // Check if user has sufficient balance
       if (!hasSufficientBalance()) {
         toast("Insufficient balance");
-        setShowApproveSpending(true);
+        setShowLowBalanceModal(true);
         return;
       }
     }
@@ -684,6 +686,10 @@ export default function Tweets({ fid }: TweetsProps) {
 
   const handleApproveSpendingClose = () => {
     setShowApproveSpending(false);
+  };
+
+  const handleLowBalanceModalClose = () => {
+    setShowLowBalanceModal(false);
   };
 
   const handleConfirmSave = async (
@@ -987,7 +993,10 @@ export default function Tweets({ fid }: TweetsProps) {
         isOpen={showConnectNeynar}
         onClose={handleConnectNeynarClose}
       />
-
+      <LowBalanceModal
+        isOpen={showLowBalanceModal}
+        onClose={handleLowBalanceModalClose}
+      />
       <ApproveSpending
         isOpen={showApproveSpending}
         onClose={handleApproveSpendingClose}
