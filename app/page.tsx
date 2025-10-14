@@ -1,12 +1,16 @@
 "use client";
 
-import { sdk } from "@farcaster/miniapp-sdk";
-import { useEffect } from "react";
+import { useMiniKit } from "@coinbase/onchainkit/minikit";
+import { useEffect, useState } from "react";
 
 function App() {
+  const { setFrameReady, isFrameReady } = useMiniKit();
+
   useEffect(() => {
-    sdk.actions.ready();
-  }, []);
+    if (!isFrameReady) {
+      setFrameReady();
+    }
+  }, [setFrameReady, isFrameReady]);
 
   return (
     <div className="flex items-center justify-center h-screen bg-gray-100">
