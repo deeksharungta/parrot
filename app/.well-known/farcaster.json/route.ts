@@ -1,37 +1,36 @@
 export async function GET() {
   const appUrl = process.env.NEXT_PUBLIC_URL;
 
-  // You can use appUrl for debugging or additional configuration
-  console.log(`Server running at: ${appUrl}`);
-
-  const config = {
+  const manifest = {
     accountAssociation: {
-      header: process.env.FARCASTER_HEADER,
-      payload: process.env.FARCASTER_PAYLOAD,
-      signature: process.env.FARCASTER_SIGNATURE,
+      header: process.env.FARCASTER_HEADER || "",
+      payload: process.env.FARCASTER_PAYLOAD || "",
+      signature: process.env.FARCASTER_SIGNATURE || "",
     },
-    frame: {
+    baseBuilder: {
+      allowedAddresses: [process.env.BASE_ACCOUNT_ADDRESS || ""],
+    },
+    miniapp: {
       version: "1",
-      name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
+      name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME || "Parrot",
+      homeUrl: appUrl,
       iconUrl: `${appUrl}/icon.png`,
-      homeUrl: `${appUrl}`,
-      imageUrl: `${appUrl}/image.png`,
-      buttonTitle: "Check this out",
       splashImageUrl: `${appUrl}/splash.png`,
       splashBackgroundColor: "#4998D1",
       webhookUrl: `${appUrl}/api/webhook`,
       subtitle: "Make your post work for you",
       description: "Make your post work for you",
-      screenshotUrls: [`${appUrl}/screenshot.png`],
+      screenshotUrls: [`${appUrl}/screenshot.png`, `${appUrl}/hero.png`],
       primaryCategory: "social",
-      tags: ["social", "twitter", "cast"],
+      tags: ["social", "miniapp", "baseapp", "farcaster"],
       heroImageUrl: `${appUrl}/hero.png`,
       tagline: "Make your post work for you",
-      ogTitle: "Parrot",
+      ogTitle: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME || "Parrot",
       ogDescription: "Make your post work for you",
       ogImageUrl: `${appUrl}/hero.png`,
+      noindex: true,
     },
   };
 
-  return Response.json(config);
+  return Response.json(manifest);
 }
