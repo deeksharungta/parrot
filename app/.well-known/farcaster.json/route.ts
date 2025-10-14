@@ -28,7 +28,7 @@ export async function GET() {
       ogTitle: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME || "Parrot",
       ogDescription: "Make your post work for you",
       ogImageUrl: `${appUrl}/hero.png`,
-      noindex: true,
+      noindex: false,
     },
   };
 
