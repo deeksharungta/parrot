@@ -57,6 +57,20 @@ export async function generateMetadata(): Promise<Metadata> {
           },
         },
       }),
+      "fc:miniapp": JSON.stringify({
+        version: "next",
+        imageUrl: `${URL}/hero.png`,
+        button: {
+          title: `Launch ${process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME}`,
+          action: {
+            type: "launch_miniapp",
+            name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
+            url: URL,
+            splashImageUrl: `${URL}/splash.png`,
+            splashBackgroundColor: "#4998D1",
+          },
+        },
+      }),
       ...Sentry.getTraceData(),
     },
   };
