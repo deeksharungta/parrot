@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import WelcomeCard from "./components/welcome/WelcomeCard";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import UserProfiles from "./components/welcome/UserProfiles";
-import { animate, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { sdk } from "@farcaster/frame-sdk";
 import { analytics } from "@/lib/analytics";
 import LandingPage from "./components/landing-page/LandingPage";
@@ -65,35 +65,44 @@ export default function HomePage() {
     }
   }, [context?.client.added, sdkReady, isMiniApp]);
 
-  // Show loading state while we determine the app type
-  if (isMiniApp === null) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Initializing...</p>
-        </div>
-      </div>
-    );
-  }
+  // // Show loading state while we determine the app type
+  // if (isMiniApp === null) {
+  //   return (
+  //     <div className="flex items-center justify-center h-screen">
+  //       <div className="text-center">
+  //         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+  //         <p className="text-gray-600">Initializing...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
-    <>
-      {isMiniApp ? (
-        // Mini App version - show the full app
-        <motion.div
-          className="flex flex-col items-center justify-start h-screen overflow-hidden relative"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <WelcomeCard />
-          <UserProfiles />
-        </motion.div>
-      ) : (
-        // Web version
-        <LandingPage />
-      )}
-    </>
+    <motion.div
+      className="flex flex-col items-center justify-start h-screen overflow-hidden relative"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <WelcomeCard />
+      <UserProfiles />
+    </motion.div>
+    // <>
+    //   {isMiniApp ? (
+    //     // Mini App version - show the full app
+    //     <motion.div
+    //       className="flex flex-col items-center justify-start h-screen overflow-hidden relative"
+    //       initial={{ opacity: 0 }}
+    //       animate={{ opacity: 1 }}
+    //       transition={{ duration: 0.5 }}
+    //     >
+    //       <WelcomeCard />
+    //       <UserProfiles />
+    //     </motion.div>
+    //   ) : (
+    //     // Web version
+    //     <LandingPage />
+    //   )}
+    // </>
   );
 }
