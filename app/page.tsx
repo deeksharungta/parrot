@@ -5,7 +5,7 @@ import WelcomeCard from "./components/welcome/WelcomeCard";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import UserProfiles from "./components/welcome/UserProfiles";
 import { motion } from "framer-motion";
-import { sdk } from "@farcaster/frame-sdk";
+import { sdk } from "@farcaster/miniapp-sdk";
 import { analytics } from "@/lib/analytics";
 import LandingPage from "./components/landing-page/LandingPage";
 
