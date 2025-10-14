@@ -12,24 +12,24 @@ import LandingPage from "./components/landing-page/LandingPage";
 export default function HomePage() {
   const { setFrameReady, isFrameReady, context } = useMiniKit();
   const [sdkReady, setSdkReady] = useState(false);
-  const [isMiniApp, setIsMiniApp] = useState<boolean | null>(null);
+  // const [isMiniApp, setIsMiniApp] = useState<boolean | null>(null);
 
-  // Track page view
-  useEffect(() => {
-    analytics.trackPageView("home", {
-      is_mini_app: isMiniApp,
-      user_fid: context?.user?.fid,
-    });
-  }, [isMiniApp, context?.user?.fid]);
+  // // Track page view
+  // useEffect(() => {
+  //   analytics.trackPageView("home", {
+  //     is_mini_app: isMiniApp,
+  //     user_fid: context?.user?.fid,
+  //   });
+  // }, [isMiniApp, context?.user?.fid]);
 
   useEffect(() => {
     const initializeSDK = async () => {
       try {
-        // Check if running in a Mini App
-        const miniAppStatus = await sdk.isInMiniApp();
-        setIsMiniApp(miniAppStatus);
+        // // Check if running in a Mini App
+        // const miniAppStatus = await sdk.isInMiniApp();
+        // setIsMiniApp(miniAppStatus);
 
-        if (miniAppStatus) {
+        if (true) {
           // Wait for the SDK context to be available
           if (sdk.context) {
             await sdk.context;
@@ -44,7 +44,7 @@ export default function HomePage() {
         console.error("Failed to initialize Farcaster SDK:", error);
         // Even if SDK fails, we should still set it as ready to not block the UI
         setSdkReady(true);
-        setIsMiniApp(false);
+        // setIsMiniApp(false);
       }
     };
 
@@ -52,18 +52,18 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    if (!isFrameReady && isMiniApp) {
+    if (!isFrameReady) {
       setFrameReady();
     }
-  }, [isFrameReady, setFrameReady, isMiniApp]);
+  }, [isFrameReady, setFrameReady]);
 
   useEffect(() => {
-    if (isMiniApp && sdkReady && context?.client && !context.client.added) {
+    if (sdkReady && context?.client && !context.client.added) {
       sdk.actions.addMiniApp().catch((error) => {
         console.error("Failed to add mini app:", error);
       });
     }
-  }, [context?.client.added, sdkReady, isMiniApp]);
+  }, [context?.client.added, sdkReady]);
 
   // // Show loading state while we determine the app type
   // if (isMiniApp === null) {
