@@ -483,12 +483,29 @@ export const POST = withApiKeyAndJwtAuth(async function (
 
         // Add embeds if available (images, quoted tweets, etc.)
         if (parsedCast.embeds && parsedCast.embeds.length > 0) {
+          // Filter out Twitter photo/video URLs from embeds
+          const filteredEmbeds = parsedCast.embeds.filter((url) => {
+            // Filter out Twitter photo/video URLs that have the pattern status/<tweetid>/photo or status/<tweetid>/video
+            if (
+              url.includes("/status/") &&
+              (url.includes("/photo/") || url.includes("/video/"))
+            ) {
+              return false;
+            }
+            return true;
+          });
+
+          console.log("=== EMBED FILTERING (THREAD) ===");
+          console.log("Original embeds:", parsedCast.embeds);
+          console.log("Filtered embeds:", filteredEmbeds);
+          console.log("================================");
+
           // Check user's embed limit based on pro subscription status
           const embedLimit = await getEmbedLimit(userFid);
-          const limitedEmbeds = parsedCast.embeds.slice(0, embedLimit);
-          if (parsedCast.embeds.length > embedLimit) {
+          const limitedEmbeds = filteredEmbeds.slice(0, embedLimit);
+          if (filteredEmbeds.length > embedLimit) {
             console.log(
-              `Thread tweet ${tweet.tweet_id}: Limiting embeds from ${parsedCast.embeds.length} to ${embedLimit} based on user subscription status (FID: ${userFid})`,
+              `Thread tweet ${tweet.tweet_id}: Limiting embeds from ${filteredEmbeds.length} to ${embedLimit} based on user subscription status (FID: ${userFid})`,
             );
           }
           castPayload.embeds = limitedEmbeds.map((url) => ({ url }));
