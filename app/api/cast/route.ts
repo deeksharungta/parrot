@@ -579,7 +579,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
     }
 
     // Resolve any t.co URLs in the content before casting
-    const resolvedContent = await resolveTcoUrls(parsedCast.content);
+    let resolvedContent = await resolveTcoUrls(parsedCast.content);
 
     console.log("=== URL RESOLUTION ===");
     console.log("Content before URL resolution:", parsedCast.content);
@@ -589,6 +589,36 @@ export const POST = withApiKeyAndJwtAuth(async function (
       resolvedContent !== parsedCast.content,
     );
     console.log("======================");
+
+    // Remove Twitter photo/video URLs from content if there are media embeds
+    // This handles cases where t.co links resolve to twitter.com/.../status/.../photo/1 etc
+    if (parsedCast.embeds && parsedCast.embeds.length > 0) {
+      const hasMediaEmbed = parsedCast.embeds.some((embed) => {
+        return (
+          embed.includes("pbs.twimg.com") ||
+          embed.includes(".jpg") ||
+          embed.includes(".png") ||
+          embed.includes(".gif") ||
+          embed.includes(".mp4")
+        );
+      });
+
+      if (hasMediaEmbed) {
+        // Remove Twitter photo/video URLs from the text
+        const twitterPhotoVideoRegex =
+          /https?:\/\/(?:twitter\.com|x\.com)\/[^\/]+\/status\/\d+\/(?:photo|video)\/\d+/g;
+        const contentBeforeRemoval = resolvedContent;
+        resolvedContent = resolvedContent
+          .replace(twitterPhotoVideoRegex, "")
+          .trim();
+
+        console.log("=== TWITTER PHOTO/VIDEO URL REMOVAL ===");
+        console.log("Has media embed:", hasMediaEmbed);
+        console.log("Content before removal:", contentBeforeRemoval);
+        console.log("Content after removal:", resolvedContent);
+        console.log("========================================");
+      }
+    }
 
     // Extract and embed regular URLs from resolved content (lowest priority)
     // Only do this if we used the override logic (when any override params were provided)
