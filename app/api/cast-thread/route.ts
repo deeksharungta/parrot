@@ -511,6 +511,85 @@ export const POST = withApiKeyAndJwtAuth(async function (
         // Resolve any t.co URLs in the content before casting
         castPayload.text = await resolveTcoUrls(castPayload.text);
 
+        // Remove Twitter photo/video URLs from content if there are media embeds
+        // This handles cases where t.co links resolve to twitter.com/.../status/.../photo/1 etc
+        if (castPayload.embeds && castPayload.embeds.length > 0) {
+          const hasMediaEmbed = castPayload.embeds.some(
+            (embed: { url: string }) => {
+              return (
+                embed.url.includes("pbs.twimg.com") ||
+                embed.url.includes(".jpg") ||
+                embed.url.includes(".png") ||
+                embed.url.includes(".gif") ||
+                embed.url.includes(".mp4")
+              );
+            },
+          );
+
+          if (hasMediaEmbed) {
+            // Remove Twitter photo/video URLs from the text
+            const twitterPhotoVideoRegex =
+              /https?:\/\/(?:twitter\.com|x\.com)\/[^\/]+\/status\/\d+\/(?:photo|video)\/\d+/g;
+            const contentBeforeRemoval = castPayload.text;
+            castPayload.text = castPayload.text
+              .replace(twitterPhotoVideoRegex, "")
+              .trim();
+
+            console.log("=== TWITTER PHOTO/VIDEO URL REMOVAL (THREAD) ===");
+            console.log("Has media embed:", hasMediaEmbed);
+            console.log("Content before removal:", contentBeforeRemoval);
+            console.log("Content after removal:", castPayload.text);
+            console.log("================================================");
+          }
+        }
+
+        // Extract and embed regular URLs from content (lowest priority)
+        const urlRegex =
+          /https?:\/\/(?:[-\w.])+(?:\.[a-zA-Z]{2,})+(?:\/[^\s]*)?/g;
+        const matches = Array.from(
+          castPayload.text.matchAll(urlRegex),
+        ) as RegExpMatchArray[];
+        const contentUrls = matches
+          .map((match) => match[0])
+          .filter((url) => {
+            try {
+              new URL(url);
+              // Filter out Twitter photo/video URLs that have the pattern status/<tweetid>/photo or status/<tweetid>/video
+              if (
+                url.includes("/status/") &&
+                (url.includes("/photo/") || url.includes("/video/"))
+              ) {
+                return false;
+              }
+              return true;
+            } catch {
+              return false;
+            }
+          });
+
+        // Add URLs as embeds with lowest priority
+        if (contentUrls.length > 0) {
+          if (!castPayload.embeds) {
+            castPayload.embeds = [];
+          }
+
+          contentUrls.forEach((url) => {
+            castPayload.embeds.push({ url });
+          });
+
+          console.log("=== CONTENT URL EXTRACTION (THREAD) ===");
+          console.log("URLs found in content:", contentUrls);
+          console.log("Embeds after adding content URLs:", castPayload.embeds);
+          console.log("=======================================");
+
+          // Re-apply embed limit after adding content links
+          const embedLimit = await getEmbedLimit(userFid);
+          if (castPayload.embeds.length > embedLimit) {
+            castPayload.embeds = castPayload.embeds.slice(0, embedLimit);
+            console.log("Embeds truncated after content URL addition");
+          }
+        }
+
         if (
           !tweet.is_retweet &&
           !tweet.quoted_tweet_url &&
