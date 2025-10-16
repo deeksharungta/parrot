@@ -188,6 +188,7 @@ async function findFarcasterUserByTwitter(
   twitterUsername: string,
 ): Promise<string | null> {
   try {
+    // Step 1: Try Neynar API first
     const response = await fetch(
       `${NEYNAR_BASE_URL}/farcaster/user/by_x_username?x_username=${twitterUsername}`,
       {
@@ -199,17 +200,46 @@ async function findFarcasterUserByTwitter(
       },
     );
 
-    if (!response.ok) {
-      return null;
+    if (response.ok) {
+      const data: { users: FarcasterUser[] } = await response.json();
+
+      // Return the first user found (should be exact match by X username)
+      if (data.users && data.users.length > 0) {
+        return data.users[0].username;
+      }
     }
 
-    const data: { users: FarcasterUser[] } = await response.json();
+    // Step 2: If not found in Neynar, check Notion mapping
+    try {
+      const notionResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/notion/farcaster-usernames`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ xUsername: twitterUsername }),
+        },
+      );
 
-    // Return the first user found (should be exact match by X username)
-    if (data.users && data.users.length > 0) {
-      return data.users[0].username;
+      if (notionResponse.ok) {
+        const notionData = await notionResponse.json();
+        if (notionData.farcasterUsername) {
+          console.log(
+            `Found Farcaster username in Notion mapping: @${twitterUsername} -> @${notionData.farcasterUsername}`,
+          );
+          return notionData.farcasterUsername;
+        }
+      }
+    } catch (notionError) {
+      console.error(
+        `Error checking Notion mapping for @${twitterUsername}:`,
+        notionError,
+      );
+      // Continue to return null if Notion lookup fails
     }
 
+    // Step 3: No mapping found anywhere
     return null;
   } catch (error) {
     console.error(

@@ -18,6 +18,7 @@
     "@farcaster/miniapp-sdk": "^0.2.0",
     "@neynar/nodejs-sdk": "^1.69.1",
     "@neynar/react": "^0.9.1",
+    "@notionhq/client": "^5.2.0",
     "@pigment-css/react": "^0.0.9",
     "@privy-io/react-auth": "^2.13.3",
     "@sentry/nextjs": "^9.30.0",
