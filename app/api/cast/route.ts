@@ -606,6 +606,13 @@ export const POST = withApiKeyAndJwtAuth(async function (
         .filter((url) => {
           try {
             new URL(url);
+            // Filter out Twitter photo/video URLs that have the pattern status/<tweetid>/photo or status/<tweetid>/video
+            if (
+              url.includes("/status/") &&
+              (url.includes("/photo/") || url.includes("/video/"))
+            ) {
+              return false;
+            }
             return true;
           } catch {
             return false;
