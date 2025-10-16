@@ -82,7 +82,7 @@ export class NotionFarcasterService {
           },
           body: JSON.stringify({
             filter: {
-              property: "   x_username",
+              property: "x_username",
               rich_text: {
                 equals: xUsername,
               },
