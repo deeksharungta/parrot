@@ -159,7 +159,14 @@ export const POST = withApiKeyAndJwtAuth(async function (
       isRetweetRemoved,
       videoUrls,
       isEdit = false,
+      channel_id,
     } = body;
+
+    // Log incoming request parameters
+    console.log("=== INCOMING CAST REQUEST ===");
+    console.log("Authenticated FID:", authenticatedFid);
+    console.log("Request body:", JSON.stringify(body, null, 2));
+    console.log("=============================");
 
     if (!tweetId) {
       return NextResponse.json(
@@ -286,10 +293,25 @@ export const POST = withApiKeyAndJwtAuth(async function (
       return NextResponse.json({ error: "Tweet not found" }, { status: 404 });
     }
 
+    // Log initial tweet data from database
+    console.log("=== DATABASE TWEET DATA ===");
+    console.log("Tweet ID:", tweet.tweet_id);
+    console.log("Content:", tweet.content);
+    console.log("Media URLs:", tweet.media_urls);
+    console.log("Is retweet:", tweet.is_retweet);
+    console.log("Quoted tweet URL:", tweet.quoted_tweet_url);
+    console.log("Twitter URL:", tweet.twitter_url);
+    console.log("===========================");
+
     // Check if tweet content is truncated and fetch full details if needed
     let finalTweetContent = tweet.content;
     let updatedMediaUrls = tweet.media_urls;
     let fullTweetDetailsFetched = false;
+
+    console.log("=== TRUNCATION CHECK ===");
+    console.log("Is tweet truncated:", isTweetTruncated(tweet.content));
+    console.log("Content length:", tweet.content.length);
+    console.log("=========================");
 
     if (isTweetTruncated(tweet.content)) {
       console.log(
@@ -297,12 +319,23 @@ export const POST = withApiKeyAndJwtAuth(async function (
       );
       const fullTweetDetails = await fetchTweetDetails(tweet.tweet_id);
 
+      console.log("Full tweet details:", fullTweetDetails);
+
       if (fullTweetDetails && fullTweetDetails.text) {
         finalTweetContent = fullTweetDetails.text;
         fullTweetDetailsFetched = true;
         console.log(
           `Updated content for tweet ${tweet.tweet_id} with full text`,
         );
+
+        console.log("=== FULL TWEET DETAILS PROCESSED ===");
+        console.log("Original content:", tweet.content);
+        console.log("Full content:", finalTweetContent);
+        console.log(
+          "Content length change:",
+          finalTweetContent.length - tweet.content.length,
+        );
+        console.log("=====================================");
 
         // Also update media URLs from full details if available - using new simplified format
         let newMediaItems: Array<{ type: string; url: string }> = [];
@@ -331,6 +364,10 @@ export const POST = withApiKeyAndJwtAuth(async function (
 
         if (newMediaItems.length > 0) {
           updatedMediaUrls = newMediaItems;
+          console.log("=== MEDIA URLS UPDATED ===");
+          console.log("Original media URLs:", tweet.media_urls);
+          console.log("Updated media URLs:", updatedMediaUrls);
+          console.log("==========================");
         }
 
         // Update the tweet in the database with the full content
@@ -366,6 +403,11 @@ export const POST = withApiKeyAndJwtAuth(async function (
       fullTweetDetailsFetched,
     );
 
+    console.log("=== INITIAL PARSED CAST ===");
+    console.log("Parsed content:", parsedCast.content);
+    console.log("Parsed embeds:", parsedCast.embeds);
+    console.log("===========================");
+
     // Override with edited values if provided
     if (
       content !== undefined ||
@@ -373,6 +415,16 @@ export const POST = withApiKeyAndJwtAuth(async function (
       quotedTweetUrl !== undefined ||
       videoUrls !== undefined
     ) {
+      console.log("=== OVERRIDE LOGIC TRIGGERED ===");
+      console.log("Content override provided:", content !== undefined);
+      console.log("Media URLs override provided:", mediaUrls !== undefined);
+      console.log(
+        "Quoted tweet URL override provided:",
+        quotedTweetUrl !== undefined,
+      );
+      console.log("Video URLs override provided:", videoUrls !== undefined);
+      console.log("Is edit mode:", isEdit);
+      console.log("=================================");
       const embeds: string[] = [];
 
       if (tweet.is_retweet) {
@@ -393,8 +445,7 @@ export const POST = withApiKeyAndJwtAuth(async function (
           // 1. This is an explicit edit (isEdit = true), OR
           // 2. The provided content is longer than the parsed content (indicating it's a genuine override)
           // 3. Otherwise, keep the full database content to avoid truncation
-
-           if (isEdit || content.length > parsedCast.content.length) {
+          if (isEdit || content.length > parsedCast.content.length) {
             console.log("=== CONTENT OVERRIDE DECISION ===");
             console.log("User provided content:", content);
             console.log("Original tweet content:", tweet.content);
@@ -488,9 +539,19 @@ export const POST = withApiKeyAndJwtAuth(async function (
 
       // Check user's embed limit based on pro subscription status
       const embedLimit = await getEmbedLimit(userFid);
+      console.log("=== EMBED LIMIT CHECK ===");
+      console.log("Embed limit:", embedLimit);
+      console.log("Embeds before limit:", embeds);
+      console.log("Embed count before limit:", embeds.length);
+
       if (embeds.length > embedLimit) {
         embeds.splice(embedLimit);
+        console.log("Embeds truncated to limit");
       }
+
+      console.log("Final embeds:", embeds);
+      console.log("Final embed count:", embeds.length);
+      console.log("========================");
 
       // Remove last t.co link if there are media embeds (but not if full tweet details were fetched)
       if (
@@ -498,7 +559,11 @@ export const POST = withApiKeyAndJwtAuth(async function (
         embeds.length > 0 &&
         !fullTweetDetailsFetched
       ) {
+        console.log("=== REMOVING T.CO LINK ===");
+        console.log("Content before t.co removal:", parsedCast.content);
         parsedCast.content = removeLastTcoLinkIfMedia(parsedCast.content, true);
+        console.log("Content after t.co removal:", parsedCast.content);
+        console.log("==========================");
       }
 
       // Update the parsed cast with the new embeds
@@ -506,10 +571,101 @@ export const POST = withApiKeyAndJwtAuth(async function (
         ...parsedCast,
         embeds,
       };
+
+      console.log("=== PARSED CAST UPDATED WITH EMBEDS ===");
+      console.log("Updated content:", parsedCast.content);
+      console.log("Updated embeds:", parsedCast.embeds);
+      console.log("=======================================");
     }
 
     // Resolve any t.co URLs in the content before casting
-    const resolvedContent = await resolveTcoUrls(parsedCast.content);
+    let resolvedContent = await resolveTcoUrls(parsedCast.content);
+
+    console.log("=== URL RESOLUTION ===");
+    console.log("Content before URL resolution:", parsedCast.content);
+    console.log("Content after URL resolution:", resolvedContent);
+    console.log(
+      "URL resolution changed content:",
+      resolvedContent !== parsedCast.content,
+    );
+    console.log("======================");
+
+    // Remove Twitter photo/video URLs from content if there are media embeds
+    // This handles cases where t.co links resolve to twitter.com/.../status/.../photo/1 etc
+    if (parsedCast.embeds && parsedCast.embeds.length > 0) {
+      const hasMediaEmbed = parsedCast.embeds.some((embed) => {
+        return (
+          embed.includes("pbs.twimg.com") ||
+          embed.includes(".jpg") ||
+          embed.includes(".png") ||
+          embed.includes(".gif") ||
+          embed.includes(".mp4")
+        );
+      });
+
+      if (hasMediaEmbed) {
+        // Remove Twitter photo/video URLs from the text
+        const twitterPhotoVideoRegex =
+          /https?:\/\/(?:twitter\.com|x\.com)\/[^\/]+\/status\/\d+\/(?:photo|video)\/\d+/g;
+        const contentBeforeRemoval = resolvedContent;
+        resolvedContent = resolvedContent
+          .replace(twitterPhotoVideoRegex, "")
+          .trim();
+
+        console.log("=== TWITTER PHOTO/VIDEO URL REMOVAL ===");
+        console.log("Has media embed:", hasMediaEmbed);
+        console.log("Content before removal:", contentBeforeRemoval);
+        console.log("Content after removal:", resolvedContent);
+        console.log("========================================");
+      }
+    }
+
+    // Extract and embed regular URLs from resolved content (lowest priority)
+    // Only do this if we used the override logic (when any override params were provided)
+    if (
+      content !== undefined ||
+      mediaUrls !== undefined ||
+      quotedTweetUrl !== undefined ||
+      videoUrls !== undefined
+    ) {
+      const urlRegex =
+        /https?:\/\/(?:[-\w.])+(?:\.[a-zA-Z]{2,})+(?:\/[^\s]*)?/g;
+      const matches = Array.from(resolvedContent.matchAll(urlRegex));
+      const contentUrls = matches
+        .map((match) => match[0])
+        .filter((url) => {
+          try {
+            new URL(url);
+            // Filter out Twitter photo/video URLs that have the pattern status/<tweetid>/photo or status/<tweetid>/video
+            if (
+              url.includes("/status/") &&
+              (url.includes("/photo/") || url.includes("/video/"))
+            ) {
+              return false;
+            }
+            return true;
+          } catch {
+            return false;
+          }
+        });
+
+      // Add URLs as embeds with lowest priority
+      contentUrls.forEach((url) => {
+        parsedCast.embeds.push(url);
+      });
+
+      console.log("=== CONTENT URL EXTRACTION ===");
+      console.log("URLs found in content:", contentUrls);
+      console.log("Embeds after adding content URLs:", parsedCast.embeds);
+      console.log("=================================");
+
+      // Re-apply embed limit after adding content links
+      const embedLimit = await getEmbedLimit(userFid);
+      if (parsedCast.embeds.length > embedLimit) {
+        parsedCast.embeds.splice(embedLimit);
+        console.log("Embeds truncated after content URL addition");
+      }
+    }
 
     // Convert Twitter mentions to Farcaster format
     const convertedContent = await convertTwitterMentionsToFarcaster(
@@ -517,6 +673,15 @@ export const POST = withApiKeyAndJwtAuth(async function (
       isEdit,
       tweet.original_content || undefined,
     );
+
+    console.log("=== MENTION CONVERSION ===");
+    console.log("Content before mention conversion:", resolvedContent);
+    console.log("Content after mention conversion:", convertedContent);
+    console.log(
+      "Mention conversion changed content:",
+      convertedContent !== resolvedContent,
+    );
+    console.log("==========================");
 
     // Check user's pro status and truncate text accordingly
     const isProUser = await checkUserProStatus(userFid);
@@ -526,11 +691,47 @@ export const POST = withApiKeyAndJwtAuth(async function (
         ? convertedContent.substring(0, textLimit)
         : convertedContent;
 
+    console.log("=== PRO STATUS & TEXT TRUNCATION ===");
+    console.log("Is pro user:", isProUser);
+    console.log("Text limit:", textLimit);
+    console.log("Content before truncation:", convertedContent);
+    console.log("Content after truncation:", truncatedContent);
+    console.log(
+      "Content was truncated:",
+      truncatedContent.length < convertedContent.length,
+    );
+    console.log("Content length:", truncatedContent.length);
+    console.log("====================================");
+
+    // Log what we're about to cast
+    console.log("=== CASTING DETAILS ===");
+    console.log("Tweet ID:", tweetId);
+    console.log("User FID:", userFid);
+    console.log("Channel ID:", channel_id || "none (home feed)");
+    console.log("Original tweet content:", tweet.content);
+    console.log("Final resolved content:", resolvedContent);
+    console.log("Converted content (mentions):", convertedContent);
+    console.log("Final truncated content:", truncatedContent);
+    console.log("Content length:", truncatedContent.length);
+    console.log("Text limit:", textLimit);
+    console.log("Is pro user:", isProUser);
+    console.log("Embeds:", parsedCast.embeds);
+    console.log("Embed count:", parsedCast.embeds?.length || 0);
+    console.log("Is retweet:", tweet.is_retweet);
+    console.log("Has quoted tweet:", !!tweet.quoted_tweet_url);
+    console.log("Media URLs:", tweet.media_urls);
+    console.log("========================");
+
     // Cast to Farcaster using Neynar API (AFTER payment is confirmed)
     const castPayload: any = {
       signer_uuid: user.neynar_signer_uuid,
       text: truncatedContent,
     };
+
+    // Add channel_id if provided (not for home feed)
+    if (channel_id && channel_id.trim() !== "") {
+      castPayload.channel_id = channel_id;
+    }
 
     // Add embeds if available (images, quoted tweets, etc.)
     if (parsedCast.embeds && parsedCast.embeds.length > 0) {
@@ -552,11 +753,26 @@ export const POST = withApiKeyAndJwtAuth(async function (
         Array.isArray(tweet.media_urls.types) &&
         tweet.media_urls.types.includes("animated_gif");
 
+      console.log("=== VIDEO/GIF CHECK ===");
+      console.log("Has video:", hasVideo);
+      console.log("Has GIF:", hasGif);
+      console.log("Media URLs:", tweet.media_urls);
+      console.log("======================");
+
       if (hasVideo || hasGif) {
+        console.log("=== VIDEO/GIF HANDLING ===");
+        console.log("Original cast payload:", castPayload);
         castPayload.embeds = [{ url: tweet.twitter_url || "" }];
         castPayload.text = "";
+        console.log("Modified cast payload for video/GIF:", castPayload);
+        console.log("==========================");
       }
     }
+
+    // Log the final cast payload being sent to Neynar
+    console.log("=== FINAL CAST PAYLOAD ===");
+    console.log("Cast payload:", JSON.stringify(castPayload, null, 2));
+    console.log("==========================");
 
     const castResponse = await fetch(`${NEYNAR_BASE_URL}/farcaster/cast`, {
       method: "POST",
@@ -577,6 +793,12 @@ export const POST = withApiKeyAndJwtAuth(async function (
     }
 
     const castData = await castResponse.json();
+
+    // Log the Neynar API response
+    console.log("=== NEYNAR API RESPONSE ===");
+    console.log("Response status:", castResponse.status);
+    console.log("Response data:", JSON.stringify(castData, null, 2));
+    console.log("===========================");
 
     // Process payment or deduct free cast
     let newBalance = user.usdc_balance || 0;
