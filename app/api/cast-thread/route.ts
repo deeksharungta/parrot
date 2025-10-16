@@ -168,7 +168,12 @@ export const POST = withApiKeyAndJwtAuth(async function (
 ) {
   try {
     const body = await request.json();
-    const { conversationId, fid, threadTweets: editedThreadTweets } = body;
+    const {
+      conversationId,
+      fid,
+      threadTweets: editedThreadTweets,
+      channel_id,
+    } = body;
 
     if (!conversationId) {
       return NextResponse.json(
@@ -176,6 +181,14 @@ export const POST = withApiKeyAndJwtAuth(async function (
         { status: 400 },
       );
     }
+
+    // Log incoming request parameters
+    console.log("=== INCOMING CAST THREAD REQUEST ===");
+    console.log("Authenticated FID:", authenticatedFid);
+    console.log("Conversation ID:", conversationId);
+    console.log("Channel ID:", channel_id || "none (home feed)");
+    console.log("Request body:", JSON.stringify(body, null, 2));
+    console.log("====================================");
 
     // Use the authenticated user's FID instead of the one from the request body
     const userFid = fid || authenticatedFid;
@@ -448,14 +461,51 @@ export const POST = withApiKeyAndJwtAuth(async function (
           text: truncatedContent,
         };
 
+        // Add channel_id only to the first tweet in the thread
+        if (
+          channel_id &&
+          channel_id.trim() !== "" &&
+          (!tweet.thread_position || tweet.thread_position === 1)
+        ) {
+          castPayload.channel_id = channel_id;
+          console.log(`=== FIRST TWEET WITH CHANNEL ===`);
+          console.log("Tweet ID:", tweet.tweet_id);
+          console.log("Thread Position:", tweet.thread_position);
+          console.log("Channel ID:", channel_id);
+          console.log("===============================");
+        } else if (tweet.thread_position && tweet.thread_position > 1) {
+          console.log(`=== REPLY TWEET (NO CHANNEL_ID) ===`);
+          console.log("Tweet ID:", tweet.tweet_id);
+          console.log("Thread Position:", tweet.thread_position);
+          console.log("Parent Hash:", lastCastHash);
+          console.log("===============================");
+        }
+
         // Add embeds if available (images, quoted tweets, etc.)
         if (parsedCast.embeds && parsedCast.embeds.length > 0) {
+          // Filter out Twitter photo/video URLs from embeds
+          const filteredEmbeds = parsedCast.embeds.filter((url) => {
+            // Filter out Twitter photo/video URLs that have the pattern status/<tweetid>/photo or status/<tweetid>/video
+            if (
+              url.includes("/status/") &&
+              (url.includes("/photo/") || url.includes("/video/"))
+            ) {
+              return false;
+            }
+            return true;
+          });
+
+          console.log("=== EMBED FILTERING (THREAD) ===");
+          console.log("Original embeds:", parsedCast.embeds);
+          console.log("Filtered embeds:", filteredEmbeds);
+          console.log("================================");
+
           // Check user's embed limit based on pro subscription status
           const embedLimit = await getEmbedLimit(userFid);
-          const limitedEmbeds = parsedCast.embeds.slice(0, embedLimit);
-          if (parsedCast.embeds.length > embedLimit) {
+          const limitedEmbeds = filteredEmbeds.slice(0, embedLimit);
+          if (filteredEmbeds.length > embedLimit) {
             console.log(
-              `Thread tweet ${tweet.tweet_id}: Limiting embeds from ${parsedCast.embeds.length} to ${embedLimit} based on user subscription status (FID: ${userFid})`,
+              `Thread tweet ${tweet.tweet_id}: Limiting embeds from ${filteredEmbeds.length} to ${embedLimit} based on user subscription status (FID: ${userFid})`,
             );
           }
           castPayload.embeds = limitedEmbeds.map((url) => ({ url }));
@@ -477,6 +527,85 @@ export const POST = withApiKeyAndJwtAuth(async function (
 
         // Resolve any t.co URLs in the content before casting
         castPayload.text = await resolveTcoUrls(castPayload.text);
+
+        // Remove Twitter photo/video URLs from content if there are media embeds
+        // This handles cases where t.co links resolve to twitter.com/.../status/.../photo/1 etc
+        if (castPayload.embeds && castPayload.embeds.length > 0) {
+          const hasMediaEmbed = castPayload.embeds.some(
+            (embed: { url: string }) => {
+              return (
+                embed.url.includes("pbs.twimg.com") ||
+                embed.url.includes(".jpg") ||
+                embed.url.includes(".png") ||
+                embed.url.includes(".gif") ||
+                embed.url.includes(".mp4")
+              );
+            },
+          );
+
+          if (hasMediaEmbed) {
+            // Remove Twitter photo/video URLs from the text
+            const twitterPhotoVideoRegex =
+              /https?:\/\/(?:twitter\.com|x\.com)\/[^\/]+\/status\/\d+\/(?:photo|video)\/\d+/g;
+            const contentBeforeRemoval = castPayload.text;
+            castPayload.text = castPayload.text
+              .replace(twitterPhotoVideoRegex, "")
+              .trim();
+
+            console.log("=== TWITTER PHOTO/VIDEO URL REMOVAL (THREAD) ===");
+            console.log("Has media embed:", hasMediaEmbed);
+            console.log("Content before removal:", contentBeforeRemoval);
+            console.log("Content after removal:", castPayload.text);
+            console.log("================================================");
+          }
+        }
+
+        // Extract and embed regular URLs from content (lowest priority)
+        const urlRegex =
+          /https?:\/\/(?:[-\w.])+(?:\.[a-zA-Z]{2,})+(?:\/[^\s]*)?/g;
+        const matches = Array.from(
+          castPayload.text.matchAll(urlRegex),
+        ) as RegExpMatchArray[];
+        const contentUrls = matches
+          .map((match) => match[0])
+          .filter((url) => {
+            try {
+              new URL(url);
+              // Filter out Twitter photo/video URLs that have the pattern status/<tweetid>/photo or status/<tweetid>/video
+              if (
+                url.includes("/status/") &&
+                (url.includes("/photo/") || url.includes("/video/"))
+              ) {
+                return false;
+              }
+              return true;
+            } catch {
+              return false;
+            }
+          });
+
+        // Add URLs as embeds with lowest priority
+        if (contentUrls.length > 0) {
+          if (!castPayload.embeds) {
+            castPayload.embeds = [];
+          }
+
+          contentUrls.forEach((url) => {
+            castPayload.embeds.push({ url });
+          });
+
+          console.log("=== CONTENT URL EXTRACTION (THREAD) ===");
+          console.log("URLs found in content:", contentUrls);
+          console.log("Embeds after adding content URLs:", castPayload.embeds);
+          console.log("=======================================");
+
+          // Re-apply embed limit after adding content links
+          const embedLimit = await getEmbedLimit(userFid);
+          if (castPayload.embeds.length > embedLimit) {
+            castPayload.embeds = castPayload.embeds.slice(0, embedLimit);
+            console.log("Embeds truncated after content URL addition");
+          }
+        }
 
         if (
           !tweet.is_retweet &&
