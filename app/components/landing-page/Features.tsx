@@ -3,48 +3,57 @@ import React from "react";
 
 export default function Features() {
   return (
-    <div className="px-10 ">
-      <h3 className="font-zing font-thin text-2xl text-center mb-9">
+    <div className="px-4 sm:px-6 md:px-8 lg:px-10">
+      <h3 className="font-zing font-thin text-xl sm:text-2xl text-center mb-6 sm:mb-9">
         Features
       </h3>
-      <div className="grid grid-cols-3 gap-10 text-center w-fit mx-auto">
-        <div className="border-black border w-fit ">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10 text-center max-w-7xl mx-auto">
+        <div className="border-black border w-full">
           <Image
             src="/landing/feature-1.svg"
             alt="Pick"
             width={424}
             height={415}
+            className="w-full h-auto"
           />
-          <h4 className="font-serif text-[32px] mt-6">Pick and cast.</h4>
-          <p className="font-serif font-normal text-sm mb-6">
-            Choose your favorite posts and cast them instantly on FC. <br />
-            Stay in control of what you share and when.
+          <h4 className="font-serif text-2xl sm:text-3xl lg:text-[32px] mt-4 sm:mt-6 px-4">
+            Pick and cast.
+          </h4>
+          <p className="font-serif font-normal text-sm mb-4 sm:mb-6 px-4">
+            Choose your favorite posts and cast them instantly on FC. Stay in
+            control of what you share and when.
           </p>
         </div>
-        <div className="border-black border w-fit ">
+        <div className="border-black border w-full">
           <Image
             src="/landing/feature-2.svg"
             alt="Pick"
             width={424}
             height={415}
+            className="w-full h-auto"
           />
-          <h4 className="font-serif text-[32px] mt-6">YOLO mode.</h4>
-          <p className="font-serif font-normal text-sm mb-6">
-            Turn on auto-cast and let the system post for you—no
-            <br /> approvals needed. It stops when your allowance runs out.
+          <h4 className="font-serif text-2xl sm:text-3xl lg:text-[32px] mt-4 sm:mt-6 px-4">
+            YOLO mode.
+          </h4>
+          <p className="font-serif font-normal text-sm mb-4 sm:mb-6 px-4">
+            Turn on auto-cast and let the system post for you—no approvals
+            needed. It stops when your allowance runs out.
           </p>
         </div>
-        <div className="border-black border w-fit ">
+        <div className="border-black border w-full md:col-span-2 lg:col-span-1">
           <Image
             src="/landing/feature-3.svg"
             alt="Pick"
             width={424}
             height={415}
+            className="w-full h-auto"
           />
-          <h4 className="font-serif text-[32px] mt-6">Micropayments.</h4>
-          <p className="font-serif font-normal text-sm mb-6">
-            Monitor your earnings and reach across all <br />
-            supported platforms in one place.
+          <h4 className="font-serif text-2xl sm:text-3xl lg:text-[32px] mt-4 sm:mt-6 px-4">
+            Micropayments.
+          </h4>
+          <p className="font-serif font-normal text-sm mb-4 sm:mb-6 px-4">
+            Monitor your earnings and reach across all supported platforms in
+            one place.
           </p>
         </div>
       </div>
