@@ -14,7 +14,7 @@ export default function Hero() {
           className="absolute top-4 left-4 z-10"
         />
         <Link
-          href="/"
+          href="https://farcaster.xyz/miniapps/wttQ9mMjERiS/parrot-for-x"
           className="absolute top-6 right-6 z-10 font-zing font-thin text-sm uppercase text-white text-shadow-white"
         >
           Open Mini App
