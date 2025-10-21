@@ -118,7 +118,7 @@ export default function Hero() {
             className="absolute -top-4 -left-8 sm:-top-6 sm:-left-12 md:-top-8 md:-left-20 w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24 lg:w-[122px] lg:h-[122px] hidden sm:block"
           />
         </span>
-        ,&
+        ,&{" "}
         <span className="font-serif font-normal relative inline-block">
           {" "}
           Parrot{" "}
@@ -130,7 +130,7 @@ export default function Hero() {
             className="absolute -top-1 -right-2 sm:-top-2 sm:-right-4 w-10 h-10 sm:w-14 sm:h-14 md:w-20 md:h-20 lg:w-[98px] lg:h-[98px] hidden sm:block"
           />
         </span>{" "}
-        fetchs all your
+        fetchs all your{" "}
         <span className="font-serif font-normal relative inline-block">
           {" "}
           posts{" "}
@@ -143,8 +143,8 @@ export default function Hero() {
           />
         </span>{" "}
         to spot what
-        <span className="font-serif font-normal"> performs</span>. Pick and
-        <span className="font-serif font-normal relative inline-block">
+        <span className="font-serif font-normal"> performs</span>. Pick and{""}
+        <span className="font-serif font-normal relative inline-block ml-4">
           {" "}
           <Image
             src="/landing/thumbs-up.svg"
@@ -152,7 +152,7 @@ export default function Hero() {
             width={112}
             height={112}
             className="absolute -top-1 -left-16 sm:-top-2 sm:-left-28 md:-left-40 lg:-left-52 w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24 lg:w-[112px] lg:h-[112px] hidden sm:block"
-          />
+          />{" "}
           post{" "}
         </span>
         with{" "}
@@ -169,8 +169,8 @@ export default function Hero() {
         </span>{" "}
         - send
         <span className="font-serif font-normal"> content </span> to
-        <span className="font-serif font-normal"> Farcaster </span> or
-        <span className="font-serif font-normal relative inline-block">
+        <span className="font-serif font-normal"> Farcaster </span> or{""}
+        <span className="font-serif font-normal relative inline-block ml-4">
           <Image
             src="/landing/farcaster.svg"
             alt="Farcaster"
