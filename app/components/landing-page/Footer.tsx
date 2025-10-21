@@ -3,7 +3,7 @@ import React from "react";
 
 export default function Footer() {
   return (
-    <div className="px-4 sm:px-6 md:px-8 lg:px-10 flex items-center justify-center flex-col relative overflow-hidden pb-8 sm:pb-12 md:pb-16">
+    <div className="px-4 sm:px-6 md:px-8 lg:px-10 flex items-center justify-center flex-col relative overflow-hidden ">
       <p className="font-zing font-thin text-xs sm:text-sm uppercase text-center mb-8 sm:mb-10 md:mb-14">
         © Parrot.click — farcaster
       </p>

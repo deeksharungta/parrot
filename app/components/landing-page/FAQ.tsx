@@ -11,17 +11,17 @@ const faqData: FAQItem[] = [
   {
     question: "Is Parrot free?",
     answer:
-      "Parrot offers a free tier with basic features. You can connect your accounts and start cross-posting to Farcaster right away. For advanced features like YOLO mode and increased posting limits, we offer premium plans.",
+      "No, Parrot isn't free. We charge $0.10 per cast, on a pay-per-cast model — meaning if you post less, you pay less, and if you post more, you pay more.",
   },
   {
-    question: "How does Parrot work?",
+    question: "What platforms and content types are supported?",
     answer:
-      "Parrot automatically fetches your posts from Twitter and other connected platforms. You can then select which posts to share on Farcaster with a single tap. The app handles all the formatting, media conversion, and posting for you.",
+      "Parrot supports threads, links, images, and embedded links — everything works smoothly when you cross-post on Farcaster (FC). Currently, video support is not yet available.",
   },
   {
-    question: "What platforms does Parrot support?",
+    question: "How do tags work in Parrot?",
     answer:
-      "Currently, Parrot supports cross-posting from Twitter/X to Farcaster. We're actively working on expanding to support Lens, Zora, Medium to Paragraph, and Instagram to Zora. Check our roadmap for upcoming integrations.",
+      "Parrot automatically tags posts based on connected social accounts: We inverse search FC accounts for their connected Twitter (X) accounts. If a Twitter account is linked to an FC profile, Parrot auto-tags it when cross-posting. We also maintain a large internal library of social accounts from both FC and X — even for users who haven't connected their X to FC — so Parrot can auto-bind and tag seamlessly for a better user experience.",
   },
 ];
 
