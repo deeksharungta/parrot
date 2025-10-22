@@ -58,11 +58,9 @@ export default function Roadmap() {
                 Now
               </p>
               <p className="font-serif font-normal text-sm sm:text-base md:text-lg absolute top-16 sm:top-20 md:top-[5.4rem] left-6 sm:left-8 md:left-9 italic text-black rotate-[3deg] leading-[146%]">
-                Post from X to Farcaster
-                <br />- Pick X posts and cast
-                <br />- YOLO mode (set once and forget)
-                <br />- Reverse FC account tag
-                <br />- Supports threads, long tweets, images, links
+                Post from X to Farcaster and Baseapp <br />- Pick X posts and
+                cast <br />- YOLO mode (set once and forget) <br />- Reverse FC
+                account tag <br />- Supports threads, long tweets, images, links
               </p>
             </div>
             <div className="relative mb-10 lg:mb-10 z-30 mx-auto lg:ml-0 lg:mr-auto w-full max-w-[350px]">
@@ -84,8 +82,8 @@ export default function Roadmap() {
                 Future
               </p>
               <p className="font-serif font-normal text-base sm:text-lg md:text-xl absolute top-16 sm:top-20 md:top-[5.4rem] left-6 sm:left-8 md:left-10 italic text-black -rotate-[2.49deg]">
-                - X to Lens <br />- Insta to Zora <br />- Medium to Paragraph{" "}
-                <br />- Medium to Paragraph
+                - Insta to Zora(in beta right now) <br />- Medium to Paragraph{" "}
+                <br />- and much more(TBD)
               </p>
             </div>
           </div>
