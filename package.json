@@ -15,7 +15,7 @@
     "@farcaster/frame-sdk": "^0.0.57",
     "@farcaster/frame-wagmi-connector": "^0.0.46",
     "@farcaster/hub-nodejs": "^0.13.6",
-    "@farcaster/miniapp-sdk": "^0.2.0",
+    "@farcaster/miniapp-sdk": "^0.2.1",
     "@neynar/nodejs-sdk": "^1.69.1",
     "@neynar/react": "^0.9.1",
     "@notionhq/client": "^5.2.0",
