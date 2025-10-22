@@ -77,6 +77,7 @@ export default function DisconnectNeynar() {
         if (isMobile) {
           // On mobile, redirect directly to the approval URL
           sdk.actions.openUrl(approvalUrl);
+          sdk.actions.close();
         } else {
           // On desktop, show the QR code modal
           setShowQRModal(true);
