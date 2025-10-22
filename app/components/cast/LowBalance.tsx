@@ -59,11 +59,19 @@ export function LowBalanceModal({ onClose, isOpen }: LowBalanceModalProps) {
                 />
               </svg>
             </div>
-            <div className="flex flex-col gap-1 bg-[#FFF4E6] rounded-xl p-3">
-              <p className="text-sm font-medium text-[#FF8C00]">Low Balance</p>
-              <p className="text-sm font-light text-[#FF8C00]">
+            <div className="flex flex-col gap-1 bg-red-50 rounded-xl p-3">
+              <p className="text-sm font-medium text-red-500">Low Balance</p>
+              <p className="text-sm font-light text-red-500">
                 You need to top up your balance to cast tweets.
               </p>
+            </div>
+            <div className="mt-4 ">
+              <button
+                onClick={onClose}
+                className="w-full py-3 text-sm font-medium text-[#8C8A94] hover:text-[#100c20] transition-colors"
+              >
+                Close
+              </button>
             </div>
           </motion.div>
         </>
