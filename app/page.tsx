@@ -4,10 +4,9 @@ import React, { useEffect, useState } from "react";
 import WelcomeCard from "./components/welcome/WelcomeCard";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import UserProfiles from "./components/welcome/UserProfiles";
-import { animate, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { sdk } from "@farcaster/frame-sdk";
 import { analytics } from "@/lib/analytics";
-import LandingPage from "./components/landing-page/LandingPage";
 
 export default function HomePage() {
   const { setFrameReady, isFrameReady, context } = useMiniKit();
@@ -78,22 +77,43 @@ export default function HomePage() {
   }
 
   return (
-    <>
+    <motion.div
+      className="flex flex-col items-center justify-start h-screen overflow-hidden relative"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       {isMiniApp ? (
         // Mini App version - show the full app
-        <motion.div
-          className="flex flex-col items-center justify-start h-screen overflow-hidden relative"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
+        <>
           <WelcomeCard />
           <UserProfiles />
-        </motion.div>
+        </>
       ) : (
-        // Web version
-        <LandingPage />
+        // Web version - show open mini app prompt
+        <div className="flex flex-col items-center justify-center space-y-6 p-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              Open in Farcaster
+            </h1>
+            <p className="text-gray-600 mb-8">
+              This app works best as a Mini App in Farcaster
+            </p>
+            <button
+              onClick={() => {
+                // You can add logic here to redirect to Farcaster or show instructions
+                window.open(
+                  "https://farcaster.xyz/miniapps/wttQ9mMjERiS/parrot",
+                  "_blank",
+                );
+              }}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+            >
+              Open Mini App
+            </button>
+          </div>
+        </div>
       )}
-    </>
+    </motion.div>
   );
 }
