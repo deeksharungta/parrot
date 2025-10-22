@@ -66,12 +66,7 @@ export function LowBalanceModal({ onClose, isOpen }: LowBalanceModalProps) {
               </p>
             </div>
             <div className="mt-4 ">
-              <button
-                onClick={onClose}
-                className="w-full py-3 text-sm font-medium text-[#8C8A94] hover:text-[#100c20] transition-colors"
-              >
-                Close
-              </button>
+              <Button onClick={onClose}>Close</Button>
             </div>
           </motion.div>
         </>
