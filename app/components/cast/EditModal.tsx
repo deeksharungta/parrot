@@ -851,7 +851,7 @@ export function EditModal({
             </div>
 
             {/* Channel Selector */}
-            <div className="flex flex-col gap-1 mb-4">
+            {/* <div className="flex flex-col gap-1 mb-4">
               <h4 className="text-[#494656] text-xs font-medium font-sans">
                 Channel
               </h4>
@@ -912,7 +912,7 @@ export function EditModal({
                   </div>
                 </div>
               )}
-            </div>
+            </div> */}
 
             {/* Thread Navigation */}
             {isThread && threadTweets && threadTweets.length > 1 && (
