@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuthenticatedApi } from "./useAuthenticatedFetch";
+import { sanitizeErrorMessage } from "@/lib/utils/error-messages";
 
 interface Tweet {
   id: string;
@@ -49,7 +50,11 @@ export const useGetUserTweets = (
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to fetch user tweets");
+        throw new Error(
+          sanitizeErrorMessage(
+            errorData.error || "Failed to fetch user tweets",
+          ),
+        );
       }
 
       const data: UserTweetsResponse = await response.json();

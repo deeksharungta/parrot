@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuthenticatedApi } from "./useAuthenticatedFetch";
+import { sanitizeErrorMessage } from "@/lib/utils/error-messages";
 
 interface EditTweetData {
   tweetId: string;
@@ -33,7 +34,7 @@ export const useEditTweet = () => {
         const errorData: ApiError = await response
           .json()
           .catch(() => ({ error: "Failed to save edited content" }));
-        throw new Error(errorData.error || "Failed to save edited content");
+        throw new Error(sanitizeErrorMessage(errorData.error));
       }
 
       return response.json();
@@ -68,7 +69,7 @@ export const useCastTweet = () => {
         const errorData: ApiError = await response
           .json()
           .catch(() => ({ error: "Failed to cast tweet" }));
-        throw new Error(errorData.error || "Failed to cast tweet");
+        throw new Error(sanitizeErrorMessage(errorData.error));
       }
 
       return response.json();
@@ -86,7 +87,11 @@ export const useCastTweet = () => {
     onError: (error) => {
       // Dismiss any loading toasts and show error toast
       toast.dismiss();
-      toast("Error Casting Tweet");
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Unable to cast, please reload the app and try again";
+      toast.error(sanitizeErrorMessage(errorMessage));
       console.error("Error casting tweet:", error);
     },
   });

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { Database } from "@/lib/types/database";
 import { useAuthenticatedApi } from "./useAuthenticatedFetch";
+import { sanitizeErrorMessage } from "@/lib/utils/error-messages";
 
 // Type definitions
 export type User = Database["public"]["Tables"]["users"]["Row"];
@@ -59,7 +60,7 @@ export const useGetUser = (fid: number | undefined) => {
         const errorData: ApiError = await response
           .json()
           .catch(() => ({ error: "Failed to fetch user" }));
-        throw new Error(errorData.error || "Failed to fetch user");
+        throw new Error(sanitizeErrorMessage(errorData.error));
       }
 
       return response.json();
@@ -87,7 +88,7 @@ export const useCreateUser = () => {
         const errorData: ApiError = await response
           .json()
           .catch(() => ({ error: "Failed to create user" }));
-        throw new Error(errorData.error || "Failed to create user");
+        throw new Error(sanitizeErrorMessage(errorData.error));
       }
 
       return response.json();
@@ -126,7 +127,7 @@ export const useUpdateUser = () => {
         const errorData: ApiError = await response
           .json()
           .catch(() => ({ error: "Failed to update user" }));
-        throw new Error(errorData.error || "Failed to update user");
+        throw new Error(sanitizeErrorMessage(errorData.error));
       }
 
       return response.json();
@@ -170,7 +171,7 @@ export const useUpsertUser = () => {
         const errorData: ApiError = await response
           .json()
           .catch(() => ({ error: "Failed to upsert user" }));
-        throw new Error(errorData.error || "Failed to upsert user");
+        throw new Error(sanitizeErrorMessage(errorData.error));
       }
 
       return response.json();

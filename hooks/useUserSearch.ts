@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { sanitizeErrorMessage } from "@/lib/utils/error-messages";
 
 // Type definitions based on the Neynar API response structure
 export interface FarcasterUser {
@@ -97,7 +98,9 @@ export const useUserSearch = (query: string, enabled: boolean = true) => {
         const errorData = await response
           .json()
           .catch(() => ({ error: "Failed to search users" }));
-        throw new Error(errorData.error || "Failed to search users");
+        throw new Error(
+          sanitizeErrorMessage(errorData.error || "Failed to search users"),
+        );
       }
 
       return response.json();

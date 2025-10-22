@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState, useCallback } from "react";
 import { useAuthenticatedApi } from "./useAuthenticatedFetch";
+import { sanitizeErrorMessage } from "@/lib/utils/error-messages";
 
 // Type definitions for channel user data (matching the API response)
 interface ChannelUser {
@@ -181,7 +182,11 @@ export const useGetUserChannels = (
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to fetch user channels");
+        throw new Error(
+          sanitizeErrorMessage(
+            errorData.error || "Failed to fetch user channels",
+          ),
+        );
       }
 
       const data: UserChannelsResponse = await response.json();

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuthenticatedApi } from "./useAuthenticatedFetch";
+import { sanitizeErrorMessage } from "@/lib/utils/error-messages";
 
 interface FreeCastsResponse {
   freeCastsLeft: number;
@@ -23,7 +24,7 @@ export const useFreeCasts = () => {
         const errorData: ApiError = await response
           .json()
           .catch(() => ({ error: "Failed to fetch free casts info" }));
-        throw new Error(errorData.error || "Failed to fetch free casts info");
+        throw new Error(sanitizeErrorMessage(errorData.error));
       }
 
       return response.json();

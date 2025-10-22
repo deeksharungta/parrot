@@ -1,5 +1,6 @@
 import { Database } from "./types/database";
 import { secureStorage } from "./secure-storage";
+import { sanitizeErrorMessage } from "./utils/error-messages";
 
 type Tweet = Database["public"]["Tables"]["tweets"]["Row"];
 
@@ -149,7 +150,9 @@ export async function getCachedTweets(
       }
 
       throw new Error(
-        errorData.error || `HTTP error! status: ${response.status}`,
+        sanitizeErrorMessage(
+          errorData.error || `HTTP error! status: ${response.status}`,
+        ),
       );
     }
 
@@ -190,7 +193,9 @@ export async function fetchAndSaveFreshTweets(fid: number): Promise<{
       }
 
       throw new Error(
-        errorData.error || "Failed to fetch and save fresh tweets",
+        sanitizeErrorMessage(
+          errorData.error || "Failed to fetch and save fresh tweets",
+        ),
       );
     }
 
@@ -207,7 +212,10 @@ export async function fetchAndSaveFreshTweets(fid: number): Promise<{
       success: false,
       tweets: [],
       user: null,
-      error: error instanceof Error ? error.message : "Unknown error",
+      error:
+        error instanceof Error
+          ? sanitizeErrorMessage(error.message)
+          : "Something went wrong, please reload the app and try again",
     };
   }
 }
@@ -250,7 +258,9 @@ export async function updateTweetStatus(
       }
 
       throw new Error(
-        errorData.error || "Failed to update tweet status via server",
+        sanitizeErrorMessage(
+          errorData.error || "Failed to update tweet status via server",
+        ),
       );
     }
   } catch (error) {
@@ -310,7 +320,9 @@ export async function castThread(
       if (response.status === 401) {
         secureStorage.removeToken();
       }
-      throw new Error(data.error || "Failed to cast thread");
+      throw new Error(
+        sanitizeErrorMessage(data.error || "Failed to cast thread"),
+      );
     }
 
     return data;
@@ -347,7 +359,11 @@ export async function restoreRejectedTweets(): Promise<{
         secureStorage.removeToken();
       }
 
-      throw new Error(errorData.error || "Failed to restore rejected tweets");
+      throw new Error(
+        sanitizeErrorMessage(
+          errorData.error || "Failed to restore rejected tweets",
+        ),
+      );
     }
 
     const data = await response.json();
@@ -362,7 +378,10 @@ export async function restoreRejectedTweets(): Promise<{
       success: false,
       restoredCount: 0,
       message: "Failed to restore rejected tweets",
-      error: error instanceof Error ? error.message : "Unknown error",
+      error:
+        error instanceof Error
+          ? sanitizeErrorMessage(error.message)
+          : "Something went wrong, please reload the app and try again",
     };
   }
 }
@@ -407,7 +426,9 @@ export async function getThreadCastPreview(
         secureStorage.removeToken();
       }
 
-      throw new Error(errorData.error || "Failed to get thread preview");
+      throw new Error(
+        sanitizeErrorMessage(errorData.error || "Failed to get thread preview"),
+      );
     }
 
     return await response.json();
@@ -424,7 +445,10 @@ export async function getThreadCastPreview(
         castCount: 0,
         costPerThread: 0.1,
       },
-      error: error instanceof Error ? error.message : "Unknown error",
+      error:
+        error instanceof Error
+          ? sanitizeErrorMessage(error.message)
+          : "Something went wrong, please reload the app and try again",
     };
   }
 }

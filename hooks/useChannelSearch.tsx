@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState, useCallback } from "react";
 import { useAuthenticatedApi } from "./useAuthenticatedFetch";
+import { sanitizeErrorMessage } from "@/lib/utils/error-messages";
 
 // Type definitions for channel search data
 interface Channel {
@@ -87,7 +88,9 @@ export const useChannelSearch = (
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to search channels");
+        throw new Error(
+          sanitizeErrorMessage(errorData.error || "Failed to search channels"),
+        );
       }
 
       const data: ChannelSearchResponse = await response.json();

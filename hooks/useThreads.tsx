@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { castThread, getThreadCastPreview } from "@/lib/client-tweets-service";
 import { toast } from "sonner";
+import { sanitizeErrorMessage } from "@/lib/utils/error-messages";
 
 export interface ThreadCastResult {
   success: boolean;
@@ -94,7 +95,11 @@ export function useCastThread() {
     onError: (error) => {
       // Dismiss any loading toasts and show error toast
       toast.dismiss();
-      toast("Error Casting Tweet");
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Unable to cast, please reload the app and try again";
+      toast.error(sanitizeErrorMessage(errorMessage));
       console.error("Error casting thread:", error);
     },
   });

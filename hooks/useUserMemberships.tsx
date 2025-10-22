@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState, useCallback } from "react";
 import { useAuthenticatedApi } from "./useAuthenticatedFetch";
+import { sanitizeErrorMessage } from "@/lib/utils/error-messages";
 
 // Type definitions for channel/membership data
 interface Channel {
@@ -87,7 +88,11 @@ export const useGetUserMemberships = (
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to fetch user memberships");
+        throw new Error(
+          sanitizeErrorMessage(
+            errorData.error || "Failed to fetch user memberships",
+          ),
+        );
       }
 
       const data: UserMembershipsResponse = await response.json();

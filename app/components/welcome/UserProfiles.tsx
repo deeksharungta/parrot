@@ -111,7 +111,7 @@ export default function UserProfiles() {
       router.push("/cast");
     } catch (error) {
       console.error("Failed to save user data:", error);
-      toast.error("Failed to save user information. Please try again.");
+      toast.error("Unable to continue, please reload the app and try again");
     } finally {
       setIsRedirecting(false);
     }
