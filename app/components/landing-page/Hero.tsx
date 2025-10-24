@@ -106,7 +106,14 @@ export default function Hero() {
       </div>
 
       {/* Hero Tagline Section */}
-      <p className="text-black-v1 max-w-[1150px] mx-auto font-zing font-thin text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[90px] leading-tight lg:leading-none tracking-[-0.15px] text-center my-12 sm:my-16 md:my-20 lg:my-24 px-4 sm:px-6">
+      <Image
+        src="/landing/hero-tagline.svg"
+        alt="Hero Tagline"
+        width={1150}
+        height={1150}
+        className="w-full h-auto mx-auto my-12 sm:my-16 md:my-20 lg:my-24 px-4 sm:px-6"
+      />
+      {/* <p className="text-black-v1 max-w-[1150px] mx-auto font-zing font-thin text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[90px] leading-tight lg:leading-none tracking-[-0.15px] text-center my-12 sm:my-16 md:my-20 lg:my-24 px-4 sm:px-6">
         Connect your{" "}
         <span className="font-serif font-normal relative inline-block">
           Socials
@@ -115,7 +122,7 @@ export default function Hero() {
             alt="Blue Bird"
             width={122}
             height={122}
-            className="absolute -top-4 -left-8 sm:-top-6 sm:-left-12 md:-top-8 md:-left-20 w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24 lg:w-[122px] lg:h-[122px] hidden sm:block"
+            className="absolute -top-2 -left-8 sm:-top-6 sm:-left-12 md:-top-8 md:-left-20 w-10 h-10 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 xl:w-[122px] xl:h-[122px]  sm:block"
           />
         </span>
         ,&{" "}
@@ -127,7 +134,7 @@ export default function Hero() {
             alt="Parrot Still"
             width={98}
             height={98}
-            className="absolute -top-1 -right-2 sm:-top-2 sm:-right-4 w-10 h-10 sm:w-14 sm:h-14 md:w-20 md:h-20 lg:w-[98px] lg:h-[98px] hidden sm:block"
+            className="absolute -top-1 -right-2 sm:-top-2 sm:-right-4 w-10 h-10 sm:w-14 sm:h-14 md:w-20 md:h-20 lg:w-24 lg:h-24 xl:w-[98px] xl:h-[98px] sm:block"
           />
         </span>{" "}
         fetchs all your{" "}
@@ -139,19 +146,19 @@ export default function Hero() {
             alt="Phone"
             width={64}
             height={96}
-            className="absolute top-1 -right-10 sm:top-2 sm:-right-16 md:-right-28 w-8 h-12 sm:w-10 sm:h-14 md:w-16 md:h-24 lg:w-[64px] lg:h-[96px] hidden sm:block"
+            className="absolute -top-1 md:-top-1 lg:-top-2 xl:top-1 -right-1 sm:-right-16 lg:-right-28 w-8 h-12 sm:w-10 sm:h-14 md:w-12 md:h-12 lg:w-24 lg:h-24 xl:w-[64px] xl:h-[96px] "
           />
         </span>{" "}
         to spot what
         <span className="font-serif font-normal"> performs</span>. Pick and{""}
-        <span className="font-serif font-normal relative inline-block ml-4">
+        <span className="font-serif font-normal relative inline-block ml-4 mr-2">
           {" "}
           <Image
             src="/landing/thumbs-up.svg"
             alt="Thumbs Up"
             width={112}
             height={112}
-            className="absolute -top-1 -left-16 sm:-top-2 sm:-left-28 md:-left-40 lg:-left-52 w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24 lg:w-[112px] lg:h-[112px] hidden sm:block"
+            className="absolute -top-1 -left-16 sm:-top-2 sm:-left-28 md:-left-40 lg:-left-52 w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24 lg:w-24 lg:h-24 xl:w-[112px] xl:h-[112px] sm:block"
           />{" "}
           post{" "}
         </span>
@@ -163,12 +170,12 @@ export default function Hero() {
             alt="Arrow"
             width={104}
             height={93}
-            className="absolute top-1 -right-6 sm:top-2 sm:-right-10 md:-right-14 w-12 h-11 sm:w-16 sm:h-14 md:w-20 md:h-18 lg:w-[104px] lg:h-[93px] hidden sm:block"
+            className="absolute top-1 -right-6 sm:top-2 sm:-right-10 md:-right-14 w-12 h-11 sm:w-16 sm:h-14 md:w-20 md:h-18 lg:w-24 lg:h-24 xl:w-[104px] xl:h-[93px] sm:block"
           />
           one tap{" "}
         </span>{" "}
         - send
-        <span className="font-serif font-normal"> content </span> to
+        <span className="font-serif font-normal ml-2"> content </span> to
         <span className="font-serif font-normal"> Farcaster </span> or{""}
         <span className="font-serif font-normal relative inline-block ml-4">
           <Image
@@ -176,7 +183,7 @@ export default function Hero() {
             alt="Farcaster"
             width={98}
             height={98}
-            className="absolute top-1 -left-20 sm:top-2 sm:-left-32 md:top-3 md:-left-52 lg:-left-72 w-10 h-10 sm:w-14 sm:h-14 md:w-20 md:h-20 lg:w-[98px] lg:h-[98px] hidden md:block"
+            className="absolute top-1 -left-20 sm:top-2 sm:-left-32 md:top-3 md:-left-52 lg:-left-72 w-10 h-10 sm:w-14 sm:h-14 md:w-20 md:h-20 lg:w-24 lg:h-24 xl:w-[98px] xl:h-[98px] md:block"
           />{" "}
           Zora{" "}
           <Image
@@ -184,11 +191,11 @@ export default function Hero() {
             alt="Zora"
             width={66}
             height={66}
-            className="absolute top-0 -right-3 sm:-right-4 md:-right-6 w-8 h-8 sm:w-10 sm:h-10 md:w-14 md:h-14 lg:w-[66px] lg:h-[66px] hidden sm:block"
+            className="absolute top-0 -right-3 sm:-right-4 md:-right-6 w-8 h-8 sm:w-10 sm:h-10 md:w-14 md:h-14 lg:w-24 lg:h-24 xl:w-[66px] xl:h-[66px] sm:block"
           />
         </span>
         , instantly.
-      </p>
+      </p> */}
     </>
   );
 }

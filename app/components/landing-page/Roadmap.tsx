@@ -38,7 +38,7 @@ export default function Roadmap() {
       <div className="h-[1px] bg-black w-16 sm:w-20 md:w-24 mx-auto -mt-1" />
       <div className="relative h-auto sm:h-[400px] md:h-[500px] lg:h-[600px] z-20 overflow-hidden">
         <div className="relative">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-10 mx-auto mt-10 sm:mt-20 md:mt-32 lg:mt-40 relative z-30 max-w-5xl px-4">
+          <div className="grid sm:grid-cols-2 gap-6 sm:gap-8 lg:gap-10 mx-auto mt-10 sm:mt-20 md:mt-32 lg:mt-40 relative z-30 max-w-5xl px-4">
             <div className="relative mb-10 lg:mb-10 z-30 mx-auto lg:ml-auto lg:mr-0 w-full max-w-[350px]">
               <Image
                 src="/landing/page.svg"
@@ -57,7 +57,7 @@ export default function Roadmap() {
               <p className="font-zing font-thin text-black text-lg sm:text-xl md:text-2xl absolute top-5 sm:top-7 left-6 sm:left-8 md:left-10 rotate-[2.25deg]">
                 Now
               </p>
-              <p className="font-serif font-normal text-sm sm:text-base md:text-lg absolute top-16 sm:top-20 md:top-[5.4rem] left-6 sm:left-8 md:left-9 italic text-black rotate-[3deg] leading-[146%]">
+              <p className="font-serif font-normal text-base sm:text-sm lg:text-lg absolute top-16 sm:top-16 lg:top-[5.4rem] left-6 sm:left-8 md:left-9 italic text-black rotate-[3deg] leading-[146%]">
                 Post from X to Farcaster and Baseapp <br />- Pick X posts and
                 cast <br />- YOLO mode (set once and forget) <br />- Reverse FC
                 account tag <br />- Supports threads, long tweets, images, links
@@ -81,14 +81,14 @@ export default function Roadmap() {
               <p className="font-zing font-thin text-black text-lg sm:text-xl md:text-2xl absolute top-6 sm:top-8 md:top-9 left-6 sm:left-8 md:left-10 -rotate-[3.24deg]">
                 Future
               </p>
-              <p className="font-serif font-normal text-base sm:text-lg md:text-xl absolute top-16 sm:top-20 md:top-[5.4rem] left-6 sm:left-8 md:left-10 italic text-black -rotate-[2.49deg]">
+              <p className="font-serif font-normal text-base sm:text-sm lg:text-lg absolute top-16 sm:top-16 lg:top-[5.4rem] left-6 sm:left-8 md:left-9 italic text-black -rotate-[2.49deg]">
                 - Insta to Zora(in beta right now) <br />- Medium to Paragraph{" "}
                 <br />- and much more(TBD)
               </p>
             </div>
           </div>
         </div>
-        <p className="font-zing font-thin text-black text-[80px] sm:text-[120px] md:text-[200px] lg:text-[300px] xl:text-[370px] text-center opacity-5 absolute left-1/2 transform -translate-x-1/2 top-0 sm:top-10 md:top-20 z-0 whitespace-nowrap">
+        <p className="font-zing font-thin text-black text-[120px] sm:text-[180px] md:text-[200px] lg:text-[370px] text-center opacity-5 absolute left-1/2 transform -translate-x-1/2 top-60 sm:top-32 md:top-60 lg:top-20 z-0 whitespace-nowrap">
           Roadmap
         </p>
       </div>

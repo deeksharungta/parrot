@@ -7,8 +7,8 @@ export default function Features() {
       <h3 className="font-zing font-thin text-xl sm:text-2xl text-center mb-6 sm:mb-9">
         Features
       </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10 text-center max-w-7xl mx-auto">
-        <div className="border-black border w-full">
+      <div className="lg:grid flex flex-col lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10 text-center max-w-7xl mx-auto">
+        <div className="border-black border w-full max-w-xs mx-auto">
           <Image
             src="/landing/feature-1.svg"
             alt="Pick"
@@ -24,7 +24,7 @@ export default function Features() {
             control of what you share and when.
           </p>
         </div>
-        <div className="border-black border w-full">
+        <div className="border-black border w-full max-w-xs mx-auto">
           <Image
             src="/landing/feature-2.svg"
             alt="Pick"
@@ -40,7 +40,7 @@ export default function Features() {
             needed. It stops when your allowance runs out.
           </p>
         </div>
-        <div className="border-black border w-full md:col-span-2 lg:col-span-1">
+        <div className="border-black border w-full max-w-xs mx-auto">
           <Image
             src="/landing/feature-3.svg"
             alt="Pick"
