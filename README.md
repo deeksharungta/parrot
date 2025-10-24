@@ -1,72 +1,47 @@
-# XCast - Twitter to Farcaster Bridge
+# XCast
 
 [![Next.js](https://img.shields.io/badge/Next.js-14.2.10-black?logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-18-blue?logo=react)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.3-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
 
-XCast is a powerful Farcaster Mini App that bridges the gap between Twitter and Farcaster, allowing users to seamlessly cross-post their Twitter content to Farcaster. Built with modern web technologies and optimized for mobile-first experiences within Farcaster clients.
+A Farcaster Mini App that enables seamless cross-posting from Twitter to Farcaster. Built with Next.js and optimized for mobile-first experiences within Farcaster clients.
 
-## ✨ Features
+## Features
 
-### 🔗 **Seamless Social Bridge**
+### Core Functionality
 
-- Connect verified Twitter accounts through Farcaster
-- Automatic content synchronization between platforms
-- One-tap cross-posting with smart content adaptation
+- Cross-post Twitter content to Farcaster with one tap
+- Preview and edit tweets before casting
+- Thread support with automatic conversion
+- Channel selection for targeted casting
+- YOLO mode for automatic approval
 
-### 📱 **Mobile-First Design**
+### Platform Integration
 
-- Optimized for mobile viewing in Farcaster clients
-- Responsive UI with Tailwind CSS
-- Smooth animations with Framer Motion
-- Native mobile experience
+- Farcaster authentication via Mini App SDK
+- Neynar API for cast publishing
+- Notion integration for Farcaster username mapping
+- USDC payment system for casting fees (OnchainKit)
 
-### 🔄 **Intelligent Content Management**
+### User Controls
 
-- Real-time monitoring of Twitter activity
-- Automatic tweet fetching and parsing
-- Content preview with edit capabilities
-- Smart content filtering and curation
+- Manual tweet approval workflow
+- Content editing before posting
+- Status tracking (pending, approved, cast, failed)
+- Notification preferences
+- Spending limits and balance management
 
-### ✅ **Advanced Control Features**
-
-- **YOLO Mode**: Auto-approve and cast all tweets
-- **Selective Casting**: Choose which tweets to cast manually
-- **Content Editing**: Modify tweets before casting
-- **Status Tracking**: Monitor cast status (pending, approved, cast, failed)
-
-### 💰 **USDC Integration**
-
-- Built-in USDC payment system for casting fees
-- Spending limits and approval controls
-- Transaction history and balance tracking
-- OnchainKit integration for seamless payments
-
-### 🔔 **Smart Notifications**
-
-- Real-time status updates
-- Customizable notification preferences
-- Success/failure alerts
-- Cast confirmation notifications
-
-### 🛡️ **Security & Privacy**
-
-- Secure authentication via Farcaster
-- Encrypted token storage
-- Rate limiting and abuse prevention
-- Privacy-first data handling
-
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
-- **Node.js** 18+ and npm/yarn
-- **Farcaster Account** with verified Twitter
-- **Supabase Project** (free tier available)
-- **Neynar API Key** ([Get one here](https://neynar.com/)).
+- Node.js 18+ and npm
+- Farcaster account with verified Twitter
+- Supabase project (free tier available)
+- Neynar API key (get one at [neynar.com](https://neynar.com/))
 
-### 1. Clone & Install
+### Installation
 
 ```bash
 git clone https://github.com/yourusername/xcast.git
@@ -74,69 +49,56 @@ cd xcast
 npm install
 ```
 
-### 2. Environment Configuration
+### Environment Setup
 
-Create a `.env.local` file in your project root:
+Create a `.env.local` file:
 
 ```bash
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key_here
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
-# Neynar API Configuration
-NEXT_PUBLIC_NEYNAR_CLIENT_ID=your_neynar_client_id_here
-NEYNAR_API_KEY=your_neynar_api_key_here
+# Neynar
+NEXT_PUBLIC_NEYNAR_CLIENT_ID=your_neynar_client_id
+NEYNAR_API_KEY=your_neynar_api_key
 
-# Optional: Twitter API (for production usage)
-TWITTER_BEARER_TOKEN=your_twitter_bearer_token_here
-TWITTER_API_KEY=your_twitter_api_key_here
-TWITTER_API_SECRET=your_twitter_api_secret_here
+# Notion (optional - for username mapping)
+NOTION_API_KEY=your_notion_api_key
+NOTION_DATABASE_ID=your_notion_database_id
 
-# Redis Configuration (Optional - for caching)
-UPSTASH_REDIS_REST_URL=your_redis_url_here
-UPSTASH_REDIS_REST_TOKEN=your_redis_token_here
+# Redis (optional - for caching)
+UPSTASH_REDIS_REST_URL=your_redis_url
+UPSTASH_REDIS_REST_TOKEN=your_redis_token
+
+# Analytics (optional)
+NEXT_PUBLIC_POSTHOG_KEY=your_posthog_key
+NEXT_PUBLIC_POSTHOG_HOST=your_posthog_host
 ```
 
-### 3. Database Setup
+### Database Setup
 
-Set up your Supabase database with the required tables:
-
-#### Users Table
+Run these SQL commands in your Supabase SQL editor:
 
 ```sql
+-- Users table
 CREATE TABLE users (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  twitter_id TEXT,
-  twitter_username TEXT,
-  twitter_display_name TEXT,
-  twitter_access_token TEXT,
-  twitter_refresh_token TEXT,
-  twitter_connected_at TIMESTAMP WITH TIME ZONE,
   farcaster_fid INTEGER UNIQUE,
   farcaster_username TEXT,
   farcaster_display_name TEXT,
   neynar_signer_uuid TEXT,
-  farcaster_connected_at TIMESTAMP WITH TIME ZONE,
   yolo_mode BOOLEAN DEFAULT FALSE,
   notifications_enabled BOOLEAN DEFAULT TRUE,
-  auto_approve BOOLEAN DEFAULT FALSE,
-  usdc_balance NUMERIC DEFAULT 0,
-  total_spent NUMERIC DEFAULT 0,
   spending_approved BOOLEAN DEFAULT FALSE,
   spending_limit NUMERIC DEFAULT 0
 );
 
--- Add indexes for performance
 CREATE INDEX idx_users_farcaster_fid ON users(farcaster_fid);
-CREATE INDEX idx_users_twitter_username ON users(twitter_username);
-```
 
-#### Tweets Table
-
-```sql
+-- Tweets table
 CREATE TABLE tweets (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -147,59 +109,39 @@ CREATE TABLE tweets (
   original_content TEXT,
   twitter_url TEXT,
   twitter_created_at TIMESTAMP WITH TIME ZONE,
-  cast_status TEXT DEFAULT 'pending' CHECK (cast_status IN ('pending', 'approved', 'rejected', 'cast', 'failed')),
+  cast_status TEXT DEFAULT 'pending',
   cast_hash TEXT,
   cast_url TEXT,
   cast_created_at TIMESTAMP WITH TIME ZONE,
-  cast_price NUMERIC DEFAULT 0,
-  payment_approved BOOLEAN DEFAULT FALSE,
-  payment_processed BOOLEAN DEFAULT FALSE,
   is_edited BOOLEAN DEFAULT FALSE,
-  edit_count INTEGER DEFAULT 0,
   auto_cast BOOLEAN DEFAULT FALSE
 );
 
--- Add indexes for performance
 CREATE INDEX idx_tweets_user_id ON tweets(user_id);
-CREATE INDEX idx_tweets_twitter_id ON tweets(twitter_id);
 CREATE INDEX idx_tweets_cast_status ON tweets(cast_status);
-CREATE INDEX idx_tweets_created_at ON tweets(created_at DESC);
 ```
 
-### 4. Development
+### Development
 
 ```bash
 npm run dev
 ```
 
-Visit `http://localhost:3000` to see your app running locally..
+Open `http://localhost:3000` in your browser.
 
-## 🏗️ Architecture
+## Tech Stack
 
-### Tech Stack
-
-- **Frontend**: Next.js 14, React 18, TypeScript
-- **Styling**: Tailwind CSS, Framer Motion
-- **Backend**: Next.js API Routes
+- **Framework**: Next.js 14 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
 - **Database**: Supabase (PostgreSQL)
-- **Authentication**: Farcaster Frame SDK, Neynar
+- **Authentication**: Farcaster Mini App SDK
+- **Farcaster API**: Neynar SDK
 - **Blockchain**: OnchainKit, Wagmi, Viem
 - **State Management**: React Query, SWR
-- **Caching**: Upstash Redis (optional)
-
-### Key Dependencies
-
-```json
-{
-  "@farcaster/frame-sdk": "Frame integration",
-  "@neynar/react": "Farcaster API wrapper",
-  "@coinbase/onchainkit": "Blockchain utilities",
-  "@supabase/supabase-js": "Database client",
-  "@tanstack/react-query": "Data fetching",
-  "framer-motion": "Animations",
-  "lucide-react": "Icons"
-}
-```
+- **Animation**: Framer Motion
+- **Analytics**: PostHog
+- **Monitoring**: Sentry
 
 ### Project Structure
 
@@ -400,8 +342,3 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - [ ] **API Webhooks**: Third-party integrations
 
 ---
-
-<div align="center">
-  <strong>Built with ❤️ for the Farcaster ecosystem</strong>
-</div>
-
