@@ -6,6 +6,14 @@ const nextConfig = {
   // https://github.com/WalletConnect/walletconnect-monorepo/issues/1908
   webpack: (config) => {
     config.externals.push("pino-pretty", "lokijs", "encoding");
+
+    // Configure SVGR to import SVGs as React components
+    config.module.rules.push({
+      test: /\.svg$/i,
+      issuer: /\.[jt]sx?$/,
+      use: ["@svgr/webpack"],
+    });
+
     return config;
   },
   images: {
