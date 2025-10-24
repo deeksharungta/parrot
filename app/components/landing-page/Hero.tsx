@@ -6,7 +6,7 @@ export default function Hero() {
   return (
     <>
       {/* Hero Banner */}
-      <div className="w-full max-w-[1392px] h-[300px] sm:h-[400px] md:h-[500px] lg:h-[635px] relative mx-auto mt-4 sm:mt-6 rounded-2xl sm:rounded-3xl overflow-hidden">
+      <div className="w-full max-w-[1392px] h-[640px] sm:h-[400px] md:h-[500px] lg:h-[635px] relative mx-auto mt-4 sm:mt-6 rounded-2xl sm:rounded-3xl overflow-hidden">
         <Image
           src="/landing/header-title.svg"
           alt="Parrot"
@@ -21,7 +21,7 @@ export default function Hero() {
         >
           Try Mini App
         </Link>
-        <p className="font-zing font-thin text-lg sm:text-xl md:text-2xl lg:text-[32px] absolute top-20 sm:top-28 md:top-36 lg:top-40 left-1/2 transform -translate-x-1/2 z-10 text-white text-shadow-white text-center tracking-[-7%] px-4">
+        <p className="font-zing font-thin text-lg sm:text-xl md:text-2xl lg:text-[32px] absolute  top-60 xs:top-40 sm:top-28 md:top-36 lg:top-40 left-1/2 transform -translate-x-1/2 z-10 text-white text-shadow-white text-center tracking-[-7%] px-4 whitespace-nowrap">
           Make your posts work for you
         </p>
         <Image
@@ -29,14 +29,21 @@ export default function Hero() {
           alt="Hero"
           width={1276}
           height={691}
-          className="absolute bottom-0 left-1/2 transform -translate-x-1/2 z-10 w-[600px] sm:w-[800px] md:w-[1000px] lg:w-[1276px]"
+          className="absolute  hidden md:block md:bottom-0 left-1/2 transform -translate-x-1/2 z-10 w-[600px] sm:w-[400px] md:w-[800px] lg:w-[1276px]"
+        />
+        <Image
+          src="/landing/parrot-title-2.svg"
+          alt="Hero"
+          width={1276}
+          height={691}
+          className="absolute top-60 sm:top-20 md:hidden left-1/2 transform -translate-x-1/2 z-10 xs:w-[500px] sm:w-[600px] md:w-[800px] lg:w-[1276px]"
         />
         <Image
           src="/landing/parrot.svg"
           alt="Hero"
           width={400}
           height={400}
-          className="absolute top-32 sm:top-40 md:top-48 lg:top-56 left-1/2 transform -translate-x-1/2 z-10 w-40 sm:w-56 md:w-80 lg:w-[400px]"
+          className="absolute hidden md:block top-32 sm:top-40 md:top-48 lg:top-64 xl:top-56 left-1/2 transform -translate-x-1/2 z-10 w-40 sm:w-56 md:w-80 lg:w-[400px]"
         />
         <Image
           src="/landing/cloud-1.svg"
@@ -72,7 +79,7 @@ export default function Hero() {
         <p className="text-black-v1 font-zing font-thin text-xl sm:text-2xl">
           Internet Distribution Market
         </p>
-        <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 font-serif text-black-v2 text-sm font-normal">
+        <div className="grid gap-3 grid-cols-1 md:grid-cols-3 lg:grid-cols-3 font-serif text-black-v2 text-sm font-normal">
           <p>
             Parrot is built on a simple thesis: distribution isn&apos;t just a
             channel, it&apos;s a market. As content spreads across Twitter,
