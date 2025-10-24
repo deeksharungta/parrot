@@ -1,10 +1,56 @@
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 export default function Hero() {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 100);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
     <>
+      {/* Sticky Navbar */}
+      <div
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-2 sm:px-3 md:px-4 ${
+          isScrolled
+            ? "translate-y-0 opacity-100"
+            : "-translate-y-full opacity-0"
+        }`}
+      >
+        <div className="relative h-14 sm:h-16 overflow-hidden rounded-full mt-2 max-w-[1440px] mx-auto shadow-lg">
+          {/* Background Image */}
+          <Image
+            src="/landing/header-bg.svg"
+            alt="Navbar Background"
+            fill
+            className="object-cover"
+          />
+          {/* Parrot Logo */}
+          <Image
+            src="/landing/header-title.svg"
+            alt="Parrot"
+            width={120}
+            height={58}
+            className="absolute top-1/2 -translate-y-1/2 left-4 sm:left-6 md:left-8 z-10 w-16 h-8 sm:w-20 sm:h-10 md:w-[100px] md:h-[48px]"
+          />
+          {/* Try Mini App Button */}
+          <Link
+            target="_blank"
+            href="https://farcaster.xyz/miniapps/wttQ9mMjERiS/parrot-for-x"
+            className="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 md:right-8 font-zing font-thin text-xs sm:text-sm uppercase text-black text-shadow-white z-50 bg-white rounded-full px-4 py-2 pt-3 hover:bg-gray-100 transition-colors"
+          >
+            Try Mini App
+          </Link>
+        </div>
+      </div>
+
       {/* Hero Banner */}
       <div className="w-full max-w-[1392px] h-[640px] sm:h-[400px] md:h-[500px] lg:h-[635px] relative mx-auto mt-4 sm:mt-6 rounded-2xl sm:rounded-3xl overflow-hidden">
         <Image
