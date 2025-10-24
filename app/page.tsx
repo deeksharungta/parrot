@@ -78,22 +78,22 @@ export default function HomePage() {
   }
 
   return (
-    <motion.div
-      className="flex flex-col items-center justify-start h-screen overflow-hidden relative"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
+    <>
       {isMiniApp ? (
         // Mini App version - show the full app
-        <>
+        <motion.div
+          className="flex flex-col items-center justify-start h-screen overflow-hidden relative"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
           <WelcomeCard />
           <UserProfiles />
-        </>
+        </motion.div>
       ) : (
         // Web version - show open mini app prompt
         <LandingPage />
       )}
-    </motion.div>
+    </>
   );
 }

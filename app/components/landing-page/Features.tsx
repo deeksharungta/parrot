@@ -19,7 +19,7 @@ export default function Features() {
           <h4 className="font-serif text-2xl sm:text-3xl lg:text-[32px] mt-4 sm:mt-6 px-4">
             Pick and cast.
           </h4>
-          <p className="font-serif font-normal text-sm mb-4 sm:mb-6 px-4">
+          <p className="font-serif font-normal text-sm mb-4 sm:mb-6 px-4 max-w-xs mx-auto">
             Choose your favorite posts and cast them instantly on FC. Stay in
             control of what you share and when.
           </p>
@@ -35,7 +35,7 @@ export default function Features() {
           <h4 className="font-serif text-2xl sm:text-3xl lg:text-[32px] mt-4 sm:mt-6 px-4">
             YOLO mode.
           </h4>
-          <p className="font-serif font-normal text-sm mb-4 sm:mb-6 px-4">
+          <p className="font-serif font-normal text-sm mb-4 sm:mb-6 px-4 max-w-xs mx-auto">
             Turn on auto-cast and let the system post for you—no approvals
             needed. It stops when your allowance runs out.
           </p>
@@ -51,7 +51,7 @@ export default function Features() {
           <h4 className="font-serif text-2xl sm:text-3xl lg:text-[32px] mt-4 sm:mt-6 px-4">
             Micropayments.
           </h4>
-          <p className="font-serif font-normal text-sm mb-4 sm:mb-6 px-4">
+          <p className="font-serif font-normal text-sm mb-4 sm:mb-6 px-4 max-w-xs mx-auto">
             Monitor your earnings and reach across all supported platforms in
             one place.
           </p>

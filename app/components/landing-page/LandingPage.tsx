@@ -7,7 +7,7 @@ import Footer from "./Footer";
 
 export default function LandingPage() {
   return (
-    <div className="max-w-[1440px] mx-auto w-full">
+    <div className="max-w-[1440px] mx-auto w-full px-4">
       <Hero />
       <Features />
       <Roadmap />
