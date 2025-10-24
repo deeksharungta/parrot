@@ -17,9 +17,9 @@ export default function Hero() {
         <Link
           target="_blank"
           href="https://farcaster.xyz/miniapps/wttQ9mMjERiS/parrot-for-x"
-          className="absolute top-3 right-3 sm:top-6 sm:right-6 font-zing font-thin text-xs sm:text-sm uppercase text-white text-shadow-white z-50"
+          className="absolute top-3 right-3 sm:top-6 sm:right-6 font-zing font-thin text-xs sm:text-sm uppercase text-black text-shadow-white z-50 bg-white rounded-full px-4 py-2 pt-3"
         >
-          Open Mini App
+          Try Mini App
         </Link>
         <p className="font-zing font-thin text-lg sm:text-xl md:text-2xl lg:text-[32px] absolute top-20 sm:top-28 md:top-36 lg:top-40 left-1/2 transform -translate-x-1/2 z-10 text-white text-shadow-white text-center tracking-[-7%] px-4">
           Make your posts work for you
