@@ -100,7 +100,7 @@ export default function Roadmap() {
             </div>
           </div>
         </div>
-        <p className="font-zing font-thin text-black text-[120px] sm:text-[180px] md:text-[200px] lg:text-[370px] text-center opacity-5 absolute left-1/2 transform -translate-x-1/2 top-60 sm:top-32 md:top-60 lg:top-20 z-0 whitespace-nowrap">
+        <p className="font-zing font-thin text-black text-[86px] sm:text-[180px] md:text-[200px] lg:text-[370px] text-center opacity-5 absolute left-1/2 transform -translate-x-1/2 top-56 sm:top-32 md:top-60 lg:top-20 z-0 whitespace-nowrap">
           Roadmap
         </p>
       </div>

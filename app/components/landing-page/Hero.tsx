@@ -186,7 +186,7 @@ export default function Hero() {
         alt="Hero Tagline"
         width={1150}
         height={1150}
-        className="w-full h-auto mx-auto my-12 sm:my-16 md:my-20 lg:my-24 px-4 sm:px-6"
+        className="w-full h-auto mx-auto my-12 sm:my-16 md:my-20 lg:my-24 px-0 sm:px-6"
         loading="lazy"
         quality={90}
       />
