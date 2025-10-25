@@ -170,11 +170,11 @@ export default function Hero() {
 
       {/* Hero Tagline Section */}
       <Image
-        src="/landing/hero-tagline.svg"
+        src="/landing/hero-tagline.webp"
         alt="Hero Tagline"
         width={1150}
         height={1150}
-        className="w-full h-auto mx-auto my-12 sm:my-16 md:my-20 lg:my-24 px-4 sm:px-6"
+        className="w-full h-auto mx-auto my-12 sm:my-16 md:my-20 lg:my-24 px-0 sm:px-6"
         unoptimized
       />
       {/* <p className="text-black-v1 max-w-[1150px] mx-auto font-zing font-thin text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[90px] leading-tight lg:leading-none tracking-[-0.15px] text-center my-12 sm:my-16 md:my-20 lg:my-24 px-4 sm:px-6">
