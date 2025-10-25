@@ -1,18 +1,18 @@
 import Image from "next/image";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, memo } from "react";
 
-export default function Hero() {
+function Hero() {
   const [isScrolled, setIsScrolled] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 100);
-    };
+  const handleScroll = useCallback(() => {
+    setIsScrolled(window.scrollY > 100);
+  }, []);
 
+  useEffect(() => {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [handleScroll]);
 
   return (
     <>
@@ -27,7 +27,7 @@ export default function Hero() {
         <div className="relative h-14 sm:h-16 overflow-hidden rounded-full mt-2 max-w-[1440px] mx-auto shadow-lg">
           {/* Background Image */}
           <Image
-            src="/landing/header-bg.svg"
+            src="/landing/header-bg.webp"
             alt="Navbar Background"
             fill
             className="object-cover"
@@ -287,3 +287,5 @@ export default function Hero() {
     </>
   );
 }
+
+export default memo(Hero);
