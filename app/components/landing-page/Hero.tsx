@@ -1,18 +1,18 @@
 import Image from "next/image";
 import Link from "next/link";
-import React, { useEffect, useState, useCallback, memo } from "react";
+import React, { useEffect, useState } from "react";
 
-function Hero() {
+export default function Hero() {
   const [isScrolled, setIsScrolled] = useState(false);
 
-  const handleScroll = useCallback(() => {
-    setIsScrolled(window.scrollY > 100);
-  }, []);
-
   useEffect(() => {
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 100);
+    };
+
+    window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
+  }, []);
 
   return (
     <>
@@ -27,25 +27,19 @@ function Hero() {
         <div className="relative h-14 sm:h-16 overflow-hidden rounded-full mt-2 max-w-[1440px] mx-auto shadow-lg">
           {/* Background Image */}
           <Image
-            src="/landing/header-bg.webp"
+            src="/landing/header-bg.svg"
             alt="Navbar Background"
             fill
             className="object-cover"
-            priority={isScrolled}
-            loading={isScrolled ? "eager" : "lazy"}
-            quality={90}
             unoptimized
           />
           {/* Parrot Logo */}
           <Image
-            src="/landing/header-title.webp"
+            src="/landing/header-title.svg"
             alt="Parrot"
             width={120}
             height={58}
             className="absolute top-1/2 -translate-y-1/2 left-4 sm:left-6 md:left-8 z-10 w-16 h-8 sm:w-20 sm:h-10 md:w-[100px] md:h-[48px]"
-            priority={isScrolled}
-            loading={isScrolled ? "eager" : "lazy"}
-            quality={90}
             unoptimized
           />
           {/* Try Mini App Button */}
@@ -62,13 +56,11 @@ function Hero() {
       {/* Hero Banner */}
       <div className="w-full max-w-[1392px] h-[640px] sm:h-[400px] md:h-[500px] lg:h-[635px] relative mx-auto mt-4 sm:mt-6 rounded-2xl sm:rounded-3xl overflow-hidden">
         <Image
-          src="/landing/header-title.webp"
+          src="/landing/header-title.svg"
           alt="Parrot"
           width={120}
           height={58}
           className="absolute top-2 left-2 sm:top-4 sm:left-4 z-10 w-16 h-8 sm:w-20 sm:h-10 md:w-[120px] md:h-[58px]"
-          priority
-          quality={90}
           unoptimized
         />
         <Link
@@ -82,72 +74,58 @@ function Hero() {
           Make your posts work for you
         </p>
         <Image
-          src="/landing/parrot-title.webp"
+          src="/landing/parrot-title.svg"
           alt="Hero"
           width={1276}
           height={691}
           className="absolute  hidden md:block md:bottom-0 left-1/2 transform -translate-x-1/2 z-10 w-[600px] sm:w-[400px] md:w-[800px] lg:w-[1276px]"
-          priority
-          quality={90}
           unoptimized
         />
         <Image
-          src="/landing/parrot-title-2.webp"
+          src="/landing/parrot-title-2.svg"
           alt="Hero"
           width={1276}
           height={691}
           className="absolute top-60 sm:top-20 md:hidden left-1/2 transform -translate-x-1/2 z-10 xs:w-[500px] sm:w-[600px] md:w-[800px] lg:w-[1276px]"
-          priority
-          quality={90}
           unoptimized
         />
         <Image
-          src="/landing/parrot.webp"
+          src="/landing/parrot.svg"
           alt="Hero"
           width={400}
           height={400}
           className="absolute hidden md:block top-32 sm:top-40 md:top-48 lg:top-64 xl:top-56 left-1/2 transform -translate-x-1/2 z-10 w-40 sm:w-56 md:w-80 lg:w-[400px]"
-          priority
-          quality={90}
           unoptimized
         />
         <Image
-          src="/landing/cloud-1.webp"
+          src="/landing/cloud-1.svg"
           alt="Hero"
           width={400}
           height={400}
           className="absolute top-32 sm:top-40 md:top-48 lg:top-56 -left-10 sm:-left-16 lg:-left-20 z-20 w-40 sm:w-56 md:w-80 lg:w-[400px] hidden sm:block"
-          loading="lazy"
-          quality={85}
           unoptimized
         />
         <Image
-          src="/landing/cloud-2.webp"
+          src="/landing/cloud-2.svg"
           alt="Hero"
           width={676}
           height={327}
           className="absolute top-0 -right-20 sm:-right-32 md:-right-48 lg:-right-60 z-10 w-80 sm:w-[450px] md:w-[550px] lg:w-[676px] hidden md:block"
-          loading="lazy"
-          quality={85}
           unoptimized
         />
         <Image
-          src="/landing/cloud-3.webp"
+          src="/landing/cloud-3.svg"
           alt="Hero"
           width={674}
           height={326}
           className="absolute -bottom-0 right-0 z-20 w-80 sm:w-[450px] md:w-[550px] lg:w-[674px] hidden md:block"
-          loading="lazy"
-          quality={85}
           unoptimized
         />
         <Image
-          src="/landing/header-bg.webp"
+          src="/landing/header-bg.svg"
           alt="Hero"
           fill
           className="object-cover object-bottom"
-          priority
-          quality={90}
           unoptimized
         />
       </div>
@@ -192,13 +170,11 @@ function Hero() {
 
       {/* Hero Tagline Section */}
       <Image
-        src="/landing/hero-tagline.webp"
+        src="/landing/hero-tagline.svg"
         alt="Hero Tagline"
         width={1150}
         height={1150}
-        className="w-full h-auto mx-auto my-12 sm:my-16 md:my-20 lg:my-24 px-0 sm:px-6"
-        loading="lazy"
-        quality={90}
+        className="w-full h-auto mx-auto my-12 sm:my-16 md:my-20 lg:my-24 px-4 sm:px-6"
         unoptimized
       />
       {/* <p className="text-black-v1 max-w-[1150px] mx-auto font-zing font-thin text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[90px] leading-tight lg:leading-none tracking-[-0.15px] text-center my-12 sm:my-16 md:my-20 lg:my-24 px-4 sm:px-6">
@@ -287,5 +263,3 @@ function Hero() {
     </>
   );
 }
-
-export default memo(Hero);
