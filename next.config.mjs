@@ -6,9 +6,9 @@ const nextConfig = {
   reactStrictMode: false, // Disable strict mode to prevent double-renders in production
   swcMinify: true,
   compress: true,
-  experimental: {
-    optimizeCss: true,
-  },
+  // experimental: {
+  //   optimizeCss: false, // Disable CSS optimization to avoid critters dependency
+  // },
 
   // Silence warnings
   // https://github.com/WalletConnect/walletconnect-monorepo/issues/1908
