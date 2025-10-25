@@ -30,14 +30,23 @@ const strictRatelimit = redis
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
 
-  // Add security headers
-  addSecurityHeaders(response);
+  // Skip middleware for static assets to allow proper caching
+  const pathname = request.nextUrl.pathname;
+  const isStaticAsset =
+    pathname.startsWith("/_next/static") ||
+    pathname.startsWith("/_next/image") ||
+    pathname.match(/\.(svg|jpg|jpeg|png|webp|gif|ico)$/);
 
-  // Apply rate limiting
-  if (ratelimit && request.nextUrl.pathname.startsWith("/api/")) {
-    const rateLimitResult = await applyRateLimit(request);
-    if (rateLimitResult) {
-      return rateLimitResult;
+  if (!isStaticAsset) {
+    // Add security headers
+    addSecurityHeaders(response);
+
+    // Apply rate limiting
+    if (ratelimit && pathname.startsWith("/api/")) {
+      const rateLimitResult = await applyRateLimit(request);
+      if (rateLimitResult) {
+        return rateLimitResult;
+      }
     }
   }
 
@@ -132,8 +141,7 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public (public files)
      */
-    "/((?!_next/static|_next/image|favicon.ico|public/).*)",
+    "/((?!_next/static|_next/image|favicon|.*\\.(?:svg|jpg|jpeg|png|webp|gif|ico)).*)",
   ],
 };
