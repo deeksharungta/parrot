@@ -2,6 +2,11 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Optimize for production
+  reactStrictMode: false, // Disable strict mode to prevent double-renders in production
+  swcMinify: true,
+  compress: true,
+
   // Silence warnings
   // https://github.com/WalletConnect/walletconnect-monorepo/issues/1908
   webpack: (config) => {
@@ -28,6 +33,9 @@ const nextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     formats: ["image/webp"],
     minimumCacheTTL: 31536000, // 1 year cache for static images
+    unoptimized: false, // Keep optimization enabled
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
   async headers() {
     return [

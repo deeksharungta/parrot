@@ -28,6 +28,7 @@ export default function Roadmap() {
           className="w-8 h-8 sm:w-10 sm:h-10 md:w-[46px] md:h-[46px]"
           loading="lazy"
           quality={90}
+          unoptimized
         />
         <Image
           src="/landing/parrot-still.webp"
@@ -37,6 +38,7 @@ export default function Roadmap() {
           className="scale-x-[-1] -ml-1 w-8 h-8 sm:w-10 sm:h-10 md:w-[46px] md:h-[46px]"
           loading="lazy"
           quality={90}
+          unoptimized
         />
       </div>
       <div className="h-[1px] bg-black w-16 sm:w-20 md:w-24 mx-auto -mt-1" />
@@ -61,6 +63,7 @@ export default function Roadmap() {
                 className="absolute -top-3 -left-3 rotate-[5.29deg] w-16 sm:w-20 md:w-[81px] h-auto"
                 loading="lazy"
                 quality={85}
+                unoptimized
               />
               <p className="font-zing font-thin text-black text-lg sm:text-xl md:text-2xl absolute top-5 sm:top-7 left-6 sm:left-8 md:left-10 rotate-[2.25deg]">
                 Now
@@ -89,6 +92,7 @@ export default function Roadmap() {
                 className="absolute -top-3 -left-3 w-16 sm:w-20 md:w-[81px] h-auto"
                 loading="lazy"
                 quality={85}
+                unoptimized
               />
               <p className="font-zing font-thin text-black text-lg sm:text-xl md:text-2xl absolute top-6 sm:top-8 md:top-9 left-6 sm:left-8 md:left-10 -rotate-[3.24deg]">
                 Future

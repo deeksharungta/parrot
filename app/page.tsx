@@ -14,13 +14,16 @@ export default function HomePage() {
   const [sdkReady, setSdkReady] = useState(false);
   const [isMiniApp, setIsMiniApp] = useState<boolean | null>(null);
 
-  // Track page view
+  // Track page view - only once on mount
   useEffect(() => {
-    analytics.trackPageView("home", {
-      is_mini_app: isMiniApp,
-      user_fid: context?.user?.fid,
-    });
-  }, [isMiniApp, context?.user?.fid]);
+    if (isMiniApp !== null) {
+      analytics.trackPageView("home", {
+        is_mini_app: isMiniApp,
+        user_fid: context?.user?.fid,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const initializeSDK = async () => {
@@ -63,7 +66,7 @@ export default function HomePage() {
         console.error("Failed to add mini app:", error);
       });
     }
-  }, [context?.client.added, sdkReady, isMiniApp]);
+  }, [context?.client?.added, sdkReady, isMiniApp, context]);
 
   // Show loading state while we determine the app type
   if (isMiniApp === null) {

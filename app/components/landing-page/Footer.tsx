@@ -16,6 +16,7 @@ export default function Footer() {
           className="w-full h-auto"
           loading="lazy"
           quality={90}
+          unoptimized
         />
         <Image
           src="/landing/parrot-still.webp"
@@ -25,6 +26,7 @@ export default function Footer() {
           className="absolute -bottom-14 sm:-bottom-24 md:-bottom-48 lg:-bottom-56 right-2 sm:right-4 md:right-6 lg:right-10 w-40 h-40 sm:w-64 sm:h-64 md:w-96 md:h-96 lg:w-[534px] lg:h-[534px]"
           loading="lazy"
           quality={90}
+          unoptimized
         />
       </div>
     </div>
