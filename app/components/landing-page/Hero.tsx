@@ -35,7 +35,7 @@ export default function Hero() {
           />
           {/* Parrot Logo */}
           <Image
-            src="/landing/header-title.svg"
+            src="/landing/header-title.webp"
             alt="Parrot"
             width={120}
             height={58}
@@ -56,7 +56,7 @@ export default function Hero() {
       {/* Hero Banner */}
       <div className="w-full max-w-[1392px] h-[640px] sm:h-[400px] md:h-[500px] lg:h-[635px] relative mx-auto mt-4 sm:mt-6 rounded-2xl sm:rounded-3xl overflow-hidden">
         <Image
-          src="/landing/header-title.svg"
+          src="/landing/header-title.webp"
           alt="Parrot"
           width={120}
           height={58}
@@ -74,7 +74,7 @@ export default function Hero() {
           Make your posts work for you
         </p>
         <Image
-          src="/landing/parrot-title.svg"
+          src="/landing/parrot-title.webp"
           alt="Hero"
           width={1276}
           height={691}
@@ -82,7 +82,7 @@ export default function Hero() {
           unoptimized
         />
         <Image
-          src="/landing/parrot-title-2.svg"
+          src="/landing/parrot-title-2.webp"
           alt="Hero"
           width={1276}
           height={691}
@@ -90,7 +90,7 @@ export default function Hero() {
           unoptimized
         />
         <Image
-          src="/landing/parrot.svg"
+          src="/landing/parrot.webp"
           alt="Hero"
           width={400}
           height={400}
@@ -98,7 +98,7 @@ export default function Hero() {
           unoptimized
         />
         <Image
-          src="/landing/cloud-1.svg"
+          src="/landing/cloud-1.webp"
           alt="Hero"
           width={400}
           height={400}
@@ -106,7 +106,7 @@ export default function Hero() {
           unoptimized
         />
         <Image
-          src="/landing/cloud-2.svg"
+          src="/landing/cloud-2.webp"
           alt="Hero"
           width={676}
           height={327}
@@ -114,7 +114,7 @@ export default function Hero() {
           unoptimized
         />
         <Image
-          src="/landing/cloud-3.svg"
+          src="/landing/cloud-3.webp"
           alt="Hero"
           width={674}
           height={326}
