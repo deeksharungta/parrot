@@ -15,7 +15,8 @@ export default function Features() {
             width={424}
             height={415}
             className="w-full h-auto"
-            unoptimized
+            loading="lazy"
+            quality={90}
           />
           <h4 className="font-serif text-2xl sm:text-3xl lg:text-[32px] mt-4 sm:mt-6 px-4">
             Pick and cast.
@@ -32,7 +33,8 @@ export default function Features() {
             width={424}
             height={415}
             className="w-full h-auto"
-            unoptimized
+            loading="lazy"
+            quality={90}
           />
           <h4 className="font-serif text-2xl sm:text-3xl lg:text-[32px] mt-4 sm:mt-6 px-4">
             YOLO mode.
@@ -49,7 +51,8 @@ export default function Features() {
             width={424}
             height={415}
             className="w-full h-auto"
-            unoptimized
+            loading="lazy"
+            quality={90}
           />
           <h4 className="font-serif text-2xl sm:text-3xl lg:text-[32px] mt-4 sm:mt-6 px-4">
             Micropayments.

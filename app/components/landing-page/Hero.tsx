@@ -31,7 +31,9 @@ export default function Hero() {
             alt="Navbar Background"
             fill
             className="object-cover"
-            unoptimized
+            priority={isScrolled}
+            loading={isScrolled ? "eager" : "lazy"}
+            quality={90}
           />
           {/* Parrot Logo */}
           <Image
@@ -40,7 +42,9 @@ export default function Hero() {
             width={120}
             height={58}
             className="absolute top-1/2 -translate-y-1/2 left-4 sm:left-6 md:left-8 z-10 w-16 h-8 sm:w-20 sm:h-10 md:w-[100px] md:h-[48px]"
-            unoptimized
+            priority={isScrolled}
+            loading={isScrolled ? "eager" : "lazy"}
+            quality={90}
           />
           {/* Try Mini App Button */}
           <Link
@@ -61,7 +65,8 @@ export default function Hero() {
           width={120}
           height={58}
           className="absolute top-2 left-2 sm:top-4 sm:left-4 z-10 w-16 h-8 sm:w-20 sm:h-10 md:w-[120px] md:h-[58px]"
-          unoptimized
+          priority
+          quality={90}
         />
         <Link
           target="_blank"
@@ -79,7 +84,8 @@ export default function Hero() {
           width={1276}
           height={691}
           className="absolute  hidden md:block md:bottom-0 left-1/2 transform -translate-x-1/2 z-10 w-[600px] sm:w-[400px] md:w-[800px] lg:w-[1276px]"
-          unoptimized
+          priority
+          quality={90}
         />
         <Image
           src="/landing/parrot-title-2.webp"
@@ -87,7 +93,8 @@ export default function Hero() {
           width={1276}
           height={691}
           className="absolute top-60 sm:top-20 md:hidden left-1/2 transform -translate-x-1/2 z-10 xs:w-[500px] sm:w-[600px] md:w-[800px] lg:w-[1276px]"
-          unoptimized
+          priority
+          quality={90}
         />
         <Image
           src="/landing/parrot.webp"
@@ -95,7 +102,8 @@ export default function Hero() {
           width={400}
           height={400}
           className="absolute hidden md:block top-32 sm:top-40 md:top-48 lg:top-64 xl:top-56 left-1/2 transform -translate-x-1/2 z-10 w-40 sm:w-56 md:w-80 lg:w-[400px]"
-          unoptimized
+          priority
+          quality={90}
         />
         <Image
           src="/landing/cloud-1.webp"
@@ -103,7 +111,8 @@ export default function Hero() {
           width={400}
           height={400}
           className="absolute top-32 sm:top-40 md:top-48 lg:top-56 -left-10 sm:-left-16 lg:-left-20 z-20 w-40 sm:w-56 md:w-80 lg:w-[400px] hidden sm:block"
-          unoptimized
+          loading="lazy"
+          quality={85}
         />
         <Image
           src="/landing/cloud-2.webp"
@@ -111,7 +120,8 @@ export default function Hero() {
           width={676}
           height={327}
           className="absolute top-0 -right-20 sm:-right-32 md:-right-48 lg:-right-60 z-10 w-80 sm:w-[450px] md:w-[550px] lg:w-[676px] hidden md:block"
-          unoptimized
+          loading="lazy"
+          quality={85}
         />
         <Image
           src="/landing/cloud-3.webp"
@@ -119,14 +129,16 @@ export default function Hero() {
           width={674}
           height={326}
           className="absolute -bottom-0 right-0 z-20 w-80 sm:w-[450px] md:w-[550px] lg:w-[674px] hidden md:block"
-          unoptimized
+          loading="lazy"
+          quality={85}
         />
         <Image
           src="/landing/header-bg.webp"
           alt="Hero"
           fill
           className="object-cover object-bottom"
-          unoptimized
+          priority
+          quality={90}
         />
       </div>
 
@@ -175,7 +187,8 @@ export default function Hero() {
         width={1150}
         height={1150}
         className="w-full h-auto mx-auto my-12 sm:my-16 md:my-20 lg:my-24 px-4 sm:px-6"
-        unoptimized
+        loading="lazy"
+        quality={90}
       />
       {/* <p className="text-black-v1 max-w-[1150px] mx-auto font-zing font-thin text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[90px] leading-tight lg:leading-none tracking-[-0.15px] text-center my-12 sm:my-16 md:my-20 lg:my-24 px-4 sm:px-6">
         Connect your{" "}

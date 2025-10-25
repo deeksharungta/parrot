@@ -26,6 +26,21 @@ const nextConfig = {
     dangerouslyAllowSVG: true,
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    formats: ["image/webp"],
+    minimumCacheTTL: 31536000, // 1 year cache for static images
+  },
+  async headers() {
+    return [
+      {
+        source: "/landing/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+    ];
   },
 };
 
