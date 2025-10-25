@@ -10,7 +10,7 @@ export default function Features() {
       <div className="lg:grid flex flex-col lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10 text-center max-w-7xl mx-auto">
         <div className="border-black border w-full max-w-xs mx-auto">
           <Image
-            src="/landing/feature-1.svg"
+            src="/landing/feature-1.webp"
             alt="Pick"
             width={424}
             height={415}
@@ -27,7 +27,7 @@ export default function Features() {
         </div>
         <div className="border-black border w-full max-w-xs mx-auto">
           <Image
-            src="/landing/feature-2.svg"
+            src="/landing/feature-2.webp"
             alt="Pick"
             width={424}
             height={415}
@@ -44,7 +44,7 @@ export default function Features() {
         </div>
         <div className="border-black border w-full max-w-xs mx-auto">
           <Image
-            src="/landing/feature-3.svg"
+            src="/landing/feature-3.webp"
             alt="Pick"
             width={424}
             height={415}

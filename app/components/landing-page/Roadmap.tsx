@@ -21,7 +21,7 @@ export default function Roadmap() {
       </p>
       <div className="flex items-center justify-center gap-0 mt-2">
         <Image
-          src="/landing/parrot-still.svg"
+          src="/landing/parrot-still.webp"
           alt="Parrot"
           width={46}
           height={46}
@@ -29,7 +29,7 @@ export default function Roadmap() {
           unoptimized
         />
         <Image
-          src="/landing/parrot-still.svg"
+          src="/landing/parrot-still.webp"
           alt="Roadmap"
           width={46}
           height={46}
@@ -51,7 +51,7 @@ export default function Roadmap() {
                 unoptimized
               />
               <Image
-                src="/landing/tape.svg"
+                src="/landing/tape.webp"
                 alt="Roadmap"
                 width={81}
                 height={23}
@@ -77,7 +77,7 @@ export default function Roadmap() {
                 unoptimized
               />
               <Image
-                src="/landing/tape.svg"
+                src="/landing/tape.webp"
                 alt="Roadmap"
                 width={81}
                 height={23}

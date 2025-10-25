@@ -9,7 +9,7 @@ export default function Footer() {
       </p>
       <div className="w-full max-w-[1340px] relative">
         <Image
-          src="/landing/footer-title.svg"
+          src="/landing/footer-title.webp"
           alt="Parrot"
           width={1340}
           height={545}
@@ -17,7 +17,7 @@ export default function Footer() {
           unoptimized
         />
         <Image
-          src="/landing/parrot-still.svg"
+          src="/landing/parrot-still.webp"
           alt="Parrot"
           width={534}
           height={534}
