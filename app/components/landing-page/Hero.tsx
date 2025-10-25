@@ -27,7 +27,7 @@ export default function Hero() {
         <div className="relative h-14 sm:h-16 overflow-hidden rounded-full mt-2 max-w-[1440px] mx-auto shadow-lg">
           {/* Background Image */}
           <Image
-            src="/landing/header-bg.svg"
+            src="/landing/header-bg.webp"
             alt="Navbar Background"
             fill
             className="object-cover"
@@ -122,7 +122,7 @@ export default function Hero() {
           unoptimized
         />
         <Image
-          src="/landing/header-bg.svg"
+          src="/landing/header-bg.webp"
           alt="Hero"
           fill
           className="object-cover object-bottom"
