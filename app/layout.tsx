@@ -13,23 +13,18 @@ const outfit = Outfit({
   subsets: ["latin"],
   variable: "--font-outfit",
   weight: ["300", "400", "500", "600"],
-  display: "swap",
-  preload: true,
 });
 
 const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
   variable: "--font-instrument-serif",
   weight: ["400"],
-  display: "swap",
-  preload: true,
 });
 
 const zingFont = localFont({
   src: "../public/fonts/zing-font.otf",
   variable: "--font-zing",
   display: "swap",
-  preload: true,
 });
 
 export const viewport: Viewport = {
