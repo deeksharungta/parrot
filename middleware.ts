@@ -86,8 +86,8 @@ function addSecurityHeaders(response: NextResponse) {
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
-    // Allow framing from Farcaster-related domains and development tunnels
-    "frame-ancestors 'self' https://warpcast.com https://*.warpcast.com https://farcaster.xyz https://*.farcaster.xyz https://*.vercel.app https://*.netlify.app https://*.loca.lt https://*.ngrok.io https://*.localhost.run",
+    // Allow framing from Farcaster-related domains, Base.dev, and development tunnels
+    "frame-ancestors 'self' https://warpcast.com https://*.warpcast.com https://farcaster.xyz https://*.farcaster.xyz https://www.base.dev https://*.base.dev https://*.vercel.app https://*.netlify.app https://*.loca.lt https://*.ngrok.io https://*.localhost.run",
     "upgrade-insecure-requests",
   ].join("; ");
 
