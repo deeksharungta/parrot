@@ -61,8 +61,8 @@ export default function Features() {
             Micropayments.
           </h4>
           <p className="font-serif font-normal text-sm mb-4 sm:mb-6 px-4 max-w-xs mx-auto">
-            Monitor your earnings and reach across all supported platforms in
-            one place.
+            Every post works on a pay-per-post model - you only pay for what you
+            use. Post less, pay less. Post more, pay more.
           </p>
         </div>
       </div>
