@@ -15,7 +15,7 @@ export default function Roadmap() {
       </p>
       <p className="text-black mx-auto font-serif font-normal text-sm text-center mt-4 px-4">
         Distribution isn&apos;t just reach, it&apos;s about entering new markets
-        where every post can earn. Parrot routes your
+        where every post can earn. Parrot routes your{" "}
         <br className="hidden sm:block" />
         content to onchain platforms, unlocking likes, tips, collectibles.
       </p>
