@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { sdk } from "@farcaster/frame-sdk";
 import { analytics } from "@/lib/analytics";
 import LandingPage from "./components/landing-page/LandingPage";
+import Image from "next/image";
 
 export default function HomePage() {
   const { setFrameReady, isFrameReady, context } = useMiniKit();
@@ -84,7 +85,7 @@ export default function HomePage() {
 
   return (
     <>
-      {isMiniApp ? (
+      {true ? (
         // Mini App version - show the full app
         <motion.div
           className="flex flex-col items-center justify-start h-screen overflow-hidden relative"
@@ -92,6 +93,13 @@ export default function HomePage() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
+          <Image
+            src="/landing/header-bg.svg"
+            alt="Navbar Background"
+            fill
+            className="object-cover"
+            unoptimized
+          />
           <WelcomeCard />
           <UserProfiles />
         </motion.div>

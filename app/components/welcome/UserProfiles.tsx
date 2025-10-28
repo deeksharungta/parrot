@@ -124,10 +124,10 @@ export default function UserProfiles() {
 
   return (
     <motion.div
-      className="flex flex-col items-center justify-center w-full px-6 py-8 bg-white border-t border-[#ECECED] absolute bottom-0 left-0 right-0"
       initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, delay: 0.8, ease: "easeOut" }}
+      className="fixed bottom-2 left-2 right-2 bg-white rounded-[32px] border border-[#ECECED] z-50 max-h-[80vh] overflow-hidden p-6"
     >
       <motion.div
         className="flex justify-between items-center w-full mb-2.5"

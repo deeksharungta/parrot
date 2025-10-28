@@ -60,6 +60,18 @@ const Features = () => {
     >
       <SkeletonEffect isLeft={false} delay={shouldReduceMotion ? 0 : 0.1} />
       <SkeletonEffect isLeft={true} delay={shouldReduceMotion ? 0 : 0.2} />
+      <div className="bg-white/20 flex flex-col gap-5 p-6 rounded-3xl blur-sm items-center justify-center">
+        <Image
+          src="/landing/header-title.webp"
+          alt="Parrot"
+          width={62}
+          height={25}
+          unoptimized
+        />
+        <p className="font-zing text-white text-2xl font-thin text-center">
+          Cross-post your X posts to Farcaster in one-click
+        </p>
+      </div>
       {features.map((feature, index) => (
         <FeatureItem
           key={feature.feature}
