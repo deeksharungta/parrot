@@ -102,7 +102,7 @@ export default function Header({ title }: { title: string }) {
               onClick={
                 isYoloModeEnabled ? handleDisableAutoPost : handleEnableAutoPost
               }
-              className={`text-white text-sm py-1 px-3 rounded-xl bg-black whitespace-nowrap ${isYoloModeEnabled ? "bg-[#0ED065]" : "bg-black"}`}
+              className={`text-white text-sm py-1 px-3 rounded-xl whitespace-nowrap ${isYoloModeEnabled ? "bg-[#0ED065]" : "bg-black"}`}
               disabled={updateUser.isPending}
             >
               {isYoloModeEnabled ? "Auto-post enabled" : "Enable auto-post"}
