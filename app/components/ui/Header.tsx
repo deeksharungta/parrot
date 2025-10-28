@@ -11,11 +11,13 @@ import { useCurrentUser, useUpdateUser } from "@/hooks/useUsers";
 import YoloModeModal from "../modals/YoloModeModal";
 import { toast } from "sonner";
 import { analytics } from "@/lib/analytics";
+import { useRouter } from "next/navigation";
 
 export default function Header({ title }: { title: string }) {
   const { context } = useMiniKit();
   const { data: userData } = useCurrentUser();
   const updateUser = useUpdateUser();
+  const router = useRouter();
   const [yoloModeModalOpen, setYoloModeModalOpen] = useState(false);
   // const [earlyAccessModalOpen, setEarlyAccessModalOpen] = useState(false);
   // const { data: promotionCastStatus, isLoading } = usePromotionCastCheck();
@@ -26,6 +28,10 @@ export default function Header({ title }: { title: string }) {
   const handleEnableAutoPost = () => {
     analytics.trackModalOpen("yolo_mode_config", "header_enable_button");
     setYoloModeModalOpen(true);
+  };
+
+  const handleDisableAutoPost = () => {
+    router.push("/settings");
   };
 
   const handleSaveYoloModeSettings = (settings: {
@@ -91,13 +97,17 @@ export default function Header({ title }: { title: string }) {
             </button>
           )} */}
 
-          <button
-            onClick={handleEnableAutoPost}
-            className="text-white text-sm py-1 px-3 rounded-xl bg-black"
-            disabled={updateUser.isPending}
-          >
-            Enable auto-post
-          </button>
+          {title === "Pick and Cast" && (
+            <button
+              onClick={
+                isYoloModeEnabled ? handleDisableAutoPost : handleEnableAutoPost
+              }
+              className={`text-white text-sm py-1 px-3 rounded-xl bg-black whitespace-nowrap ${isYoloModeEnabled ? "bg-[#0ED065]" : "bg-black"}`}
+              disabled={updateUser.isPending}
+            >
+              {isYoloModeEnabled ? "Auto-post enabled" : "Enable auto-post"}
+            </button>
+          )}
           <div className="rounded-full overflow-hidden">
             <Image
               src={context?.user?.pfpUrl ?? "/farcaster.png"}
