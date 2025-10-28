@@ -56,7 +56,7 @@ export default function Approve() {
           <Loader2 className="animate-spin" />
         ) : (
           <>
-            Topup ${spendingLimit} <Dollar isActive />
+            Approve ${spendingLimit} <Dollar isActive />
           </>
         )}
       </Button>

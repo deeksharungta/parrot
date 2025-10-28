@@ -6,7 +6,7 @@ import { motion, useReducedMotion } from "framer-motion";
 
 const features = [
   {
-    feature: "Post tweets to Farcaster",
+    feature: "X to Farcaster/Baseapp",
     icon: "/twitter.png",
     backgrounColor: "#000000",
   },

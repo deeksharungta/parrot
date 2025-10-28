@@ -226,7 +226,7 @@ export default function UserProfiles() {
                   ? "Signing you in..."
                   : isLoading
                     ? "Checking authentication..."
-                    : "Continue fetching tweets"}
+                    : "Continue to app"}
             </Button>
           )
         ) : (
@@ -241,7 +241,7 @@ export default function UserProfiles() {
                   sdk.actions.openUrl(
                     isMobile
                       ? "https://farcaster.xyz/~/settings/verifications"
-                      : "https://farcaster.xyz/~/settings",
+                      : `https://farcaster.xyz/${context?.user?.username}`,
                   );
                 }
               }}

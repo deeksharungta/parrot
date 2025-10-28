@@ -196,9 +196,9 @@ export function ConnectNeynar({ onClose, isOpen }: ConnectNeynarProps) {
                       Secure Authentication
                     </p>
                     <p className="text-sm font-light text-[#0BABFB]">
-                      You'll be redirected to securely authorize parrot. This
-                      allows us to cast on your behalf without storing sensitive
-                      keys.
+                      You&apos;ll be redirected to Neynar to securely authorize
+                      Parrot. This will grant Parrot permission to post on your
+                      behalf.
                     </p>
                   </div>
                   <Button
