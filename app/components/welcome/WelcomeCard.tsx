@@ -81,7 +81,6 @@ const Features = () => {
         />
       ))}
       <SkeletonEffect isLeft={true} delay={shouldReduceMotion ? 0 : 0.6} />
-      <SkeletonEffect isLeft={false} delay={shouldReduceMotion ? 0 : 0.7} />
     </motion.div>
   );
 };
