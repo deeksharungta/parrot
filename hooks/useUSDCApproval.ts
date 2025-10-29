@@ -25,6 +25,8 @@ export interface UseUSDCApprovalReturn {
   currentAllowance: bigint | undefined;
   currentAllowanceFormatted: string;
   hasAllowance: boolean;
+  isAllowanceLoading: boolean;
+  isAllowanceUpdating: boolean;
 
   // Functions
   handleApprove: (amount: number) => Promise<void>;
@@ -38,6 +40,7 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
   const [isRevoking, setIsRevoking] = useState(false);
   const [error, setError] = useState<string>("");
   const [pendingTxHash, setPendingTxHash] = useState<string | undefined>();
+  const [isAllowanceUpdating, setIsAllowanceUpdating] = useState(false);
 
   const { writeContractAsync } = useWriteContract();
   const updateUser = useUpdateUser();
@@ -47,17 +50,20 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
   const { address, isConnected } = useAccount();
 
   // Check current allowance
-  const { data: currentAllowance, refetch: refetchAllowance } = useReadContract(
-    {
-      address: USDC_ADDRESS,
-      abi: erc20Abi,
-      functionName: "allowance",
-      args: address && SPENDER_ADDRESS ? [address, SPENDER_ADDRESS] : undefined,
-      query: {
-        enabled: !!address,
-      },
+  const {
+    data: currentAllowance,
+    refetch: refetchAllowance,
+    isLoading: isAllowanceLoading,
+    isPending: isAllowancePending,
+  } = useReadContract({
+    address: USDC_ADDRESS,
+    abi: erc20Abi,
+    functionName: "allowance",
+    args: address && SPENDER_ADDRESS ? [address, SPENDER_ADDRESS] : undefined,
+    query: {
+      enabled: !!address,
     },
-  );
+  });
 
   // Wait for transaction confirmation
   const { data: txReceipt } = useWaitForTransactionReceipt({
@@ -72,6 +78,12 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
     if (txReceipt && txReceipt.status === "success") {
       refetchAllowance();
       setPendingTxHash(undefined);
+      setIsAllowanceUpdating(false);
+      
+      // Show success toast after confirmation
+      toast(`USDC Approved!`, {
+        description: `Spending limit updated successfully`,
+      });
     }
   }, [txReceipt, refetchAllowance]);
 
@@ -88,6 +100,7 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
 
     setError("");
     setIsApproving(true);
+    setIsAllowanceUpdating(true);
 
     try {
       // Convert spending limit to USDC amount (6 decimals)
@@ -124,14 +137,10 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
         });
       }
 
-      // Show success toast
-      toast(`USDC Approved!`, {
-        description: `$${amount} spending limit set successfully`,
-      });
-
       setIsApproving(false);
     } catch (err: any) {
       setIsApproving(false);
+      setIsAllowanceUpdating(false);
       setError(err.message || "Failed to approve USDC spending");
       console.error("Approval error:", err);
     }
@@ -150,6 +159,7 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
 
     setError("");
     setIsRevoking(true);
+    setIsAllowanceUpdating(true);
 
     try {
       const hash = await writeContractAsync({
@@ -183,14 +193,10 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
         });
       }
 
-      // Show success toast
-      toast("USDC Revoked!", {
-        description: "Spending allowance removed successfully",
-      });
-
       setIsRevoking(false);
     } catch (err: any) {
       setIsRevoking(false);
+      setIsAllowanceUpdating(false);
       setError(err.message || "Failed to revoke USDC allowance");
       console.error("Revoke error:", err);
     }
@@ -219,6 +225,8 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
     currentAllowance,
     currentAllowanceFormatted,
     hasAllowance: !!hasAllowance,
+    isAllowanceLoading,
+    isAllowanceUpdating,
 
     // Functions
     handleApprove,
