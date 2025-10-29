@@ -97,7 +97,7 @@ export default function HomePage() {
             src="/landing/header-bg.svg"
             alt="Navbar Background"
             fill
-            className="object-cover object-center"
+            className="object-cover object-top"
             unoptimized
           />
           <WelcomeCard />

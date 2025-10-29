@@ -193,7 +193,7 @@ const SkeletonEffect = ({
 
   return (
     <motion.div
-      className="flex items-center justify-center w-full gap-3 h-[86px] opacity-10"
+      className="flex items-center justify-center w-full gap-3 h-[86px] opacity-5"
       initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.9 }}
       animate={{ opacity: 0.2, scale: 1 }}
       transition={{
