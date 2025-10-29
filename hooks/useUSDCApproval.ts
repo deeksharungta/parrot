@@ -41,6 +41,9 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
   const [error, setError] = useState<string>("");
   const [pendingTxHash, setPendingTxHash] = useState<string | undefined>();
   const [isAllowanceUpdating, setIsAllowanceUpdating] = useState(false);
+  const [pendingTxType, setPendingTxType] = useState<
+    "approve" | "revoke" | null
+  >(null);
 
   const { writeContractAsync } = useWriteContract();
   const updateUser = useUpdateUser();
@@ -79,13 +82,21 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
       refetchAllowance();
       setPendingTxHash(undefined);
       setIsAllowanceUpdating(false);
-      
-      // Show success toast after confirmation
-      toast(`USDC Approved!`, {
-        description: `Spending limit updated successfully`,
-      });
+
+      // Show success toast after confirmation based on transaction type
+      if (pendingTxType === "revoke") {
+        toast(`USDC Revoked!`, {
+          description: `Spending allowance removed successfully`,
+        });
+      } else if (pendingTxType === "approve") {
+        toast(`USDC Approved!`, {
+          description: `Spending limit updated successfully`,
+        });
+      }
+
+      setPendingTxType(null);
     }
-  }, [txReceipt, refetchAllowance]);
+  }, [txReceipt, refetchAllowance, pendingTxType]);
 
   const handleApprove = async (amount: number) => {
     if (!isConnected || !address) {
@@ -113,8 +124,9 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
         args: [SPENDER_ADDRESS, amountBigInt],
       });
 
-      // Set pending transaction hash to wait for confirmation
+      // Set pending transaction hash and type to wait for confirmation
       setPendingTxHash(hash);
+      setPendingTxType("approve");
 
       // Save approval to Supabase users table
       try {
@@ -169,8 +181,9 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
         args: [SPENDER_ADDRESS, BigInt(0)], // Set allowance to 0 to revoke
       });
 
-      // Set pending transaction hash to wait for confirmation
+      // Set pending transaction hash and type to wait for confirmation
       setPendingTxHash(hash);
+      setPendingTxType("revoke");
 
       // Save revocation to Supabase users table
       try {
