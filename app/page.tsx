@@ -85,7 +85,7 @@ export default function HomePage() {
 
   return (
     <>
-      {true ? (
+      {isMiniApp ? (
         // Mini App version - show the full app
         <motion.div
           className="flex flex-col items-center justify-start h-screen overflow-hidden relative"
