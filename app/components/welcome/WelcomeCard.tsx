@@ -58,9 +58,8 @@ const Features = () => {
         delay: shouldReduceMotion ? 0 : 0.2,
       }}
     >
-      <SkeletonEffect isLeft={false} delay={shouldReduceMotion ? 0 : 0.1} />
       <SkeletonEffect isLeft={true} delay={shouldReduceMotion ? 0 : 0.2} />
-      <div className="bg-white/20 flex flex-col gap-5 p-6 rounded-3xl blur-sm items-center justify-center">
+      <div className="bg-white/20 flex flex-col gap-5 p-6 rounded-3xl items-center justify-center">
         <Image
           src="/landing/header-title.webp"
           alt="Parrot"
